@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\Btoc\OrderService;
 use App\DTO\Btoc\RegisterTrackingDTO;
 use App\Models\Order;
+use App\Models\Shop;
 
 class BtocOrderController extends Controller
 {
@@ -23,6 +24,27 @@ class BtocOrderController extends Controller
 
     return view('btoc.index', compact('orders'));
     }
+
+    public function dashboard()
+{
+      $shopCount = \App\Models\Shop::count();
+
+    $todayOrders = \App\Models\Order::whereDate('created_at', today())->count();
+
+    $unshipped = \App\Models\Order::where('status', 'pending')->count();
+
+    $todayShipped = \App\Models\Order::whereDate('shipped_at', today())->count();
+
+    $shops = Shop::all();
+
+    return view('btoc.dashboard', compact(
+        'shopCount',
+        'todayOrders',
+        'unshipped',
+        'todayShipped',
+        'shops',
+    ));
+}
 
     public function registerTracking(Request $request)
     {

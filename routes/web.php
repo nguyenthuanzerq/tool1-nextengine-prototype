@@ -11,3 +11,5 @@ Route::post('/btoc/register-tracking', [BtocOrderController::class, 'registerTra
 
 Route::post('/orders/sync-next-engine', [OrderController::class, 'syncNextEngine'])
     ->name('orders.sync-next-engine');
+
+Route::get('/dashboard', [BtocOrderController::class, 'dashboard']);

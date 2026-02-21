@@ -15,7 +15,7 @@ class OrderController extends Controller
 
     public function syncNextEngine(Request $request)
     {
-        $order = Order::with('nextEngineOrder')->findOrFail($request->id);
+        $order = Order::with('nextEngineOrder')->findOrFail($request->order_id);
         $nextEngineOrder = $order->nextEngineOrder;
 
         // ==========================
