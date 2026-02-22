@@ -16,11 +16,7 @@
     <div class="text-sm text-gray-700 mb-6">
         🔒 <span class="font-semibold">Phase1:</span> Order list + tracking input + mail trigger
     </div>
-@if(session('success'))
-    <div class="mb-4 p-3 bg-green-100 border border-green-300 text-green-800 text-sm">
-        {{ session('success') }}
-    </div>
-@endif
+
     <div class="overflow-x-auto border border-gray-300">
         <table class="w-full border-collapse text-sm">
             <thead class="bg-gray-100">
@@ -65,7 +61,6 @@
             </thead>
 
             <tbody>
-                @foreach($orders as $order)
             <tr class="hover:bg-gray-50">
                 <td class="border border-gray-300 px-3 py-2">ファッションストアA</td>
                 <td class="border border-gray-300 px-3 py-2">SHOP-001</td>
@@ -74,10 +69,8 @@
                 <td class="border border-gray-300 px-3 py-2">ヤマト運輸</td>
 
                 <td class="border border-gray-300 px-3 py-2">
-                    <form method="POST" action="{{ route('orders.sync-next-engine') }}">
+                    <form method="POST" action="#" onsubmit="alert('Demo submit — Mail logic TBD'); return false;">
                         @csrf
-                       <input type="hidden" name="id" value="{{ $order->id }}">
-
                         <input
                             type="text"
                             name="tracking_number"
@@ -103,11 +96,11 @@
                     </form>
                 </td>
             </tr>
-            @endforeach
             </tbody>
         </table>
     </div>
 
+    {{-- NOTE dưới table (đúng như Figma) --}}
     <div class="mt-6 border border-gray-300 bg-gray-50 p-4 text-sm">
         <p class="text-gray-800">
             発送番号を入力して「登録」を押すと、購入者へ発送完了メールが自動送信されます。
@@ -117,6 +110,7 @@
         </p>
     </div>
 
+    {{-- Phase2 TBD --}}
     <div class="mt-6 border border-gray-300 bg-gray-50 p-4">
         <div class="text-sm font-semibold mb-2">🔒 Phase2 TBD:</div>
         <ul class="list-disc pl-6 text-sm text-gray-800 space-y-1">
