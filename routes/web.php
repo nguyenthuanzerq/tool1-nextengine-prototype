@@ -1,5 +1,6 @@
 <?php
-
+  
+    // dd('ROUTE FILE LOADED');
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Btoc\BtocOrderController;
 use App\Http\Controllers\OrderController;
@@ -40,3 +41,4 @@ Route::prefix('btoc')->name('btoc.')->group(function () {
 // ================= API (KHÔNG prefix btoc) =================
 Route::post('/orders/sync-next-engine', [OrderController::class, 'syncNextEngine'])
     ->name('orders.sync-next-engine');
+  

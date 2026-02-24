@@ -97,24 +97,46 @@ public function shopEdit($id)
 
 public function shopStore(Request $request)
 {
-    // dd($request->all());
-    Shop::create([
-        'shop_code'     => $request->shop_code,
-        'shop_name'     => $request->shop_name,
-        'client_id'     => $request->client_id,
-        'client_secret' => $request->client_secret,
-        'login_id'      => $request->login_id,
-        'login_password'=> $request->login_password,
+    // 1. Validate backend (BẮT BUỘC)
+    $validated = $request->validate([
+        'shop_code'      => 'required|string|max:50|unique:shops,shop_code',
+        'shop_name'      => 'required|string|max:255',
+        'client_id'      => 'nullable|string|max:255',
+        'client_secret'  => 'nullable|string|max:255',
+        'login_id'       => 'nullable|string|max:255',
+        'login_password' => 'nullable|string|max:255',
     ]);
 
-    return redirect()->route('btoc.shops');
+    // 2. Create using validated data only
+    Shop::create($validated);
+
+    // 3. Redirect with success message
+    return redirect()
+        ->route('btoc.shops')
+        ->with('success', 'Shop created successfully.');
 }
 
 public function shopUpdate(Request $request, $id)
 {
     $shop = Shop::findOrFail($id);
-    $shop->update($request->all());
-    return redirect()->route('btoc.shops');
+
+    // 1. Validate backend
+    $validated = $request->validate([
+        'shop_code'      => 'required|string|max:50|unique:shops,shop_code,' . $shop->id,
+        'shop_name'      => 'required|string|max:255',
+        'client_id'      => 'nullable|string|max:255',
+        'client_secret'  => 'nullable|string|max:255',
+        'login_id'       => 'nullable|string|max:255',
+        'login_password' => 'nullable|string|max:255',
+    ]);
+
+    // 2. Update using validated data only
+    $shop->update($validated);
+
+    // 3. Redirect
+    return redirect()
+        ->route('btoc.shops')
+        ->with('success', 'Shop updated successfully.');
 }
 
 public function show($id)
