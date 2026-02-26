@@ -8,7 +8,8 @@
     <h1 class="text-2xl font-bold mb-1">BtoC NextEngine 管理画面</h1>
 
     <div class="text-sm text-gray-700 mb-6">
-        🔒 <span class="font-semibold">Phase1:</span> Order list + tracking input + mail trigger
+        🔒 <span class="font-semibold">Phase1（確定範囲）：</span>
+        注文一覧表示・発送番号入力・発送完了メール送信
     </div>
 
 <div class="border border-gray-300">
@@ -31,7 +32,11 @@
             </th>
             <th class="border px-3 py-4 text-left align-top">
                 発送番号（入力）
-                <div class="text-xs text-gray-500">🔒 TBD: validation rule</div>
+                <div class="text-xs text-gray-500">
+                    🔒 要確認：
+                    発送番号の入力ルール
+                    （桁数・使用可能文字・配送会社別フォーマットの有無）
+                </div>
             </th>
             <th class="border px-3 py-4 text-left align-top">注文者ID</th>
             <th class="border px-3 py-4 text-left align-top">注文者名</th>
@@ -45,7 +50,6 @@
         <tbody>
         <tr class="hover:bg-gray-50">
 
-            <!-- ✅ FORM BAO TRỌN INPUT + BUTTON -->
             <form method="POST" action="{{ route('btoc.registerTracking') }}">
                 @csrf
                 <input type="hidden" name="order_id" value="1">
@@ -128,11 +132,13 @@
     </div>
 
     <div class="mt-6 border border-gray-300 bg-gray-50 p-4">
-        <div class="text-sm font-semibold mb-2">🔒 Phase2 TBD:</div>
+        <div class="text-sm font-semibold mb-2">
+            🔒 Phase2（要件確認中）：
+        </div>
         <ul class="list-disc pl-6 text-sm text-gray-800 space-y-1">
-            <li>Realtime inventory</li>
-            <li>Auto sync method (cron / realtime)</li>
-            <li>Mail template detail</li>
+            <li>在庫リアルタイム連携の可否</li>
+            <li>自動同期方式（cron / リアルタイム）の確定</li>
+            <li>メールテンプレート詳細仕様の確認</li>
         </ul>
     </div>
 
