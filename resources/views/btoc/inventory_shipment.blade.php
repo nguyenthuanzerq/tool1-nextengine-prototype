@@ -12,6 +12,8 @@
 
     {{-- Inventory Section --}}
     <div class="bg-white rounded-lg border border-gray-200 mb-6">
+
+        {{-- Header --}}
         <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-gray-900">
                 在庫一覧
@@ -22,15 +24,84 @@
 
             <form method="POST" action="{{ route('btoc.inventory.refresh') }}">
                 @csrf
-                <button type="submit" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
+                <button type="submit"
+                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">
                     リアルタイム更新
                     <span class="text-xs opacity-90">(Cập nhật thời gian thực)</span>
                 </button>
             </form>
         </div>
 
+        {{-- ===== FILTER (SỬA TỪ ĐÂY) ===== --}}
+        <form method="GET" action="{{ route('btoc.inventory') }}"
+              class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+
+            <div class="flex flex-wrap gap-4 items-end">
+
+                {{-- Shop Dropdown --}}
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">
+                        ショップ名
+                    </label>
+                    <select name="shop_id"
+                            class="border rounded px-3 py-2 text-sm min-w-[200px]">
+                        <option value="">すべてのショップ</option>
+                        @foreach($shops as $shop)
+                            <option value="{{ $shop->id }}"
+                                {{ (string)request('shop_id') === (string)$shop->id ? 'selected' : '' }}>
+                                {{ $shop->shop_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Mall Dropdown --}}
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">
+                        モール名
+                    </label>
+                    <select name="mall_id"
+                            class="border rounded px-3 py-2 text-sm min-w-[200px]">
+                        <option value="">すべてのモール</option>
+                        @foreach($malls as $mall)
+                            <option value="{{ $mall->id }}"
+                                {{ (string)request('mall_id') === (string)$mall->id ? 'selected' : '' }}>
+                                {{ $mall->mall_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Product Code --}}
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1">
+                        商品コード
+                    </label>
+                    <input type="text"
+                           name="product_code"
+                           value="{{ request('product_code') }}"
+                           class="border rounded px-3 py-2 text-sm min-w-[200px]"
+                           placeholder="PRD-001">
+                </div>
+
+                {{-- Buttons --}}
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
+                        検索
+                    </button>
+
+                    <a href="{{ route('btoc.inventory') }}"
+                       class="px-4 py-2 bg-gray-300 rounded text-sm">
+                        クリア
+                    </a>
+                </div>
+
+            </div>
+        </form>
+        {{-- ===== END FILTER ===== --}}
+
         <div class="overflow-x-auto">
-            {{-- ✅ chỉ thêm table-fixed --}}
             <table class="w-full table-fixed">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -64,9 +135,8 @@
                 <tbody class="divide-y divide-gray-200">
                     @foreach($inventoryData as $item)
                     <tr>
-                        {{-- ✅ chỉ thêm width + nowrap --}}
                         <td class="px-6 py-4 text-sm text-gray-900 w-[180px] whitespace-nowrap">
-                            {{ $item->shop_name }}
+                           {{ $item->mall->shop->shop_name ?? $item->shop_name }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900">
                             {{ $item->product_code }}
@@ -90,7 +160,7 @@
         </div>
     </div>
 
-    {{-- Shipment Section --}}
+    {{-- Shipment Section giữ nguyên --}}
     <div class="bg-white rounded-lg border border-gray-200">
         <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900">
@@ -107,41 +177,29 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700">
                             注文ID
-                            <span class="block text-gray-500 font-normal">ID đơn hàng</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700">
                             出庫状態
-                            <span class="block text-gray-500 font-normal">Trạng thái xuất</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700">
                             出庫日
-                            <span class="block text-gray-500 font-normal">Ngày xuất</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700">
                             運送会社
-                            <span class="block text-gray-500 font-normal">Công ty vận chuyển</span>
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-700">
                             送り状番号
-                            <span class="block text-gray-500 font-normal">Số tracking</span>
                         </th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     @foreach($shipmentData as $item)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item['orderId'] }}</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium
-                                    {{ $item['shipmentStatus'] === '出庫済'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-yellow-100 text-yellow-700' }}">
-                                    {{ $item['shipmentStatus'] }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item['shipmentDate'] }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item['carrier'] }}</td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $item['trackingNumber'] }}</td>
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->order_id }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->shipment_status }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->shipment_date }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->carrier }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ $item->tracking_number }}</td>
                         </tr>
                     @endforeach
                 </tbody>
