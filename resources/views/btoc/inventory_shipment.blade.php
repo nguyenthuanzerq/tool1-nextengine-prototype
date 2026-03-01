@@ -101,6 +101,50 @@
         </form>
         {{-- ===== END FILTER ===== --}}
 
+{{-- ===================================================== --}}
+{{-- 🔒 今後の運用イメージのすり合わせ（事前確認）※番号付き --}}
+{{-- ===================================================== --}}
+<div class="px-6 py-4 bg-gray-50 border-b border-gray-200 text-sm text-gray-700">
+    <div class="font-semibold mb-2">
+        🔒 今後の運用イメージのすり合わせ（事前確認）
+    </div>
+
+    <div class="mb-3 text-gray-600 leading-relaxed">
+        今後の拡張や安定運用を見据えて、方向性だけ事前に共有させてください。<br>
+        現時点での想定をお聞かせいただけますと助かります。
+    </div>
+
+    {{-- チャネル --}}
+    <div class="font-semibold mb-2">【チャネルについて】</div>
+    <ul class="list-disc ml-5 space-y-2 mb-4">
+        <li>① 新しい販売チャネル（例：Yahoo、楽天など）は、今後追加できる形にしますか？</li>
+        <li>② チャネルごとに接続のための情報（IDなど）は必要になりますか？</li>
+        <li>③ 現在使用していないチャネルは、画面上に表示しない形にしますか？</li>
+    </ul>
+
+    {{-- 出品 --}}
+    <div class="font-semibold mb-2">【出品の考え方について】</div>
+    <ul class="list-disc ml-5 space-y-2 mb-4">
+        <li>
+            ④ 商品はモールごとに別管理でしょうか？<br>
+            それとも、どのチャネルでも同じ商品として扱いますか？
+        </li>
+        <li>⑤ 特に設定をしない場合、自動的に出品される想定でしょうか？</li>
+        <li>
+            ⑥ 出品の設定は商品ごとに行いますか？<br>
+            それともShopやモール単位でまとめて設定しますか？
+        </li>
+        <li>⑦ 「特定のチャネルだけに出す」といった設定は想定されていますか？</li>
+        <li>⑧ 自動更新の際にも、この出品の設定は反映される想定でしょうか？</li>
+    </ul>
+
+    {{-- 運用 --}}
+    <div class="font-semibold mb-2">【運用面について】</div>
+    <ul class="list-disc ml-5 space-y-2">
+        <li>⑨ 出品設定の変更履歴は残す形にしますか？</li>
+        <li>⑩ 一括で出品を停止する場合など、確認画面を設けた方がよろしいでしょうか？</li>
+    </ul>
+</div>
         <div class="overflow-x-auto">
             <table class="w-full table-fixed">
                 <thead class="bg-gray-50 border-b border-gray-200">

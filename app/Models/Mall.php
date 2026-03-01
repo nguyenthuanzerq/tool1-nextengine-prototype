@@ -21,4 +21,9 @@ class Mall extends Model
     {
         return $this->hasMany(Inventory::class);
     }
+
+    public function channel()
+{
+    return $this->belongsTo(Channel::class);
+}
 }

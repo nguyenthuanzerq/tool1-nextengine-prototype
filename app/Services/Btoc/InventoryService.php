@@ -9,19 +9,52 @@ use Illuminate\Support\Facades\DB;
 class InventoryService
 {
     /**
-     * Lấy danh sách tồn kho có hỗ trợ filter
-     * Không phá cấu trúc Phase 1–8
+     * Architecture-first:
+     * Toàn bộ query logic nằm ở Service layer
      */
-    public function getInventory(array $filters = [])
-{
-    return Inventory::with(['mall.shop'])
-        ->filter($filters)
-        ->orderByDesc('id')
-        ->get();
-}
+    public function filter(array $filters = [])
+    {
+        return Inventory::query()
+            ->with(['mall.channel', 'mall.shop'])
+
+            // Filter theo Shop
+            ->when($filters['shop_id'] ?? null, function ($q, $shopId) {
+                $q->whereHas('mall.shop', function ($q2) use ($shopId) {
+                    $q2->where('id', $shopId);
+                });
+            })
+
+            // Filter theo Mall
+            ->when($filters['mall_id'] ?? null, function ($q, $mallId) {
+                $q->where('mall_id', $mallId);
+            })
+
+            // Filter theo Channel
+            ->when($filters['channel_id'] ?? null, function ($q, $channelId) {
+                $q->whereHas('mall', function ($q2) use ($channelId) {
+                    $q2->where('channel_id', $channelId);
+                });
+            })
+
+            // Filter theo Product Code
+            ->when($filters['product_code'] ?? null, function ($q, $code) {
+                $q->where('product_code', 'like', "%{$code}%");
+            })
+
+            ->orderByDesc('id')
+            ->get();
+    }
 
     /**
-     * Refresh inventory timestamp (giữ đúng logic hiện tại)
+     * Giữ tương thích cấu trúc cũ
+     */
+    public function getInventory(array $filters = [])
+    {
+        return $this->filter($filters);
+    }
+
+    /**
+     * Refresh inventory
      */
     public function refreshInventory(): void
     {
@@ -31,8 +64,7 @@ class InventoryService
     }
 
     /**
-     * Lấy danh sách shipment
-     * Giữ nguyên cấu trúc cũ (chưa có Model)
+     * Shipment list (giữ nguyên)
      */
     public function getShipment(): Collection
     {
