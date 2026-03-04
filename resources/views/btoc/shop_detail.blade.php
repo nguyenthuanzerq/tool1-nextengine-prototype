@@ -33,7 +33,8 @@
     <form method="POST" action="{{ $action }}">
         @csrf
         @if(($mode ?? 'create') === 'edit')
-            @method('PUT')
+            @csrf
+            {{-- @method('PUT') --}}
         @endif
 
         <div class="space-y-6">
