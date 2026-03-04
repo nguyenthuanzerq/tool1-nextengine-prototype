@@ -9,6 +9,8 @@ use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
 
+Route::get('/', function () {return redirect('/btoc/dashboard');});
+
 Route::prefix('btoc')->name('btoc.')->group(function () {
 
     // ================= DASHBOARD =================
