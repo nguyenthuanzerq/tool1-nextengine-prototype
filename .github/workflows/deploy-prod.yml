@@ -2,7 +2,8 @@ name: Deploy Tool1 Production
 
 on:
   push:
-    branches: ["refactor/domain-separation"]
+    branches:
+      - refactor/domain-separation
 
 jobs:
   deploy:
@@ -11,10 +12,10 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PROD_HOST }}
-          username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
-          port: ${{ secrets.PROD_SSH_PORT }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
           script: |
             set -e
             cd /var/www/tool1/repo
