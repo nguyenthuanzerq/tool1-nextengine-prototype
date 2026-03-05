@@ -125,8 +125,29 @@
             <div class="text-xs text-gray-500">Lịch sử đồng bộ &amp; Log</div>
           </div>
         </a>
+        
+        <div class="mt-auto pt-4 border-t border-gray-100">
+          <a href="#" 
+             onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+             class="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600">
+              <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+              </svg>
+            </span>
+            <div class="leading-tight">
+              <div class="font-semibold">ログアウト</div>
+              <div class="text-xs text-red-400">Đăng xuất</div>
+            </div>
+          </a>
 
+          <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">
+            @csrf
+          </form>
+        </div>
       </nav>
+
+      
     </aside>
 
     <!-- Main -->

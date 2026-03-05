@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Btoc\DashboardController;
@@ -9,7 +10,12 @@ use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
 
-Route::prefix('btoc')->name('btoc.')->group(function () {
+// ================= AUTHENTICATION ROUTES =================
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [LoginController::class, 'login']);
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // ================= DASHBOARD =================
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
@@ -38,6 +44,14 @@ Route::prefix('btoc')->name('btoc.')->group(function () {
     // ================= EMAIL =================
     Route::get('/email-settings', [EmailSettingController::class, 'emailSettings'])->name('email.settings');
     Route::post('/email-settings', [EmailSettingController::class, 'emailSettings']);
+
+    // ================= NEXT ENGINE CALLBACK =================
+    Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
+    Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+    
+    // ================ TEST CONNECTION & REFRESH TOKEN =================
+    Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
+    Route::post('/shop/{id}/refresh-token', [ShopController::class, 'refreshToken'])->name('shop.refreshToken');
 });
 
 

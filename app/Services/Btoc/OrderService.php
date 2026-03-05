@@ -24,7 +24,7 @@ class OrderService
 
     public function registerTracking(RegisterTrackingDTO $dto): void
     {
-         dd('SERVICE_RUNNING');
+        //  dd('SERVICE_RUNNING');
         DB::transaction(function () use ($dto) {
 
             // 1️⃣ Lock row chống double submit

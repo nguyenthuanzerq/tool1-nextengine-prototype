@@ -7,10 +7,10 @@
     <div class="text-lg font-semibold mb-1">BtoC NextEngine</div>
     <h1 class="text-2xl font-bold mb-1">BtoC NextEngine 管理画面</h1>
 
-    <div class="text-sm text-gray-700 mb-6">
+    {{-- <div class="text-sm text-gray-700 mb-6">
         🔒 <span class="font-semibold">Phase1（確定範囲）：</span>
         注文一覧表示・発送番号入力・発送完了メール送信
-    </div>
+    </div> --}}
 
 <div class="border border-gray-300">
     <table class="w-full border-collapse text-sm">
@@ -32,11 +32,11 @@
             </th>
             <th class="border px-3 py-4 text-left align-top">
                 発送番号（入力）
-                <div class="text-xs text-gray-500">
+                {{-- <div class="text-xs text-gray-500">
                     🔒 要確認：
                     発送番号の入力ルール
                     （桁数・使用可能文字・配送会社別フォーマットの有無）
-                </div>
+                </div> --}}
             </th>
             <th class="border px-3 py-4 text-left align-top">注文者ID</th>
             <th class="border px-3 py-4 text-left align-top">注文者名</th>
@@ -131,7 +131,7 @@
         </p>
     </div>
 
-    <div class="mt-6 border border-gray-300 bg-gray-50 p-4">
+    {{-- <div class="mt-6 border border-gray-300 bg-gray-50 p-4">
         <div class="text-sm font-semibold mb-2">
             🔒 Phase2（要件確認中）：
         </div>
@@ -140,7 +140,7 @@
             <li>自動同期方式（cron / リアルタイム）の確定</li>
             <li>メールテンプレート詳細仕様の確認</li>
         </ul>
-    </div>
+    </div> --}}
 
 </div>
 
