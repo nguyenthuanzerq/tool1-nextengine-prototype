@@ -1,0 +1,24 @@
+name: Deploy Tool1 Production
+
+on:
+  push:
+    branches:
+      - refactor/domain-separation
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+            cd /var/www/tool1/repo
+            git fetch --all
+            git reset --hard origin/refactor/domain-separation
+            /var/www/tool1/scripts/deploy.sh
