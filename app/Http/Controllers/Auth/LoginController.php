@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 class LoginController extends Controller
 {
     public function showLoginForm() {
-        return view('auth.login'); // Tạo file view này ở bước 3
+        return view('auth.login'); 
     }
 
     public function login(Request $request) {
@@ -23,7 +23,7 @@ class LoginController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Thông tin đăng nhập không chính xác.',
+            'email' => 'ログイン情報が正しくありません。',
         ]);
     }
 

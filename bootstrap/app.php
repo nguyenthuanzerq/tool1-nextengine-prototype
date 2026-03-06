@@ -10,6 +10,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withProviders([
+        base_path('bootstrap/providers.php'),
+    ])
     ->withMiddleware(function (Middleware $middleware): void {
     $middleware->validateCsrfTokens(except: [
         'orders/sync-next-engine',
