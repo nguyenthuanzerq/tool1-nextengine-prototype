@@ -5,14 +5,15 @@ namespace App\Http\Controllers\Btoc;
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
 use App\Models\Order;
+use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
-public function index()
+    public function index()
     {
-       $orders = Order::with('orderProducts')->get();
+        $orders = Order::with('orderProducts')->get();
 
-    return view('btoc.kanri_gamen', compact('orders'));
+        return view('btoc.kanri_gamen', compact('orders'));
     }
 
     public function dashboard()
@@ -21,9 +22,14 @@ public function index()
 
         $todayOrders = Order::whereDate('created_at', today())->count();
 
-        $unshipped = Order::where('status', 'pending')->count();
+        // Defensive: chỉ query nếu cột tồn tại trong DB (tránh 500 khi migration chưa chạy)
+        $unshipped = Schema::hasColumn('orders', 'status')
+            ? Order::where('status', 'pending')->count()
+            : 0;
 
-        $todayShipped = Order::whereDate('shipped_at', today())->count();
+        $todayShipped = Schema::hasColumn('orders', 'shipped_at')
+            ? Order::whereDate('shipped_at', today())->count()
+            : 0;
 
         $shops = Shop::all();
 
