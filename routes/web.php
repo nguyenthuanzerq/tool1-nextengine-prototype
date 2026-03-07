@@ -10,7 +10,68 @@ use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
 
+// =================  DEBUG TẠM THỜI — XÓA SAU KHI FIX XONG =================
+// Truy cập: nextenginehub.com/debug-log?key=ne-debug-2026
+Route::get('/debug-log', function () {
+    if (request('key') !== 'ne-debug-2026') abort(403);
+
+    $logPath = storage_path('logs/laravel.log');
+    if (!file_exists($logPath)) {
+        return '<pre>Log file không tồn tại: ' . $logPath . '</pre>';
+    }
+
+    $lines = array_slice(file($logPath), -150);
+    return '<pre style="background:#111;color:#eee;padding:20px;font-size:12px;word-wrap:break-word;">'
+        . htmlspecialchars(implode('', $lines))
+        . '</pre>';
+});
+
+Route::get('/debug-env', function () {
+    if (request('key') !== 'ne-debug-2026') abort(403);
+
+    return response()->json([
+        'APP_ENV'        => env('APP_ENV'),
+        'APP_DEBUG'      => env('APP_DEBUG'),
+        'DB_CONNECTION'  => env('DB_CONNECTION'),
+        'DB_HOST'        => env('DB_HOST'),
+        'DB_DATABASE'    => env('DB_DATABASE'),
+        'NE_API_URI'     => env('NEXT_ENGINE_API_URI') ? 'SET' : 'NOT SET',
+        'NE_CLIENT_ID'   => env('NEXT_ENGINE_CLIENT_ID') ? 'SET' : 'NOT SET',
+        'php_version'    => phpversion(),
+        'laravel'        => app()->version(),
+        'db_ok'          => (function() {
+            try { \DB::connection()->getPdo(); return true; }
+            catch (\Exception $e) { return $e->getMessage(); }
+        })(),
+        'migrations_ran' => (function() {
+            try {
+                return [
+                    'orders_status'    => \Schema::hasColumn('orders', 'status'),
+                    'orders_shipped_at'=> \Schema::hasColumn('orders', 'shipped_at'),
+                    'shops_exists'     => \Schema::hasTable('shops'),
+                    'channels_exists'  => \Schema::hasTable('channels'),
+                ];
+            } catch (\Exception $e) { return $e->getMessage(); }
+        })(),
+    ]);
+});
+
+Route::get('/debug-enable', function () {
+    if (request('key') !== 'ne-debug-2026') abort(403);
+
+    $envPath = base_path('.env');
+    if (!file_exists($envPath)) return 'File .env không tìm thấy';
+
+    $content = file_get_contents($envPath);
+    $content = preg_replace('/^APP_DEBUG=.*/m', 'APP_DEBUG=true', $content);
+    file_put_contents($envPath, $content);
+
+    return 'APP_DEBUG=true đã được bật. Reload trang dashboard để xem lỗi chi tiết.';
+});
+// =================  END DEBUG =================
+
 // ================= AUTHENTICATION ROUTES =================
+
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
