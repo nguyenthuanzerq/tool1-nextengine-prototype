@@ -16,7 +16,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd /var/www/tool1-nextengine-prototype
+            cd /var/www/tool1/repo
             git fetch --all
             git reset --hard origin/refactor/domain-separation
             composer install --no-dev --prefer-dist --no-interaction --optimize-autoloader
