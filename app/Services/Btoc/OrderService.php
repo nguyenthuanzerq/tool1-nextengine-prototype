@@ -24,19 +24,19 @@ class OrderService
 
     public function registerTracking(RegisterTrackingDTO $dto): void
     {
-        //  dd('SERVICE_RUNNING');
+        // Đã xóa hàm dd() cản trở luồng chạy
+
         DB::transaction(function () use ($dto) {
 
-            // 1️⃣ Lock row chống double submit
+            // 1. Lock row chống double submit
             $order = $this->orderRepository->findForUpdate($dto->orderId);
 
             if (!$order) {
                 throw new RuntimeException('Order not found.');
             }
 
-            // 2️⃣ Guard: không cho overwrite nếu đã shipped
-            if ($order->status === 'shipped') {
-
+            // 2. Guard: Không cho overwrite nếu đã shipped (Thêm check tiếng Nhật)
+            if ($order->status === 'shipped' || $order->status === '出荷済み') {
                 Log::warning('TRACKING_REGISTER_BLOCKED_ALREADY_SHIPPED', [
                     'order_id' => $order->id,
                     'current_tracking' => $order->tracking_number,
@@ -46,13 +46,13 @@ class OrderService
                 throw new RuntimeException('Order already shipped.');
             }
 
-            // 3️⃣ Save tracking (qua repository)
+            // 3. Save tracking
             $updatedOrder = $this->orderRepository->saveTracking(
                 $dto->orderId,
                 $dto->trackingNumber
             );
 
-            // 4️⃣ Audit log
+            // 4. Audit log
             Log::info('TRACKING_REGISTERED', [
                 'order_id' => $updatedOrder->id,
                 'tracking_number' => $dto->trackingNumber,
@@ -60,7 +60,7 @@ class OrderService
                 'shipped_at' => optional($updatedOrder->shipped_at)->toDateTimeString(),
             ]);
 
-            // 5️⃣ Send mail (chỉ gửi khi transaction thành công)
+            // 5. Send mail
             $this->mailService->sendTrackingMail($updatedOrder);
         });
     }

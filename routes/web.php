@@ -81,10 +81,6 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     // ================= DASHBOARD =================
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
-    // ================= ORDER =================
-    Route::get('/', [OrderController::class, 'index'])->name('index');
-    Route::post('/register-tracking', [OrderController::class, 'registerTracking'])->name('registerTracking');
-
     // --- 1. QUẢN LÝ SHOP (CRUD) ---
     Route::get('/shops', [ShopController::class, 'index'])->name('shops');                 // Xem danh sách
     Route::get('/shop/create', [ShopController::class, 'create'])->name('shop.create');    // Hiện Form thêm mới
@@ -98,6 +94,16 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
     Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
 
+    // --- 3. QUẢN LÝ ĐƠN HÀNG (管理画面 - KANRI GAMEN) ---
+    // Hiển thị danh sách đơn hàng (Sidebar của bạn đang gọi route 'btoc.index')
+    Route::get('/', [OrderController::class, 'index'])->name('index'); 
+
+    // Các thao tác (Action) với đơn hàng
+    Route::post('/orders/sync', [OrderController::class, 'sync'])->name('orders.sync');                                  // Đồng bộ đơn hàng
+    Route::post('/orders/export-instruction', [OrderController::class, 'exportInstruction'])->name('orders.export');       // Xuất CSV/Excel 作業指示書
+    Route::post('/orders/shipping-notify', [OrderController::class, 'shippingNotify'])->name('orders.shipping_notify');    // Thông báo xuất hàng
+    Route::post('/orders/register-tracking', [OrderController::class, 'registerTracking'])->name('orders.register_tracking'); // Đăng ký mã vận đơn (API cũ)
+    
     // ================= INVENTORY =================
     Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');
     Route::post('/inventory/refresh', [InventoryController::class, 'refreshInventory'])->name('inventory.refresh');
