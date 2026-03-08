@@ -85,13 +85,18 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     Route::get('/', [OrderController::class, 'index'])->name('index');
     Route::post('/register-tracking', [OrderController::class, 'registerTracking'])->name('registerTracking');
 
-    // ================= SHOP =================
-    Route::get('/shops', [ShopController::class, 'shops'])->name('shops');
-    Route::get('/shop/create', [ShopController::class, 'shopCreate'])->name('shop.create');
-    Route::post('/shop/store', [ShopController::class, 'shopStore'])->name('shop.store');
-    Route::get('/shop/{id}/edit', [ShopController::class, 'shopEdit'])->name('shop.edit');
-    Route::post('/shop/{id}/update', [ShopController::class, 'shopUpdate'])->name('shop.update');
-    Route::get('/shops/{id}', [ShopController::class, 'show'])->name('shops.show');
+    // --- 1. QUẢN LÝ SHOP (CRUD) ---
+    Route::get('/shops', [ShopController::class, 'index'])->name('shops');                 // Xem danh sách
+    Route::get('/shop/create', [ShopController::class, 'create'])->name('shop.create');    // Hiện Form thêm mới
+    Route::post('/shop', [ShopController::class, 'store'])->name('shop.store');            // Xử lý lưu thêm mới
+    Route::get('/shop/{id}', [ShopController::class, 'edit'])->name('shop.edit');          // Hiện Form sửa
+    Route::put('/shop/{id}', [ShopController::class, 'update'])->name('shop.update');      // Xử lý lưu cập nhật
+    Route::delete('/shop/{id}', [ShopController::class, 'destroy'])->name('shop.destroy'); // Xử lý xóa
+
+    // --- 2. XÁC THỰC API NEXTENGINE ---
+    Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
+    Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+    Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
 
     // ================= INVENTORY =================
     Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');
@@ -106,13 +111,13 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     Route::get('/email-settings', [EmailSettingController::class, 'emailSettings'])->name('email.settings');
     Route::post('/email-settings', [EmailSettingController::class, 'emailSettings']);
 
-    // ================= NEXT ENGINE CALLBACK =================
-    Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
-    Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+    // // ================= NEXT ENGINE CALLBACK =================
+    // Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
+    // Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
     
-    // ================ TEST CONNECTION & REFRESH TOKEN =================
-    Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
-    Route::post('/shop/{id}/refresh-token', [ShopController::class, 'refreshToken'])->name('shop.refreshToken');
+    // // ================ TEST CONNECTION & REFRESH TOKEN =================
+    // Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
+    // Route::post('/shop/{id}/refresh-token', [ShopController::class, 'refreshToken'])->name('shop.refreshToken');
 });
 
 
