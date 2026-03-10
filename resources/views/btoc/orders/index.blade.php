@@ -142,7 +142,7 @@
                                 <th class="px-4 py-3 font-medium text-gray-700">ステータス<br><span
                                         class="text-xs text-gray-500">Trạng thái</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">お問い合わせ番号<br><span
-                                        class="text-xs text-gray-500">Mã vận đơn</span></th>
+                                        class="text-xs text-gray-500">Hành động</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -161,6 +161,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $order->purchaser_name }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 text-right font-medium">
                                         ¥{{ number_format($order->receive_order_total_amount) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900"> {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}</td>
                                     <td class="px-4 py-3 text-sm">
                                         @php
                                             $statusClass = match ($order->status) {
@@ -180,8 +181,21 @@
                                             {{ $statusLabel }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">
-                                        {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'"
+                                                class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-xs font-medium transition">
+                                                詳細
+                                            </button>
+                                            <button type="button" onclick="window.location.href='{{ route('btoc.orders.edit', $order->id) }}'"
+                                                class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded text-xs font-medium transition">
+                                                編集
+                                            </button>
+                                            <button type="button" onclick="if(confirm('削除してもよろしいですか？')) { window.location.href='{{ route('btoc.orders.destroy', $order->id) }}'; }"
+                                                class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-medium transition">
+                                                削除
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty

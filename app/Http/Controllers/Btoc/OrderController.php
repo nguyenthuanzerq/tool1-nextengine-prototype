@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Btoc;
 
+use App\DTO\Btoc\RegisterTrackingDTO;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Shop;
 use App\Services\Btoc\OrderService;
 use Illuminate\Support\Facades\Response;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkInstructionExport;
+use App\Services\Btoc\MailService;
+use Vtiful\Kernel\Excel;
 
 
 class OrderController extends Controller
@@ -89,7 +91,7 @@ class OrderController extends Controller
     /**
      * Xử lý luu đơn hàng mới
      */
-    public function store(Request $request){
+    public function store(Request $request, MailService $mailService){
         $validated = $request->validate([
             'receipt_receipt_id' => 'required|string|max:255|unique:orders,receipt_receipt_id',
             'purchaser_name' => 'required|string|max:255',
@@ -115,15 +117,16 @@ class OrderController extends Controller
             'tracking_number.max' => 'お問い合わせ番号は255文字以下でなければなりません。(Mã vận đơn không được vượt quá 255 ký tự)',
         ]);
 
-        Order::create($validated);
-        
+        $order = Order::create($validated);
+        $mailService->sendOrderCreatedMail($order);
+
         return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
     }
 
     public function show($id)
     {
         $order = Order::with(['shop', 'products'])->findOrFail($id);
-        return view('btoc.orders.show', ['order' => $order]);
+        return view('btoc.orders.detail', ['order' => $order]);
     }
 
     public function edit($id)
@@ -147,7 +150,7 @@ class OrderController extends Controller
             'purchaser_name' => 'required|string|max:255',
             'shop_id' => 'required|exists:shops,id',
             'receive_order_date' => 'required|date',
-            'total_amount' => 'required|numeric|min:0',
+            'receive_order_total_amount' => 'required|numeric|min:0',
             'status' => 'required|string|in:pending,completed,cancelled',
             'tracking_number' => 'nullable|string|max:255',
         ]);
@@ -183,7 +186,7 @@ class OrderController extends Controller
         $fileName = '作業指示書_' . date('Ymd_His') . '.xlsx';
 
         // Gọi class Export để tải file về
-        return Excel::download(new WorkInstructionExport($orders), $fileName);
+        // return Excel::download(new WorkInstructionExport($orders), $fileName);
     }
 
     /**
@@ -194,6 +197,7 @@ class OrderController extends Controller
     /**
      * Cập nhật trạng thái xuất hàng hàng loạt
      */
+
     public function shippingNotify(Request $request)
     {
         $orderIds = $request->input('order_ids', []);
@@ -210,22 +214,23 @@ class OrderController extends Controller
         return redirect()->back()->with('success', count($orderIds) . ' 注文は「配達済み」に更新されました。');
     }
 
-    // public function registerTracking(Request $request)
-    // {
-    //     $validated = $request->validate([
-    //         'order_id'        => 'required|exists:orders,id',
-    //         'tracking_number' => 'required|string|max:255',
-    //     ]);
+    public function registerTracking(Request $request)
+    {
+        $validated = $request->validate([
+            'order_id'        => 'required|exists:orders,id',
+            'tracking_number' => 'required|string|max:255',
+        ]);
 
-    //     $dto = new RegisterTrackingDTO(
-    //         (int) $validated['order_id'],
-    //         (string) $validated['tracking_number']
-    //     );
+        $dto = new RegisterTrackingDTO(
+            (int) $validated['order_id'],
+            (string) $validated['tracking_number']
+        );
 
-    //     $this->orderService->registerTracking($dto);
+        $this->orderService->registerTracking($dto);
 
-    //     return redirect()
-    //         ->route('btoc.index')
-    //         ->with('success', '発送番号を登録しました。');
-    // }
+        return redirect()
+            ->route('btoc.index')
+            ->with('success', '発送番号を登録しました。');
+    }
+
 }

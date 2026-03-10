@@ -35,22 +35,22 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">受注番号 (Mã đơn hàng) <span class="text-red-500">*</span></label>
-                <input type="text" name="order_number" value="{{ old('order_number', $order->order_number) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
+                <input type="text" name="order_number" value="{{ old('order_number', $order->receipt_receipt_id) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">受注日 (Ngày đặt) <span class="text-red-500">*</span></label>
-                <input type="date" name="order_date" value="{{ old('order_date', $order->order_date) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
+                <input type="date" name="order_date" value="{{ old('order_date', $order->receive_order_date) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">購入者名 (Người mua) <span class="text-red-500">*</span></label>
-                <input type="text" name="buyer_name" value="{{ old('buyer_name', $order->buyer_name) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
+                <input type="text" name="buyer_name" value="{{ old('buyer_name', $order->purchaser_name) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">合計金額 (Tổng tiền) <span class="text-red-500">*</span></label>
-                <input type="number" name="total_amount" value="{{ old('total_amount', $order->total_amount) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
+                <input type="number" name="total_amount" value="{{ old('total_amount', $order->receive_order_total_amount) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
             </div>
 
             <div>
@@ -64,7 +64,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">お問い合わせ番号 (Mã vận đơn / Tracking number) <span class="text-red-500">*</span></label>
-                <input type="text" name="tracking_number" value="{{ old('tracking_number', $order->tracking_number) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
+                <input type="text" name="tracking_number" value="{{ old('tracking_number', $order->shipping_delivery_tracking_number) }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg" >
             </div>
         </div>
 
