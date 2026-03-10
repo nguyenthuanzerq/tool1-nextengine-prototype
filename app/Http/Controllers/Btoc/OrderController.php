@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Shop;
 use App\Services\Btoc\OrderService;
-use App\DTO\Btoc\RegisterTrackingDTO;
 use Illuminate\Support\Facades\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkInstructionExport;
@@ -64,7 +63,106 @@ class OrderController extends Controller
         // Lấy danh sách Shop để hiển thị vào thẻ <select>
         $shops = Shop::all();
 
-        return view('btoc.kanri_gamen', compact('orders', 'shops'));
+        return view('btoc.orders.index', [
+            'orders' => $orders,
+            'shops' => $shops,
+            'filters' => $request->only(['shop_id', 'status', 'date_from', 'date_to', 'keyword'])
+        ]);
+    }
+
+    /**
+     * Hiển thị trang thêm mới đơn hàng
+     */
+
+    public function create()
+    {
+        $isCreate = true;
+        $Order = new Order();
+        $shops = Shop::all();
+        return view('btoc.orders.save',[
+            'isCreate' => $isCreate,
+            'order' => $Order,
+            'shops' => $shops
+        ]);
+    }
+
+    /**
+     * Xử lý luu đơn hàng mới
+     */
+    public function store(Request $request){
+        $validated = $request->validate([
+            'receipt_receipt_id' => 'required|string|max:255|unique:orders,receipt_receipt_id',
+            'purchaser_name' => 'required|string|max:255',
+            'shop_id' => 'required|exists:shops,id',
+            'receive_order_date' => 'required|date',
+            'total_amount' => 'required|numeric|min:0',
+            'status' => 'required|string|in:pending,completed,cancelled',
+            'tracking_number' => 'nullable|string|max:255',
+        ], [
+            'receipt_receipt_id.required' => '注文IDを空白のままにすることはできません。(Mã đơn hàng không được để trống)',
+            'receipt_receipt_id.unique' => 'この注文IDは既に存在します。(Mã đơn hàng này đã tồn tại)',
+            'purchaser_name.required' => '購入者名は空欄にできません。(Tên người mua không được để trống)',
+            'shop_id.required' => '店舗を選択してください。(Vui lòng chọn cửa hàng)',
+            'shop_id.exists' => '選択された店舗は存在しません。(Cửa hàng được chọn không tồn tại)',
+            'receive_order_date.required' => '注文受け取り日は必須です。(Ngày nhận đơn hàng là bắt buộc)',
+            'receive_order_date.date' => '注文受け取り日は有効な日付でなければなりません。(Ngày nhận đơn hàng phải là ngày hợp lệ)',
+            'total_amount.required' => '合計金額は必須です。(Tổng tiền là bắt buộc)',
+            'total_amount.numeric' => '合計金額は数値でなければなりません。(Tổng tiền phải là số)',
+            'total_amount.min' => '合計金額は0以上でなければなりません。(Tổng tiền phải lớn hơn hoặc bằng 0)',
+            'status.required' => 'ステータスは必須です。(Trạng thái là bắt buộc)',
+            'status.in' => 'ステータスは有効な値でなければなりません (pending, completed, cancelled)。(Trạng thái phải là giá trị hợp lệ: pending, completed, cancelled)',
+            'tracking_number.string' => 'お問い合わせ番号は文字列でなければなりません。(Mã vận đơn phải là chuỗi)',
+            'tracking_number.max' => 'お問い合わせ番号は255文字以下でなければなりません。(Mã vận đơn không được vượt quá 255 ký tự)',
+        ]);
+
+        Order::create($validated);
+        
+        return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
+    }
+
+    public function show($id)
+    {
+        $order = Order::with(['shop', 'products'])->findOrFail($id);
+        return view('btoc.orders.show', ['order' => $order]);
+    }
+
+    public function edit($id)
+    {
+        $isCreate = false;
+        $order = Order::findOrFail($id);
+        $shops = Shop::all();
+        return view('btoc.orders.save',[
+            'isCreate' => $isCreate,
+            'order' => $order,
+            'shops' => $shops
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $validated = $request->validate([
+            'receipt_receipt_id' => 'required|string|max:255|unique:orders,receipt_receipt_id,' . $order->id,
+            'purchaser_name' => 'required|string|max:255',
+            'shop_id' => 'required|exists:shops,id',
+            'receive_order_date' => 'required|date',
+            'total_amount' => 'required|numeric|min:0',
+            'status' => 'required|string|in:pending,completed,cancelled',
+            'tracking_number' => 'nullable|string|max:255',
+        ]);
+
+        $order->update($validated);
+
+        return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
+    }
+
+    public function destroy($id)
+    {
+        $order = Order::findOrFail($id);
+        $order->delete();
+
+        return redirect()->route('btoc.orders.index')->with('success', '注文が正常に削除されました。');
     }
 
     /**
@@ -91,11 +189,7 @@ class OrderController extends Controller
     /**
      * Đồng bộ đơn hàng từ NextEngine
      */
-    public function sync(Request $request)
-    {
-        // Giai đoạn này ta giả lập phản hồi thành công trước khi ghép nối API thật
-        return redirect()->back()->with('success', 'Giả lập phản hồi thành công!');
-    }
+    
 
     /**
      * Cập nhật trạng thái xuất hàng hàng loạt
@@ -116,22 +210,22 @@ class OrderController extends Controller
         return redirect()->back()->with('success', count($orderIds) . ' 注文は「配達済み」に更新されました。');
     }
 
-    public function registerTracking(Request $request)
-    {
-        $validated = $request->validate([
-            'order_id'        => 'required|exists:orders,id',
-            'tracking_number' => 'required|string|max:255',
-        ]);
+    // public function registerTracking(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'order_id'        => 'required|exists:orders,id',
+    //         'tracking_number' => 'required|string|max:255',
+    //     ]);
 
-        $dto = new RegisterTrackingDTO(
-            (int) $validated['order_id'],
-            (string) $validated['tracking_number']
-        );
+    //     $dto = new RegisterTrackingDTO(
+    //         (int) $validated['order_id'],
+    //         (string) $validated['tracking_number']
+    //     );
 
-        $this->orderService->registerTracking($dto);
+    //     $this->orderService->registerTracking($dto);
 
-        return redirect()
-            ->route('btoc.index')
-            ->with('success', '発送番号を登録しました。');
-    }
+    //     return redirect()
+    //         ->route('btoc.index')
+    //         ->with('success', '発送番号を登録しました。');
+    // }
 }

@@ -82,13 +82,15 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     // --- 1. QUẢN LÝ SHOP ---
-    Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');             
-    Route::get('/shop/create', [ShopController::class, 'create'])->name('shop.create');    
-    Route::post('/shop', [ShopController::class, 'store'])->name('shop.store');            
-    Route::get('/shop/{id}', [ShopController::class, 'show'])->name('shop.show');          
-    Route::get('/shop/{id}/edit', [ShopController::class, 'edit'])->name('shop.edit');     
-    Route::put('/shop/{id}', [ShopController::class, 'update'])->name('shop.update');      
-    Route::delete('/shop/{id}', [ShopController::class, 'destroy'])->name('shop.destroy'); 
+    Route::prefix('shop')->name('shop.')->group(function () {
+        Route::get('/', [ShopController::class, 'index'])->name('index');
+        Route::get('/create', [ShopController::class, 'create'])->name('create');
+        Route::post('/', [ShopController::class, 'store'])->name('store');
+        Route::get('/{id}', [ShopController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ShopController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ShopController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ShopController::class, 'destroy'])->name('destroy');
+    });
 
     // --- 2. XÁC THỰC API NEXTENGINE ---
     Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
@@ -97,13 +99,20 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // --- 3. QUẢN LÝ ĐƠN HÀNG (管理画面 - KANRI GAMEN) ---
     // Hiển thị danh sách đơn hàng (Sidebar của bạn đang gọi route 'btoc.index')
-    Route::get('/', [OrderController::class, 'index'])->name('index');
-
-    // Các thao tác (Action) với đơn hàng
-    Route::post('/orders/sync', [OrderController::class, 'sync'])->name('orders.sync');                                  // Đồng bộ đơn hàng
-    Route::post('/orders/export-instruction', [OrderController::class, 'exportInstruction'])->name('orders.export');       // Xuất CSV/Excel 作業指示書
-    Route::post('/orders/shipping-notify', [OrderController::class, 'shippingNotify'])->name('orders.shipping_notify');    // Thông báo xuất hàng
-    Route::post('/orders/register-tracking', [OrderController::class, 'registerTracking'])->name('orders.register_tracking'); // Đăng ký mã vận đơn (API cũ)
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/create', [OrderController::class, 'create'])->name('create'); 
+        Route::post('/', [OrderController::class, 'store'])->name('store'); 
+        Route::get('/{id}', [OrderController::class, 'show'])->name('show'); 
+        Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit'); 
+        Route::put('/{id}', [OrderController::class, 'update'])->name('update'); 
+        Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
+    });
+    // // Các thao tác (Action) với đơn hàng
+    // Route::post('/orders/sync', [OrderController::class, 'sync'])->name('orders.sync');                                  // Đồng bộ đơn hàng
+    // Route::post('/orders/export-instruction', [OrderController::class, 'exportInstruction'])->name('orders.export');       // Xuất CSV/Excel 作業指示書
+    // Route::post('/orders/shipping-notify', [OrderController::class, 'shippingNotify'])->name('orders.shipping_notify');    // Thông báo xuất hàng
+    // Route::post('/orders/register-tracking', [OrderController::class, 'registerTracking'])->name('orders.register_tracking'); // Đăng ký mã vận đơn (API cũ)
 
     // ================= INVENTORY =================
     Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');

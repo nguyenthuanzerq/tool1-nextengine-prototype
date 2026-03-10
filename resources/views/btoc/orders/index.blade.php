@@ -43,7 +43,7 @@
 
         {{-- Bộ lọc tìm kiếm (検索条件) --}}
         <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm">
-            <form method="GET" action="{{ route('btoc.index') }}"
+            <form method="GET" action="{{ route('btoc.orders.index') }}"
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
                 {{-- Chọn Shop --}}
@@ -97,7 +97,7 @@
 
                 {{-- Nút Submit Filter --}}
                 <div class="flex items-end gap-3">
-                    <a href="{{ route('btoc.index') }}"
+                    <a href="{{ route('btoc.orders.index') }}"
                         class="w-1/3 px-4 py-2 border border-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-center transition">
                         クリア
                     </a>
@@ -137,6 +137,8 @@
                                         class="text-xs text-gray-500">Người mua</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700 text-right">合計金額<br><span
                                         class="text-xs text-gray-500">Tổng tiền</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700 text-right">追跡番号<br><span
+                                        class="text-xs text-gray-500">Tracking Number</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">ステータス<br><span
                                         class="text-xs text-gray-500">Trạng thái</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">お問い合わせ番号<br><span

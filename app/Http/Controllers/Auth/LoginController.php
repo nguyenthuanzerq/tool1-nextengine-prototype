@@ -18,7 +18,9 @@ class LoginController extends Controller
         ]);
 
         $oldSessionId = $request->session()->getId();
-        if (Auth::attempt($credentials)) { // Hàm attempt đã tự động tạo một session mới để ngăn chặn session fixation
+
+        $remember = $request->has('remember'); 
+        if (Auth::attempt($credentials, $remember)) { // Hàm attempt đã tự động tạo một session mới để ngăn chặn session fixation
             // $request->session()->regenerate(); // Tạo một session mới để ngăn chặn session fixation (tấn công chiếm đoạt session)
 
             $newSessionId = $request->session()->getId(); 
@@ -26,7 +28,7 @@ class LoginController extends Controller
             //     'Tình trạng' => 'Đăng nhập THÀNH CÔNG',
             //     'Session ID CŨ (Trước đăng nhập)' => $oldSessionId,
             //     'Session ID MỚI (Sau đăng nhập)' => $newSessionId,
-            //     'Kết luận' => $oldSessionId === $newSessionId ? '⚠️ NGUY HIỂM: Bị giữ nguyên Session cũ!' : '✅ AN TOÀN: Đã đổi Session mới!'
+            //     'Kết luận' => $oldSessionId === $newSessionId ? ' Old Session' : 'New Sesssion'
             // ]);
 
             return redirect()->intended('/btoc/dashboard'); // Hàm intended sẽ chuyển hướng người dùng đến trang họ muốn truy cập trước khi bị yêu cầu đăng nhập, nếu không có thì sẽ chuyển đến /btoc/dashboard

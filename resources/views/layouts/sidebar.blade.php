@@ -35,10 +35,10 @@
             </div>
         </a>
 
-        <a href="{{ route('btoc.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.index*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+        <a href="{{ route('btoc.orders.index') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.orders.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
             <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.index*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.orders.index') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 6h15l-2 9H8L6 6z" />
                     <path d="M6 6H3" />
