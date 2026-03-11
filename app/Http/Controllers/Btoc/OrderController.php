@@ -93,32 +93,31 @@ class OrderController extends Controller
      */
     public function store(Request $request, MailService $mailService){
         $validated = $request->validate([
-            'receipt_receipt_id' => 'required|string|max:255|unique:orders,receipt_receipt_id',
             'purchaser_name' => 'required|string|max:255',
+            'receipt_receipt_id' => 'required|string|max:255',
             'shop_id' => 'required|exists:shops,id',
             'receive_order_date' => 'required|date',
-            'total_amount' => 'required|numeric|min:0',
+            'receive_order_total_amount' => 'required|numeric|min:0',
             'status' => 'required|string|in:pending,completed,cancelled',
-            'tracking_number' => 'nullable|string|max:255',
+            // 'tracking_number' => 'nullable|string|max:255',
         ], [
-            'receipt_receipt_id.required' => '注文IDを空白のままにすることはできません。(Mã đơn hàng không được để trống)',
-            'receipt_receipt_id.unique' => 'この注文IDは既に存在します。(Mã đơn hàng này đã tồn tại)',
             'purchaser_name.required' => '購入者名は空欄にできません。(Tên người mua không được để trống)',
+            'receipt_receipt_id.required' => '受注番号は空欄にできません。(Mã đơn hàng không được để trống)',
             'shop_id.required' => '店舗を選択してください。(Vui lòng chọn cửa hàng)',
             'shop_id.exists' => '選択された店舗は存在しません。(Cửa hàng được chọn không tồn tại)',
             'receive_order_date.required' => '注文受け取り日は必須です。(Ngày nhận đơn hàng là bắt buộc)',
             'receive_order_date.date' => '注文受け取り日は有効な日付でなければなりません。(Ngày nhận đơn hàng phải là ngày hợp lệ)',
-            'total_amount.required' => '合計金額は必須です。(Tổng tiền là bắt buộc)',
-            'total_amount.numeric' => '合計金額は数値でなければなりません。(Tổng tiền phải là số)',
-            'total_amount.min' => '合計金額は0以上でなければなりません。(Tổng tiền phải lớn hơn hoặc bằng 0)',
+            'receive_order_total_amount.required' => '合計金額は必須です。(Tổng tiền là bắt buộc)',
+            'receive_order_total_amount.numeric' => '合計金額は数値でなければなりません。(Tổng tiền phải là số)',
+            'receive_order_total_amount.min' => '合計金額は0以上でなければなりません。(Tổng tiền phải lớn hơn hoặc bằng 0)',
             'status.required' => 'ステータスは必須です。(Trạng thái là bắt buộc)',
             'status.in' => 'ステータスは有効な値でなければなりません (pending, completed, cancelled)。(Trạng thái phải là giá trị hợp lệ: pending, completed, cancelled)',
-            'tracking_number.string' => 'お問い合わせ番号は文字列でなければなりません。(Mã vận đơn phải là chuỗi)',
-            'tracking_number.max' => 'お問い合わせ番号は255文字以下でなければなりません。(Mã vận đơn không được vượt quá 255 ký tự)',
+            // 'shipping_delivery_tracking_number.string' => 'お問い合わせ番号は文字列でなければなりません。(Mã vận đơn phải là chuỗi)',
+            // 'shipping_delivery_tracking_number.max' => 'お問い合わせ番号は255文字以下でなければなりません。(Mã vận đơn không được vượt quá 255 ký tự)',
         ]);
 
         $order = Order::create($validated);
-        $mailService->sendOrderCreatedMail($order);
+        // $mailService->sendOrderCreatedMail($order);
 
         return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
     }
@@ -146,13 +145,13 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         $validated = $request->validate([
-            'receipt_receipt_id' => 'required|string|max:255|unique:orders,receipt_receipt_id,' . $order->id,
             'purchaser_name' => 'required|string|max:255',
             'shop_id' => 'required|exists:shops,id',
+            'receipt_receipt_id' => 'required|string|max:255',
             'receive_order_date' => 'required|date',
             'receive_order_total_amount' => 'required|numeric|min:0',
             'status' => 'required|string|in:pending,completed,cancelled',
-            'tracking_number' => 'nullable|string|max:255',
+            'shipping_delivery_tracking_number' => 'nullable|string|max:255',
         ]);
 
         $order->update($validated);

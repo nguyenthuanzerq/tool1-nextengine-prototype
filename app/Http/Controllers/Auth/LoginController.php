@@ -31,7 +31,7 @@ class LoginController extends Controller
             //     'Kết luận' => $oldSessionId === $newSessionId ? ' Old Session' : 'New Sesssion'
             // ]);
 
-            return redirect()->intended('/btoc/dashboard'); // Hàm intended sẽ chuyển hướng người dùng đến trang họ muốn truy cập trước khi bị yêu cầu đăng nhập, nếu không có thì sẽ chuyển đến /btoc/dashboard
+            return redirect()->intended('/btoc'); // Hàm intended sẽ chuyển hướng người dùng đến trang họ muốn truy cập trước khi bị yêu cầu đăng nhập, nếu không có thì sẽ chuyển đến /btoc/dashboard
         }
 
         return back()->withErrors([

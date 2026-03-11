@@ -79,7 +79,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // ================= DASHBOARD =================
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     // --- 1. QUẢN LÝ SHOP ---
     Route::prefix('shop')->name('shop.')->group(function () {
