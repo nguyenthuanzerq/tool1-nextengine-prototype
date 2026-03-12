@@ -35,7 +35,7 @@
                                     class="text-red-500">*</span></label>
                             <input type="text" name="shop_code" value="{{ old('shop_code', $shop->shop_code) }}"
                                 {{-- {{ !$isCreate ? 'readonly' : '' }} --}}
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg {{ !$isCreate ? 'bg-gray-100' : '' }}"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg "
                                 required>
                         </div>
 
@@ -73,7 +73,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret <span
                                         class="text-red-500">*</span></label>
-                                <input type="text" name="client_secret" value=""
+                                <input type="text" name="client_secret" value="{{ old('client_secret', $shop->client_secret) }}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
                             </div>
 
