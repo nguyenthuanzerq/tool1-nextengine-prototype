@@ -9,6 +9,7 @@ use App\Http\Controllers\Btoc\ShopController;
 use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
+use App\Http\Controllers\NextEngineConectionController;
 
 // =================  DEBUG TẠM THỜI — XÓA SAU KHI FIX XONG =================
 // Truy cập: nextenginehub.com/debug-log?key=ne-debug-2026
@@ -113,7 +114,8 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     // Route::post('/orders/export-instruction', [OrderController::class, 'exportInstruction'])->name('orders.export');       // Xuất CSV/Excel 作業指示書
     // Route::post('/orders/shipping-notify', [OrderController::class, 'shippingNotify'])->name('orders.shipping_notify');    // Thông báo xuất hàng
     // Route::post('/orders/register-tracking', [OrderController::class, 'registerTracking'])->name('orders.register_tracking'); // Đăng ký mã vận đơn (API cũ)
-
+    // ================= NEXT ENGINE CONNECTION =================
+        Route::post('/shop/{id}/nextengine-connection', [NextEngineConectionController::class, 'store'])->name('shop.nextengine_connection');
     // ================= INVENTORY =================
     Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');
     Route::post('/inventory/refresh', [InventoryController::class, 'refreshInventory'])->name('inventory.refresh');

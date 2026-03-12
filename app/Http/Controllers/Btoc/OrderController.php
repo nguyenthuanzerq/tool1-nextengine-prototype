@@ -91,7 +91,7 @@ class OrderController extends Controller
     /**
      * Xử lý luu đơn hàng mới
      */
-    public function store(Request $request, MailService $mailService){
+    public function store(Request $request){
         $validated = $request->validate([
             'purchaser_name' => 'required|string|max:255',
             'receipt_receipt_id' => 'required|string|max:255',
@@ -117,8 +117,6 @@ class OrderController extends Controller
         ]);
 
         $order = Order::create($validated);
-        // $mailService->sendOrderCreatedMail($order);
-
         return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
     }
 
@@ -140,7 +138,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MailService $mailService)
     {
         $order = Order::findOrFail($id);
 
@@ -154,8 +152,14 @@ class OrderController extends Controller
             'shipping_delivery_tracking_number' => 'nullable|string|max:255',
         ]);
 
-        $order->update($validated);
+        $trackingNumberChanged = $order->shipping_delivery_tracking_number !== ($validated['shipping_delivery_tracking_number'] ?? null);
 
+        $order->update($validated);
+        
+        if ($trackingNumberChanged) {
+            $mailService->sendOrderCreatedMail($order);
+        }
+        
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
     }
 
