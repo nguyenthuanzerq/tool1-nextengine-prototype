@@ -15,46 +15,68 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-2xl">
-        <dl class="divide-y divide-gray-100">
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Mã Đơn hàng (Order Code)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receipt_receipt_id }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Tên Cửa hàng (Shop Name)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shop->shop_name }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Mã Vận chuyển (Tracking Number)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shipping_delivery_tracking_number }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Tên Khách hàng (Customer Name)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_name }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Ngày Đặt hàng (Order Date)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receive_order_date }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Tổng Tiền (Total Amount)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receive_order_total_amount }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Trạng Thái (Status)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->status }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Ngày Tạo (Created At)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->created_at }}</dd>
-            </div>
-            <div class="px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">Ngày Cập nhật (Updated At)</dt>
-                <dd class="mt-1 text-sm leading-6 text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->updated_at }}</dd>
-            </div>
-            
-        </dl>
+    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-x-8">
+        {{-- Cột 1: Thông tin đơn hàng --}}
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Thông tin Đơn hàng</h3>
+            <dl class="divide-y divide-gray-100">
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Mã Đơn hàng</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receipt_receipt_id }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Cửa hàng</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shop->shop_name ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Ngày Đặt hàng</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receive_order_date }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Tổng Tiền</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0 font-semibold text-red-600">¥{{ number_format($order->receive_order_total_amount) }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Trạng Thái</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->status }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        {{-- Cột 2: Thông tin Khách hàng & Giao hàng --}}
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Thông tin Khách hàng & Giao hàng</h3>
+            <dl class="divide-y divide-gray-100">
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">ID Người mua</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_id ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Tên Khách hàng</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_name }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Số điện thoại</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_phone ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Email</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_email ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Địa chỉ</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shipping_address ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Hãng vận chuyển</dt>
+                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->carrier_name ?? '-' }}</dd>
+                </div>
+                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+                    <dt class="text-sm font-medium text-gray-900">Mã Vận đơn</dt>
+                    <dd class="mt-1 text-sm text-blue-600 sm:col-span-2 sm:mt-0">{{ $order->shipping_delivery_tracking_number ?? '-' }}</dd>
+                </div>
+            </dl>
+        </div>
     </div>
 </div>
 @endsection

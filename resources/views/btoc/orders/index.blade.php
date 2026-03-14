@@ -23,7 +23,7 @@
             </h1>
 
             <div class="flex flex-wrap items-center gap-3">
-                
+
 
                 {{-- Các nút thao tác hàng loạt (Sẽ submit form bảng dữ liệu) --}}
                 {{-- <button type="button" onclick="submitBulkAction('{{ route('btoc.orders.export') }}')"
@@ -133,8 +133,21 @@
                                         class="text-xs text-gray-500">Mã đơn hàng</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">受注日<br><span
                                         class="text-xs text-gray-500">Ngày đặt</span></th>
+
+                                {{-- Thêm các cột mới --}}
+                                <th class="px-4 py-3 font-medium text-gray-700">注文者 ID<br><span
+                                        class="text-xs text-gray-500">ID Người mua</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">購入者名<br><span
-                                        class="text-xs text-gray-500">Người mua</span></th>
+                                        class="text-xs text-gray-500">Tên người mua</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">電話番号<br><span
+                                        class="text-xs text-gray-500">SĐT</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">メールアドレス<br><span
+                                        class="text-xs text-gray-500">Email</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700 max-w-[150px]">配送先住所<br><span
+                                        class="text-xs text-gray-500">Địa chỉ</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">配送会社<br><span
+                                        class="text-xs text-gray-500">Hãng V/C</span></th>
+
                                 <th class="px-4 py-3 font-medium text-gray-700 text-right">合計金額<br><span
                                         class="text-xs text-gray-500">Tổng tiền</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700 text-right">追跡番号<br><span
@@ -158,10 +171,20 @@
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         {{ $order->receive_order_date ? $order->receive_order_date->format('Y-m-d') : '-' }}
                                     </td>
+
+                                    {{-- Đổ dữ liệu các cột mới --}}
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_id ?? '-' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $order->purchaser_name }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_phone ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_email ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 max-w-[150px] truncate"
+                                        title="{{ $order->shipping_address }}">{{ $order->shipping_address ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->carrier_name ?? '-' }}</td>
+
                                     <td class="px-4 py-3 text-sm text-gray-900 text-right font-medium">
                                         ¥{{ number_format($order->receive_order_total_amount) }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900"> {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}</td>
                                     <td class="px-4 py-3 text-sm">
                                         @php
                                             $statusClass = match ($order->status) {
@@ -177,21 +200,19 @@
                                                 default => $order->status,
                                             };
                                         @endphp
-                                        <span class="px-2 py-1 rounded text-xs font-semibold {{ $statusClass }}">
-                                            {{ $statusLabel }}
-                                        </span>
+                                        <span
+                                            class="px-2 py-1 rounded text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         <div class="flex items-center gap-2">
-                                            <button type="button" onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'"
-                                                class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-xs font-medium transition">
-                                                詳細
-                                            </button>
-                                            <button type="button" onclick="window.location.href='{{ route('btoc.orders.edit', $order->id) }}'"
-                                                class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded text-xs font-medium transition">
-                                                編集
-                                            </button>
-                                            <button type="button" onclick="if(confirm('削除してもよろしいですか？')) { window.location.href='{{ route('btoc.orders.destroy', $order->id) }}'; }"
+                                            <button type="button"
+                                                onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'"
+                                                class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-xs font-medium transition">詳細</button>
+                                            <button type="button"
+                                                onclick="window.location.href='{{ route('btoc.orders.edit', $order->id) }}'"
+                                                class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded text-xs font-medium transition">編集</button>
+                                            <button type="button"
+                                                onclick="deleteOrder('{{ route('btoc.orders.destroy', $order->id) }}')"
                                                 class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-medium transition">
                                                 削除
                                             </button>
@@ -200,8 +221,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-12 text-center text-gray-500">
-                                        条件に一致する受注はありません。 (Không tìm thấy đơn hàng nào phù hợp)
+                                    <td colspan="14" class="px-4 py-12 text-center text-gray-500">条件に一致する受注はありません。
+                                        (Không tìm thấy đơn hàng nào phù hợp)
                                     </td>
                                 </tr>
                             @endforelse
@@ -209,7 +230,11 @@
                     </table>
                 </div>
             </form>
-
+            {{-- Form xóa dùng chung (Đặt ngoài bảng) --}}
+            <form id="master-delete-form" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
             {{-- Phân trang --}}
             @if (isset($orders) && $orders->hasPages())
                 <div class="px-6 py-4 border-t border-gray-200">
@@ -241,6 +266,15 @@
 
             form.action = actionUrl;
             form.submit();
+        }
+
+        // 3. Xử lý chức năng Xóa đơn hàng lẻ
+        function deleteOrder(actionUrl) {
+            if (confirm('削除してもよろしいですか？ (Bạn có chắc chắn muốn xóa đơn hàng này không?)')) {
+                let form = document.getElementById('master-delete-form');
+                form.action = actionUrl;
+                form.submit();
+            }
         }
     </script>
 @endsection
