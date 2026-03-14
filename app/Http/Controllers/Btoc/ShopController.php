@@ -5,286 +5,220 @@ namespace App\Http\Controllers\Btoc;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Shop;
-use App\Services\NextEngine\NextEngineAuthService;
-use App\Services\NextEngine\NextEngineClientFactory;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ShopController extends Controller
 {
-    public function __construct(
-        private NextEngineAuthService $authService,
-        private NextEngineClientFactory $clientFactory
-    ) {}
-
-    // =====================================================
-    // SHOP LIST / CRUD
-    // =====================================================
-
-    public function shops()
+    /**
+     * Hiển thị danh sách shop (index.blade.php)
+     */
+    public function index()
     {
-        $shops = Shop::all();
-        return view('btoc.shops', compact('shops'));
+        $shops = Shop::orderBy('id', 'desc')->paginate(10);
+        
+        return view('btoc.shop.index', [
+            'shops' => $shops
+        ]);
     }
 
     /**
-     * Xem chi tiết shop (read-only).
-     * URL: GET /btoc/shops/{id}
+     * Hiển thị trang chi tiết shop (detail.blade.php) 
      */
     public function show($id)
     {
         $shop = Shop::findOrFail($id);
-
-        return view('btoc.shop_detail', [
-            'shop'   => $shop,
-            'mode'   => 'show',
-            'action' => route('btoc.shop.update', $id),
+        
+        return view('btoc.shop.detail', [
+            'shop' => $shop
         ]);
     }
 
-    public function shopCreate()
+    /**
+     * Hiển thị form thêm mới shop (save.blade.php)
+     */
+    public function create()
     {
-        return view('btoc.shop_detail', [
-            'shop'   => new Shop(),
-            'mode'   => 'create',
-            'action' => route('btoc.shop.store'),
+        $isCreate = true;
+        $shop = new Shop(); 
+        
+        return view('btoc.shop.save', [
+            'isCreate' => $isCreate,
+            'shop' => $shop
         ]);
     }
 
-    public function shopEdit($id)
-    {
-        $shop = Shop::findOrFail($id);
-
-        return view('btoc.shop_detail', [
-            'shop'   => $shop,
-            'mode'   => 'edit',
-            'action' => route('btoc.shop.update', $id),
-        ]);
-    }
-
-    public function shopStore(Request $request)
+    /**
+     * Xử lý lưu shop mới
+     */
+    public function store(Request $request)
     {
         $validated = $request->validate([
-            'shop_code'     => 'required|string|max:50|unique:shops,shop_code',
+            'shop_code'     => 'required|string|max:255|unique:shops,shop_code',
             'shop_name'     => 'required|string|max:255',
-            'client_id'     => 'nullable|string|max:255',
-            'client_secret' => 'nullable|string|max:255',
+
+        ], [
+            'shop_code.required' => '店舗コードを空白のままにすることはできません。',
+            'shop_code.unique'   => 'このショップコードは既に存在します。',
+            'shop_name.required' => 'ショップ名は空欄にできません。',
         ]);
 
         Shop::create($validated);
 
-        return redirect()
-            ->route('btoc.shops')
-            ->with('success', 'ショップを登録しました。 (Shop created successfully.)');
+        // Đổi tên route thành btoc.shop.index cho đồng bộ
+        return redirect()->route('btoc.shop.index')->with('success', 'Đã thêm shop mới thành công.');
     }
 
-    public function shopUpdate(Request $request, $id)
+    /**
+     * Hiển thị form chỉnh sửa shop (save.blade.php)
+     */
+    public function edit($id)
+    {
+        $isCreate = false;
+        $shop = Shop::findOrFail($id); 
+        
+        return view('btoc.shop.save', [
+            'isCreate' => $isCreate,
+            'shop' => $shop
+        ]);
+    }
+
+    /**
+     * Xử lý cập nhật thông tin shop
+     */
+    public function update(Request $request, $id)
     {
         $shop = Shop::findOrFail($id);
 
         $validated = $request->validate([
-            'shop_code'     => 'required|string|max:50|unique:shops,shop_code,' . $shop->id,
+            'shop_code'     => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
             'shop_name'     => 'required|string|max:255',
-            'client_id'     => 'nullable|string|max:255',
-            'client_secret' => 'nullable|string|max:255',
+            // 'client_id'     => 'required|string|max:255',
+            // 'client_secret' => 'nullable|string',
         ]);
 
         $shop->update($validated);
 
-        return redirect()
-            ->route('btoc.shops')
-            ->with('success', 'ショップを更新しました。 (Shop updated successfully.)');
+        return redirect()->route('btoc.shop.index')->with('success', 'Đã cập nhật thông tin shop thành công.');
     }
 
-    // =====================================================
-    // NEXTENGINE OAUTH
-    // =====================================================
-
     /**
-     * Redirect shop sang NextEngine để xác thực lại.
-     * URL: GET /btoc/shop/{id}/re-authorize
+     * Xóa shop
      */
-    public function reAuthorize($id)
+    public function destroy($id)
     {
         $shop = Shop::findOrFail($id);
+        $shop->delete();
 
-        $clientId = $shop->client_id ?? config('services.next_engine.client_id');
-
-        $authUrl = rtrim(config('services.next_engine.base_uri'), '/')
-            . '/api_neauth'
-            . '?client_id=' . urlencode($clientId)
-            . '&state=' . $shop->id;
-
-        Log::info('NE_REAUTHORIZE_REDIRECT', [
-            'shop_id'  => $shop->id,
-            'auth_url' => $authUrl,
-        ]);
-
-        return redirect()->away($authUrl);
+        return redirect()->route('btoc.shop.index')->with('success', 'Đã xóa shop thành công.');
     }
 
     /**
-     * NextEngine gọi lại sau khi user xác thực.
-     * URL: GET /btoc/nextengine/callback?uid=...&state={shop_id}
+     * Điều hướng sang NextEngine để xác thực (OAuth2)
      */
-    public function callback(Request $request)
-    {
-        $uid    = $request->query('uid');
-        $state  = $request->query('state');
-        $shopId = (int) $state;
+    // public function reAuthorize($id)
+    // {
+    //     $shop = Shop::findOrFail($id);
 
-        if (!$uid || !$shopId) {
-            return redirect()
-                ->route('btoc.shops')
-                ->with('error', 'コールバックパラメータが不正です。(Invalid callback parameters.)');
-        }
+    //     // Lưu ID của shop đang xác thực vào Session để dùng ở bước Callback
+    //     session(['oauth_target_shop_id' => $shop->id]);
 
-        try {
-            $tokenData = $this->authService->exchangeToken($uid, $state);
+    //     // Tạo URL đăng nhập NextEngine
+    //     $query = http_build_query([
+    //         'client_id'     => $shop->client_id,
+    //         'redirect_uri'  => route('btoc.nextengine.callback'),
+    //         'response_type' => 'code',
+    //     ]);
 
-            $accessToken  = $tokenData['access_token']  ?? null;
-            $refreshToken = $tokenData['refresh_token'] ?? null;
-
-            if (!$accessToken) {
-                throw new \Exception('No access_token in response: ' . json_encode($tokenData));
-            }
-
-            $shop = Shop::findOrFail($shopId);
-            $shop->update([
-                'access_token'     => $accessToken,
-                'refresh_token'    => $refreshToken,
-                'token_expires_at' => now()->addHours(1),
-            ]);
-
-            Log::info('NE_CALLBACK_SUCCESS', ['shop_id' => $shopId]);
-
-            return redirect()
-                ->route('btoc.shops')
-                ->with('success', 'NextEngine 認証が完了しました。(Authorization successful.)');
-
-        } catch (\Exception $e) {
-            Log::error('NE_CALLBACK_ERROR', [
-                'shop_id' => $shopId,
-                'error'   => $e->getMessage(),
-            ]);
-
-            return redirect()
-                ->route('btoc.shops')
-                ->with('error', 'NextEngine 認証に失敗しました: ' . $e->getMessage());
-        }
-    }
-
-    // =====================================================
-    // CONNECTION MANAGEMENT
-    // =====================================================
+    //     return redirect("https://api.next-engine.org/oauth2/authorize?" . $query);
+    // }
 
     /**
-     * Test xem token của shop còn hoạt động không.
-     * URL: POST /btoc/shop/{id}/test-connection
+     * Nhận mã Code từ NextEngine và đổi lấy Access Token
      */
-    public function testConnection($id)
-    {
-        $shop = Shop::findOrFail($id);
+    // public function callback(Request $request)
+    // {
+    //     $shopId = session('oauth_target_shop_id');
+        
+    //     if (!$shopId) {
+    //         return redirect()->route('btoc.shops')->with('error', 'Lỗi phiên xác thực. Vui lòng thử lại.');
+    //     }
 
-        if (!$shop->access_token) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'アクセストークンが未設定です。(Access token not set.)',
-            ], 422);
-        }
+    //     $shop = Shop::findOrFail($shopId);
+    //     $code = $request->query('code');
 
-        try {
-            $client   = $this->clientFactory->make($shop);
-            $response = $client->post('/api_v1_login_user/info', [
-                'access_token'  => $shop->access_token,
-                'refresh_token' => $shop->refresh_token,
-                'wait_flag'     => 1,
-            ]);
+    //     if (!$code) {
+    //         return redirect()->route('btoc.shop.edit', $shopId)->with('error', 'Người dùng từ chối xác thực hoặc lỗi mã Code.');
+    //     }
 
-            $isSuccess = ($response['result'] ?? null) === 'success';
+    //     // Đổi code lấy Access Token qua API của NextEngine
+    //     $response = Http::asForm()->post('https://api.next-engine.org/oauth2/token', [
+    //         'client_id'     => $shop->client_id,
+    //         'client_secret' => $shop->client_secret,
+    //         'code'          => $code,
+    //         'grant_type'    => 'authorization_code',
+    //         'redirect_uri'  => route('btoc.nextengine.callback'),
+    //     ]);
 
-            Log::info('NE_TEST_CONNECTION', [
-                'shop_id' => $shop->id,
-                'result'  => $response['result'] ?? 'unknown',
-            ]);
+    //     if ($response->successful()) {
+    //         $data = $response->json();
+            
+    //         // Cập nhật Token vào Database
+    //         $shop->update([
+    //             'access_token'     => $data['access_token'],
+    //             'refresh_token'    => $data['refresh_token'] ?? null,
+    //             'token_expires_at' => Carbon::now()->addSeconds($data['expires_in'] ?? 3600), // Thời gian hết hạn
+    //         ]);
 
-            return response()->json([
-                'status'   => $isSuccess ? 'success' : 'error',
-                'message'  => $isSuccess
-                    ? '接続OK (Connection is valid.)'
-                    : 'トークンが無効または期限切れです。(Token invalid or expired.)',
-                'response' => $response,
-            ]);
+    //         session()->forget('oauth_target_shop_id'); // Xóa session sau khi dùng xong
 
-        } catch (\Exception $e) {
-            Log::error('NE_TEST_CONNECTION_ERROR', [
-                'shop_id' => $shop->id,
-                'error'   => $e->getMessage(),
-            ]);
+    //         return redirect()->route('btoc.shop.edit', $shop->id)->with('success', 'Kết nối NextEngine và lấy Token thành công!');
+    //     }
 
-            return response()->json([
-                'status'  => 'error',
-                'message' => '接続エラー: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
+    //     // Ghi log nếu có lỗi từ NextEngine API
+    //     Log::error('NEXTENGINE_AUTH_ERROR', ['response' => $response->body()]);
+    //     return redirect()->route('btoc.shop.edit', $shop->id)->with('error', 'Lỗi khi lấy Access Token từ NextEngine. Vui lòng kiểm tra lại Client Secret.');
+    // }
 
     /**
-     * Dùng refresh_token để lấy access_token mới.
-     * URL: POST /btoc/shop/{id}/refresh-token
+     * Test kết nối API tới NextEngine
      */
-    public function refreshToken($id)
-    {
-        $shop = Shop::findOrFail($id);
+    // public function testConnection($id)
+    // {
+    //     $shop = Shop::findOrFail($id);
 
-        if (!$shop->refresh_token) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'リフレッシュトークンが未設定です。再認証してください。(Refresh token not set. Please re-authorize.)',
-            ], 422);
-        }
+    //     // 1. Kiểm tra xem shop đã có token chưa
+    //     if (empty($shop->access_token)) {
+    //         return redirect()->route('btoc.shop.edit', $id)
+    //             ->with('error', 'Chưa có Access Token. Vui lòng nhấn "Re-authorize" để cấp quyền trước.');
+    //     }
 
-        try {
-            $response = Http::asForm()->post(
-                rtrim(config('services.next_engine.api_uri'), '/') . '/api_neauth',
-                [
-                    'client_id'     => $shop->client_id ?? config('services.next_engine.client_id'),
-                    'client_secret' => $shop->client_secret ?? config('services.next_engine.client_secret'),
-                    'refresh_token' => $shop->refresh_token,
-                ]
-            );
+    //     try {
+    //         // 2. Gọi thử một API đơn giản của NextEngine (ví dụ lấy thông tin user) để test token
+    //         $response = Http::asForm()->post('https://api.next-engine.org/api_v1_login_user/info', [
+    //             'access_token' => $shop->access_token
+    //         ]);
 
-            $data            = $response->json() ?? [];
-            $newAccessToken  = $data['access_token']  ?? null;
-            $newRefreshToken = $data['refresh_token']  ?? $shop->refresh_token;
+    //         // 3. Xử lý kết quả trả về
+    //         if ($response->successful() && $response->json('result') === 'success') {
+    //             return redirect()->route('btoc.shop.edit', $id)
+    //                 ->with('success', 'Kết nối thành công! Token hoàn toàn hợp lệ.');
+    //         }
 
-            if (!$newAccessToken) {
-                throw new \Exception('Refresh returned no token: ' . json_encode($data));
-            }
+    //         // Nếu thất bại (Token hết hạn hoặc sai)
+    //         Log::error('NEXTENGINE_TEST_CONN_FAILED', [
+    //             'shop_id' => $id,
+    //             'response' => $response->body()
+    //         ]);
 
-            $shop->update([
-                'access_token'     => $newAccessToken,
-                'refresh_token'    => $newRefreshToken,
-                'token_expires_at' => now()->addHours(1),
-            ]);
+    //         return redirect()->route('btoc.shop.edit', $id)
+    //             ->with('error', 'Kết nối thất bại. Token có thể đã hết hạn hoặc bị thu hồi. Vui lòng nhấn "Re-authorize".');
 
-            Log::info('NE_TOKEN_REFRESHED', ['shop_id' => $shop->id]);
-
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'トークンを更新しました。(Token refreshed successfully.)',
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('NE_REFRESH_TOKEN_ERROR', [
-                'shop_id' => $shop->id,
-                'error'   => $e->getMessage(),
-            ]);
-
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'トークン更新に失敗しました: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         Log::error('NEXTENGINE_TEST_CONN_EXCEPTION', ['message' => $e->getMessage()]);
+    //         return redirect()->route('btoc.shop.edit', $id)
+    //             ->with('error', 'Lỗi hệ thống khi gọi API: ' . $e->getMessage());
+    //     }
+    // }
 }

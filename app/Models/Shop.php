@@ -2,41 +2,30 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shop extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'shop_code',
         'shop_name',
-        'nextengine_domain',
         'client_id',
         'client_secret',
         'access_token',
         'refresh_token',
-        'token_expires_at',
-        'status',
+        'token_expires_at'
     ];
 
-    public function orders(): HasMany
+    protected function casts(): array
     {
-        return $this->hasMany(Order::class);
+        return [
+            'client_secret'    => 'encrypted',
+            'access_token'     => 'encrypted',
+            'refresh_token'    => 'encrypted',
+            'token_expires_at' => 'datetime',
+        ];
     }
-    
-   public function getConnectionStatusAttribute(): string
-{
-    if (!$this->access_token || !$this->token_expires_at) {
-        return 'disconnected';
-    }
-
-    if ($this->token_expires_at->isPast()) {
-        return 'expired';
-    }
-
-    return 'connected';
-}
-protected $casts = [
-    'token_expires_at' => 'datetime',
-];
 }

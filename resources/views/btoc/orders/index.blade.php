@@ -23,7 +23,7 @@
             </h1>
 
             <div class="flex flex-wrap items-center gap-3">
-                
+
 
                 {{-- Các nút thao tác hàng loạt (Sẽ submit form bảng dữ liệu) --}}
                 {{-- <button type="button" onclick="submitBulkAction('{{ route('btoc.orders.export') }}')"
@@ -43,7 +43,7 @@
 
         {{-- Bộ lọc tìm kiếm (検索条件) --}}
         <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm">
-            <form method="GET" action="{{ route('btoc.index') }}"
+            <form method="GET" action="{{ route('btoc.orders.index') }}"
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
                 {{-- Chọn Shop --}}
@@ -97,7 +97,7 @@
 
                 {{-- Nút Submit Filter --}}
                 <div class="flex items-end gap-3">
-                    <a href="{{ route('btoc.index') }}"
+                    <a href="{{ route('btoc.orders.index') }}"
                         class="w-1/3 px-4 py-2 border border-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-center transition">
                         クリア
                     </a>
@@ -133,14 +133,29 @@
                                         class="text-xs text-gray-500">Mã đơn hàng</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">受注日<br><span
                                         class="text-xs text-gray-500">Ngày đặt</span></th>
+
+                                {{-- Thêm các cột mới --}}
+                                <th class="px-4 py-3 font-medium text-gray-700">注文者 ID<br><span
+                                        class="text-xs text-gray-500">ID Người mua</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">購入者名<br><span
-                                        class="text-xs text-gray-500">Người mua</span></th>
+                                        class="text-xs text-gray-500">Tên người mua</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">電話番号<br><span
+                                        class="text-xs text-gray-500">SĐT</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">メールアドレス<br><span
+                                        class="text-xs text-gray-500">Email</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700 max-w-[150px]">配送先住所<br><span
+                                        class="text-xs text-gray-500">Địa chỉ</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">配送会社<br><span
+                                        class="text-xs text-gray-500">Hãng V/C</span></th>
+
                                 <th class="px-4 py-3 font-medium text-gray-700 text-right">合計金額<br><span
                                         class="text-xs text-gray-500">Tổng tiền</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700 text-right">追跡番号<br><span
+                                        class="text-xs text-gray-500">Tracking Number</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">ステータス<br><span
                                         class="text-xs text-gray-500">Trạng thái</span></th>
                                 <th class="px-4 py-3 font-medium text-gray-700">お問い合わせ番号<br><span
-                                        class="text-xs text-gray-500">Mã vận đơn</span></th>
+                                        class="text-xs text-gray-500">Hành động</span></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200">
@@ -156,9 +171,20 @@
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         {{ $order->receive_order_date ? $order->receive_order_date->format('Y-m-d') : '-' }}
                                     </td>
+
+                                    {{-- Đổ dữ liệu các cột mới --}}
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_id ?? '-' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $order->purchaser_name }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_phone ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_email ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600 max-w-[150px] truncate"
+                                        title="{{ $order->shipping_address }}">{{ $order->shipping_address ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->carrier_name ?? '-' }}</td>
+
                                     <td class="px-4 py-3 text-sm text-gray-900 text-right font-medium">
                                         ¥{{ number_format($order->receive_order_total_amount) }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}</td>
                                     <td class="px-4 py-3 text-sm">
                                         @php
                                             $statusClass = match ($order->status) {
@@ -174,18 +200,29 @@
                                                 default => $order->status,
                                             };
                                         @endphp
-                                        <span class="px-2 py-1 rounded text-xs font-semibold {{ $statusClass }}">
-                                            {{ $statusLabel }}
-                                        </span>
+                                        <span
+                                            class="px-2 py-1 rounded text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-600 font-mono">
-                                        {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        <div class="flex items-center gap-2">
+                                            <button type="button"
+                                                onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'"
+                                                class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-xs font-medium transition">詳細</button>
+                                            <button type="button"
+                                                onclick="window.location.href='{{ route('btoc.orders.edit', $order->id) }}'"
+                                                class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-600 rounded text-xs font-medium transition">編集</button>
+                                            <button type="button"
+                                                onclick="deleteOrder('{{ route('btoc.orders.destroy', $order->id) }}')"
+                                                class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-medium transition">
+                                                削除
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-4 py-12 text-center text-gray-500">
-                                        条件に一致する受注はありません。 (Không tìm thấy đơn hàng nào phù hợp)
+                                    <td colspan="14" class="px-4 py-12 text-center text-gray-500">条件に一致する受注はありません。
+                                        (Không tìm thấy đơn hàng nào phù hợp)
                                     </td>
                                 </tr>
                             @endforelse
@@ -193,7 +230,11 @@
                     </table>
                 </div>
             </form>
-
+            {{-- Form xóa dùng chung (Đặt ngoài bảng) --}}
+            <form id="master-delete-form" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
             {{-- Phân trang --}}
             @if (isset($orders) && $orders->hasPages())
                 <div class="px-6 py-4 border-t border-gray-200">
@@ -225,6 +266,15 @@
 
             form.action = actionUrl;
             form.submit();
+        }
+
+        // 3. Xử lý chức năng Xóa đơn hàng lẻ
+        function deleteOrder(actionUrl) {
+            if (confirm('削除してもよろしいですか？ (Bạn có chắc chắn muốn xóa đơn hàng này không?)')) {
+                let form = document.getElementById('master-delete-form');
+                form.action = actionUrl;
+                form.submit();
+            }
         }
     </script>
 @endsection
