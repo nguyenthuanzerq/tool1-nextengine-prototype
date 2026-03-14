@@ -38,8 +38,6 @@ return [
     'next_engine' => [
         'base_uri' => env('NEXT_ENGINE_BASE_URI'),
         'api_uri' => env('NEXT_ENGINE_API_URI'),
-        'client_id' => env('NEXT_ENGINE_CLIENT_ID'),
-        'client_secret' => env('NEXT_ENGINE_CLIENT_SECRET'),
         'redirect_uri' => env('NEXT_ENGINE_REDIRECT_URI'),
     ],
 
