@@ -20,21 +20,23 @@
                 <div class="text-xs text-gray-500">Bảng điều khiển</div>
             </div>
         </a>
+        @can('view-shop')
+            <a href="{{ route('btoc.shop.index') }}"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+                <span
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 21h18M4 21V7l8-4 8 4v14M9 21v-8h6v8" />
+                    </svg>
+                </span>
+                <div class="leading-tight">
+                    <div class="font-semibold">ショップ管理</div>
+                    <div class="text-xs text-gray-500">Quản lý Shop</div>
+                </div>
+            </a>
+        @endcan
 
-        <a href="{{ route('btoc.shop.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
-            <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 21h18M4 21V7l8-4 8 4v14M9 21v-8h6v8" />
-                </svg>
-            </span>
-            <div class="leading-tight">
-                <div class="font-semibold">ショップ管理</div>
-                <div class="text-xs text-gray-500">Quản lý Shop</div>
-            </div>
-        </a>
-
+        @can('view-order')
         <a href="{{ route('btoc.orders.index') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.orders.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
             <span
@@ -51,6 +53,8 @@
                 <div class="text-xs text-gray-500">Quản lý đơn hàng</div>
             </div>
         </a>
+        @endcan
+
 
         <a href="{{ route('btoc.inventory') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.inventory*')
@@ -68,7 +72,25 @@
                 <div class="text-xs text-gray-500">Tồn kho &amp; Xuất hàng</div>
             </div>
         </a>
-        
+
+        @can('manage-user')
+        <a href="{{ route('btoc.users.index') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.users.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+            <span
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.users.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+            </span>
+            <div class="leading-tight">
+                <div class="font-semibold">スタッフ管理</div>
+                <div class="text-xs text-gray-500">Quản lý Nhân viên</div>
+            </div>
+        </a>
+        @endcan
+
         {{-- Cấu hình email --}}
         {{-- <a href="{{ route('btoc.email.settings') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.email.settings*')

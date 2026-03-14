@@ -9,6 +9,7 @@ use App\Http\Controllers\Btoc\ShopController;
 use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
+use App\Http\Controllers\Btoc\UserController;
 use App\Http\Controllers\NextEngineConectionController;
 
 // =================  DEBUG TẠM THỜI — XÓA SAU KHI FIX XONG =================
@@ -84,13 +85,13 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // --- 1. QUẢN LÝ SHOP ---
     Route::prefix('shop')->name('shop.')->group(function () {
-        Route::get('/', [ShopController::class, 'index'])->name('index');
-        Route::get('/create', [ShopController::class, 'create'])->name('create');
-        Route::post('/', [ShopController::class, 'store'])->name('store');
-        Route::get('/{id}', [ShopController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [ShopController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [ShopController::class, 'update'])->name('update');
-        Route::delete('/{id}', [ShopController::class, 'destroy'])->name('destroy');
+        Route::get('/', [ShopController::class, 'index'])->name('index')->middleware('permission:view-shop');
+        Route::get('/create', [ShopController::class, 'create'])->name('create')->middleware('permission:manage-shop');
+        Route::post('/', [ShopController::class, 'store'])->name('store')->middleware('permission:manage-shop');
+        Route::get('/{id}', [ShopController::class, 'show'])->name('show')->middleware('permission:view-shop');
+        Route::get('/{id}/edit', [ShopController::class, 'edit'])->name('edit')->middleware('permission:manage-shop');
+        Route::put('/{id}', [ShopController::class, 'update'])->name('update')->middleware('permission:manage-shop');
+        Route::delete('/{id}', [ShopController::class, 'destroy'])->name('destroy')->middleware('permission:manage-shop');
     });
 
     // --- 2. XÁC THỰC API NEXTENGINE ---
@@ -101,13 +102,13 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     // --- 3. QUẢN LÝ ĐƠN HÀNG (管理画面 - KANRI GAMEN) ---
     // Hiển thị danh sách đơn hàng (Sidebar của bạn đang gọi route 'btoc.index')
     Route::prefix('orders')->name('orders.')->group(function () {
-        Route::get('/', [OrderController::class, 'index'])->name('index');
-        Route::get('/create', [OrderController::class, 'create'])->name('create'); 
-        Route::post('/', [OrderController::class, 'store'])->name('store'); 
-        Route::get('/{id}', [OrderController::class, 'show'])->name('show'); 
-        Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit'); 
-        Route::put('/{id}', [OrderController::class, 'update'])->name('update'); 
-        Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
+        Route::get('/', [OrderController::class, 'index'])->name('index')->middleware('permission:view-order');
+        Route::get('/create', [OrderController::class, 'create'])->name('create')->middleware('permission:create-order');
+        Route::post('/', [OrderController::class, 'store'])->name('store')->middleware('permission:create-order');
+        Route::get('/{id}', [OrderController::class, 'show'])->name('show')->middleware('permission:view-order');
+        Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit')->middleware('permission:edit-order');
+        Route::put('/{id}', [OrderController::class, 'update'])->name('update')->middleware('permission:edit-order');
+        Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy')->middleware('permission:delete-order');
     });
     // // Các thao tác (Action) với đơn hàng
     // Route::post('/orders/sync', [OrderController::class, 'sync'])->name('orders.sync');                                  // Đồng bộ đơn hàng
@@ -115,7 +116,16 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
     // Route::post('/orders/shipping-notify', [OrderController::class, 'shippingNotify'])->name('orders.shipping_notify');    // Thông báo xuất hàng
     // Route::post('/orders/register-tracking', [OrderController::class, 'registerTracking'])->name('orders.register_tracking'); // Đăng ký mã vận đơn (API cũ)
     // ================= NEXT ENGINE CONNECTION =================
-        Route::post('/shop/{id}/nextengine-connection', [NextEngineConectionController::class, 'store'])->name('shop.nextengine_connection');
+    Route::post('/shop/{id}/nextengine-connection', [NextEngineConectionController::class, 'store'])->name('shop.nextengine_connection');
+    // ================= USER MANAGEMENT (QUẢN LÝ NHÂN VIÊN) =================
+    Route::middleware(['auth', 'permission:manage-user'])->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+        Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle_status');
+    });
     // ================= INVENTORY =================
     Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');
     Route::post('/inventory/refresh', [InventoryController::class, 'refreshInventory'])->name('inventory.refresh');
