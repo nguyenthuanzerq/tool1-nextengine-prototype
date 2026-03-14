@@ -17,8 +17,13 @@ class Order extends Model
         'receive_order_date',
         'receive_order_total_amount',
         'purchaser_name',
+        'purchaser_id',
+        'shipping_address',
+        'purchaser_phone',
+        'purchaser_email',
         'receive_order_order_status_id',
         'shipping_delivery_tracking_number',
+        'carrier_name',
         'status', 
         'shipped_at'
     ];

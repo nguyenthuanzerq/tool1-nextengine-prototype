@@ -141,7 +141,6 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // // ================= NEXT ENGINE CALLBACK =================
     // Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
-    // Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
 
     // // ================ TEST CONNECTION & REFRESH TOKEN =================
     // Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
@@ -152,3 +151,7 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 // ================= API (KHÔNG prefix btoc) =================
 Route::post('/orders/sync-next-engine', [OrderController::class, 'syncNextEngine'])
     ->name('orders.sync-next-engine');
+
+Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+Route::get('/nextengine/connect', [ShopController::class, 'connect'])->name('nextengine.connect');;
+

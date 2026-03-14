@@ -23,9 +23,6 @@ class Shop extends Model
     protected function casts(): array
     {
         return [
-            'client_secret'    => 'encrypted',
-            'access_token'     => 'encrypted',
-            'refresh_token'    => 'encrypted',
             'token_expires_at' => 'datetime',
         ];
     }
