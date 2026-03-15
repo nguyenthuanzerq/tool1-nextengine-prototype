@@ -105,10 +105,10 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
         Route::get('/create', [OrderController::class, 'create'])->name('create'); 
         Route::post('/', [OrderController::class, 'store'])->name('store'); 
-        Route::get('/{id}', [OrderController::class, 'show'])->name('show'); 
-        Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit'); 
+        // Route::get('/{id}', [OrderController::class, 'show'])->name('show'); 
+        // Route::get('/{id}/edit', [OrderController::class, 'edit'])->name('edit'); 
         Route::put('/{id}', [OrderController::class, 'update'])->name('update'); 
-        Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
+        // Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
     });
     // // Các thao tác (Action) với đơn hàng
     // Route::post('/orders/sync', [OrderController::class, 'sync'])->name('orders.sync');                                  // Đồng bộ đơn hàng

@@ -259,7 +259,9 @@
                                     </td>
 
                                     <td class="px-4 py-3 text-sm text-gray-900">
-                                        {{ $order->tracking_number ?? '-' }}
+                                        <input type="text" id="tracking_number_{{ $order->id }}"
+                                            value="{{ $order->tracking_number ?? '' }}" placeholder="Nhập mã vận đơn"
+                                            class="w-32 border border-gray-300 rounded py-1.5 px-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                                     </td>
 
                                     <td class="px-4 py-3 text-sm">
@@ -272,7 +274,7 @@
 
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         <div class="flex items-center gap-2">
-                                            <button type="button"
+                                            {{-- <button type="button"
                                                 onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'"
                                                 class="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded text-xs font-medium transition">詳細</button>
                                             <button type="button"
@@ -282,6 +284,11 @@
                                                 onclick="deleteOrder('{{ route('btoc.orders.destroy', $order->id) }}')"
                                                 class="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-medium transition">
                                                 削除
+                                            </button> --}}
+                                            <button type="button"
+                                                onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')"
+                                                class="px-3 py-1.5 bg-gray-800 hover:bg-black text-white rounded text-xs font-medium transition shadow-sm">
+                                                登録 (Đăng ký)
                                             </button>
                                         </div>
                                     </td>
@@ -342,6 +349,56 @@
                 form.action = actionUrl;
                 form.submit();
             }
+        }
+
+        // Function to handle the update action
+        function updateTrackingNumber(orderId, updateUrl) {
+            const trackingInput = document.getElementById(`tracking_number_${orderId}`);
+            const trackingNumber = trackingInput.value.trim();
+
+            if (!trackingNumber) {
+                alert('追跡番号を入力してください。(Vui lòng nhập mã vận đơn)');
+                return;
+            }
+
+            // Lấy CSRF Token (Ưu tiên thẻ meta, dự phòng lấy từ input form)
+            const metaToken = document.querySelector('meta[name="csrf-token"]');
+            const inputToken = document.querySelector('input[name="_token"]');
+            const csrfToken = metaToken ? metaToken.getAttribute('content') : (inputToken ? inputToken.value : '');
+
+            if (!csrfToken) {
+                alert('Lỗi bảo mật: Không tìm thấy CSRF Token trên trang.');
+                return;
+            }
+
+            // Send AJAX request to update the tracking number
+            fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    tracking_number: trackingNumber
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Lỗi mạng hoặc server');
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // alert('追跡番号が正常に登録されました。(Đã lưu mã vận đơn thành công!)');
+                    location.reload(); 
+                } else {
+                    alert('追跡番号の更新中にエラーが発生しました。(Đã xảy ra lỗi khi lưu)');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('サーバーエラーが発生しました。(Đã xảy ra lỗi máy chủ)');
+            });
         }
     </script>
 @endsection

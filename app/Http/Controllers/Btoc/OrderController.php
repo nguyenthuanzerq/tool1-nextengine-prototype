@@ -51,9 +51,14 @@ class OrderController extends Controller
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
                 $q->where('receive_order_id', 'like', "%{$keyword}%")
-                  ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
+                    ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
             });
         }
+
+        // Lọc ra những order có trường tracking_number là rỗng
+        $query->where(function ($q) {
+            $q->whereNull('tracking_number')->orWhere('tracking_number', '');
+        });
 
         $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
 
@@ -75,7 +80,7 @@ class OrderController extends Controller
         $isCreate = true;
         $Order = new Order();
         $shops = Shop::all();
-        return view('btoc.orders.save',[
+        return view('btoc.orders.save', [
             'isCreate' => $isCreate,
             'order' => $Order,
             'shops' => $shops
@@ -85,7 +90,8 @@ class OrderController extends Controller
     /**
      * Xử lý luu đơn hàng mới
      */
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
             'purchaser_name' => 'required|string|max:255',
             'receipt_receipt_id' => 'required|string|max:255',
@@ -137,22 +143,45 @@ class OrderController extends Controller
     public function edit($id)
     {
         $order = NextEngineOrder::with('shop')->findOrFail($id);
-        return view('btoc.orders.save',[
+        return view('btoc.orders.save', [
             'order' => $order
         ]);
     }
 
+    // public function update(Request $request, $id, MailService $mailService)
+    // {
+    //     $order = NextEngineOrder::findOrFail($id);
+
+    //     $validated = $request->validate([
+    //         'tracking_number' => 'nullable|string|max:255',
+    //     ]);
+
+    //     $order->update($validated);
+    //     $mailService->sendOrderCreatedMail($order);
+
+    //     return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
+    // }
+
+    // Trường update lại tracking number tại danh sách đơn hàng
     public function update(Request $request, $id, MailService $mailService)
     {
         $order = NextEngineOrder::findOrFail($id);
-    
+
+        // Validation lại cho đúng key gửi từ Javascript
         $validated = $request->validate([
-            'tracking_number' => 'nullable|string|max:255',
+            'tracking_number' => 'required|string|max:255',
         ]);
-        
+
         $order->update($validated);
-        $mailService->sendOrderCreatedMail($order);
-    
+
+        // Gửi mail (Nếu cần)
+        // $mailService->sendOrderCreatedMail($order);
+
+        // Nếu Request gọi từ Javascript (fetch/AJAX), trả về JSON
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Lưu thành công']);
+        }
+
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
     }
 
@@ -188,7 +217,7 @@ class OrderController extends Controller
     /**
      * Đồng bộ đơn hàng từ NextEngine
      */
-    
+
 
     /**
      * Cập nhật trạng thái xuất hàng hàng loạt
@@ -228,5 +257,4 @@ class OrderController extends Controller
             ->route('btoc.index')
             ->with('success', '発送番号を登録しました。');
     }
-
 }
