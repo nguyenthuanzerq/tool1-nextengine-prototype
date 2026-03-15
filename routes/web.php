@@ -10,6 +10,7 @@ use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\EmailSettingController;
 use App\Http\Controllers\NextEngineConectionController;
+use App\Http\Controllers\NextEngineOrderController;
 
 // =================  DEBUG TẠM THỜI — XÓA SAU KHI FIX XONG =================
 // Truy cập: nextenginehub.com/debug-log?key=ne-debug-2026
@@ -144,4 +145,4 @@ Route::post('/orders/sync-next-engine', [OrderController::class, 'syncNextEngine
 
 Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
 Route::get('/nextengine/connect', [ShopController::class, 'connect'])->name('nextengine.connect');;
-
+Route::get('/nextengine/sync/order', [ShopController::class, 'syncOrder'])->name('nextengine.sync.order');

@@ -25,4 +25,9 @@ class Shop extends Model
             'token_expires_at' => 'datetime',
         ];
     }
+
+    public function nextEngineOrders()
+    {
+        return $this->hasMany(NextEngineOrder::class);
+    }
 }

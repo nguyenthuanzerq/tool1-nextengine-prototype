@@ -34,9 +34,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">ショップコード (Mã Shop) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="shop_code" value="{{ old('shop_code', $shop->shop_code) }}"
-                                {{-- {{ !$isCreate ? 'readonly' : '' }} --}}
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg "
-                                required>
+                                {{-- {{ !$isCreate ? 'readonly' : '' }} --}} class="w-full px-3 py-2 border border-gray-300 rounded-lg " required>
                         </div>
 
                         <div>
@@ -73,27 +71,24 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Client Secret <span
                                         class="text-red-500">*</span></label>
-                                <input type="text" name="client_secret" value="{{ old('client_secret', $shop->client_secret) }}"
+                                <input type="text" name="client_secret"
+                                    value="{{ old('client_secret', $shop->client_secret) }}"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Access Token
                                 </label>
-                                <input type="text"
-                                    value="{{ $shop->access_token }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    readonly>
+                                <input type="text" value="{{ $shop->access_token }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
                             </div>
-                            
+
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Refresh Token
                                 </label>
-                                <input type="text"
-                                    value="{{ $shop->refresh_token }}"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    readonly>
+                                <input type="text" value="{{ $shop->refresh_token }}"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
                             </div>
 
                         </div>
@@ -106,10 +101,19 @@
                         </div>
                         <div class="flex gap-3 mt-4">
                             <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
-                               class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
                                 NextEngine 接続 (Kết nối NextEngine)
                             </a>
                         </div>
+                        @if ($shop->access_token)
+                            <div class="flex gap-3 mt-4">
+                                <a href="{{ route('nextengine.sync.order', ['id' => $shop->id]) }}"
+                                    class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                    NextEngine 注文同期 (Sync Order NextEngine)
+                                </a>
+                            </div>
+                        @endif
+
                     </form>
                 </div>
             @endif

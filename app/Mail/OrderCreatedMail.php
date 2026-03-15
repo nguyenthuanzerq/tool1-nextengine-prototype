@@ -2,7 +2,7 @@
 
 namespace App\Mail;
 
-use App\Models\Order;
+use App\Models\NextEngineOrder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -14,11 +14,11 @@ class OrderCreatedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Order $order;
+    public NextEngineOrder $order;
     /**
      * Create a new message instance.
      */
-    public function __construct(Order $order)
+    public function __construct(NextEngineOrder $order)
     {
         $this->order = $order;
     }

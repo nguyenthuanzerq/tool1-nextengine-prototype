@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Response;
 use App\Exports\WorkInstructionExport;
 use App\Services\Btoc\MailService;
 use Vtiful\Kernel\Excel;
+use App\Models\NextEngineOrder;
 
 
 class OrderController extends Controller
@@ -28,41 +29,34 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Order::with(['shop', 'products']);
+        $query = NextEngineOrder::with('shop');
 
-        // 1. Lọc theo Shop
         if ($request->filled('shop_id')) {
             $query->where('shop_id', $request->shop_id);
         }
 
-        // 2. Lọc theo Trạng thái
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($request->status) {
+            $query->where('receive_order_order_status_id', $request->status);
         }
 
-        // 3. Lọc theo Ngày đặt hàng (Từ ngày)
         if ($request->filled('date_from')) {
-            $query->whereDate('receive_order_date', '>=', $request->date_from);
+            $query->whereDate('receive_order_import_date', '>=', $request->date_from);
         }
 
-        // 4. Lọc theo Ngày đặt hàng (Đến ngày)
         if ($request->filled('date_to')) {
             $query->whereDate('receive_order_date', '<=', $request->date_to);
         }
 
-        // 5. Lọc theo Từ khóa (Tìm trong Mã đơn hoặc Tên người mua)
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
-                $q->where('receipt_receipt_id', 'like', "%{$keyword}%")
-                    ->orWhere('purchaser_name', 'like', "%{$keyword}%");
+                $q->where('receive_order_id', 'like', "%{$keyword}%")
+                  ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
             });
         }
 
-        // Sắp xếp đơn mới nhất lên đầu và phân trang (20 đơn/trang)
         $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
 
-        // Lấy danh sách Shop để hiển thị vào thẻ <select>
         $shops = Shop::all();
 
         return view('btoc.orders.index', [
@@ -136,55 +130,35 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        $order = Order::with(['shop', 'products'])->findOrFail($id);
+        $order = NextEngineOrder::with('shop')->findOrFail($id);
         return view('btoc.orders.detail', ['order' => $order]);
     }
 
     public function edit($id)
     {
-        $isCreate = false;
-        $order = Order::findOrFail($id);
-        $shops = Shop::all();
+        $order = NextEngineOrder::with('shop')->findOrFail($id);
         return view('btoc.orders.save',[
-            'isCreate' => $isCreate,
-            'order' => $order,
-            'shops' => $shops
+            'order' => $order
         ]);
     }
 
     public function update(Request $request, $id, MailService $mailService)
     {
-        $order = Order::findOrFail($id);
-
+        $order = NextEngineOrder::findOrFail($id);
+    
         $validated = $request->validate([
-            'purchaser_name' => 'required|string|max:255',
-            'shop_id' => 'required|exists:shops,id',
-            'receipt_receipt_id' => 'required|string|max:255',
-            'receive_order_date' => 'required|date',
-            'receive_order_total_amount' => 'required|numeric|min:0',
-            'status' => 'required|string|in:pending,completed,cancelled',
-            'shipping_delivery_tracking_number' => 'nullable|string|max:255',
-            'carrier_name' => 'nullable|string|max:255',
-            'purchaser_id' => 'nullable|string|max:255',
-            'shipping_address' => 'nullable|string',
-            'purchaser_phone' => 'nullable|string|max:50',
-            'purchaser_email' => 'nullable|email|max:255',
+            'tracking_number' => 'nullable|string|max:255',
         ]);
-
-        $trackingNumberChanged = $order->shipping_delivery_tracking_number !== ($validated['shipping_delivery_tracking_number'] ?? null);
-
+        
         $order->update($validated);
-        
-        if ($trackingNumberChanged) {
-            $mailService->sendOrderCreatedMail($order);
-        }
-        
+        $mailService->sendOrderCreatedMail($order);
+    
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
     }
 
     public function destroy($id)
     {
-        $order = Order::findOrFail($id);
+        $order = NextEngineOrder::findOrFail($id);
         $order->delete();
 
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に削除されました。');

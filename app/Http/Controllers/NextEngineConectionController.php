@@ -18,6 +18,6 @@ class NextEngineConectionController extends Controller
         
         $shop->update($validated);
         
-        return redirect()->route('btoc.shop.index')->with('success', 'ショップ情報が正常に更新されました。');
+        return redirect()->route("btoc.shop.edit", ['id' => $shop->id]);
     }
 }

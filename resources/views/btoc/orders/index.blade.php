@@ -34,10 +34,6 @@
                     class="px-4 py-2 bg-[#00B900] hover:bg-[#00A000] text-white rounded-lg text-sm font-medium transition shadow-sm">
                     出荷通知 (Thông báo giao hàng)
                 </button> --}}
-                <button type="button" onclick="window.location.href='{{ route('btoc.orders.create') }}'"
-                    class="px-4 py-2 bg-[#00B900] hover:bg-[#00A000] text-white rounded-lg text-sm font-medium transition shadow-sm">
-                    注文を追加 (Thêm đơn hàng )
-                </button>
             </div>
         </div>
 
@@ -62,16 +58,50 @@
 
                 {{-- Trạng thái --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ステータス (Trạng thái)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        ステータス (Trạng thái)
+                    </label>
+
                     <select name="status"
                         class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
+
                         <option value="">すべて (Tất cả)</option>
-                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>新規受付 (Mới nhận)
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_IMPORT_INFO_LACK }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_IMPORT_INFO_LACK ? 'selected' : '' }}>
+                            取込情報不足
                         </option>
-                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>印刷待ち (Chờ in)
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_EMAIL_IMPORTED }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_EMAIL_IMPORTED ? 'selected' : '' }}>
+                            受注メール取込済
                         </option>
-                        <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>出荷済み (Đã giao)
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_CREATED }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_CREATED ? 'selected' : '' }}>
+                            起票済(CSV/手入力)
                         </option>
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_WAITING }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_WAITING ? 'selected' : '' }}>
+                            納品書印刷待ち
+                        </option>
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTING }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTING ? 'selected' : '' }}>
+                            納品書印刷中
+                        </option>
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTED }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTED ? 'selected' : '' }}>
+                            納品書印刷済
+                        </option>
+
+                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_SHIPMENT_COMPLETED }}"
+                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_SHIPMENT_COMPLETED ? 'selected' : '' }}>
+                            出荷確定済（完了）
+                        </option>
+
                     </select>
                 </div>
 
@@ -127,33 +157,54 @@
                                     <input type="checkbox" id="check-all"
                                         class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                 </th>
-                                <th class="px-4 py-3 font-medium text-gray-700">店舗<br><span
-                                        class="text-xs text-gray-500">Shop</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">受注番号<br><span
-                                        class="text-xs text-gray-500">Mã đơn hàng</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">受注日<br><span
-                                        class="text-xs text-gray-500">Ngày đặt</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    店舗<br><span class="text-xs text-gray-500">Shop</span>
+                                </th>
 
-                                {{-- Thêm các cột mới --}}
-                                <th class="px-4 py-3 font-medium text-gray-700">注文者 ID<br><span
-                                        class="text-xs text-gray-500">ID Người mua</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">購入者名<br><span
-                                        class="text-xs text-gray-500">Tên người mua</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">電話番号<br><span
-                                        class="text-xs text-gray-500">SĐT</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">メールアドレス<br><span
-                                        class="text-xs text-gray-500">Email</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700 max-w-[150px]">配送先住所<br><span
-                                        class="text-xs text-gray-500">Địa chỉ</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">配送会社<br><span
-                                        class="text-xs text-gray-500">Hãng V/C</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    受注番号<br><span class="text-xs text-gray-500">Order ID</span>
+                                </th>
 
-                                <th class="px-4 py-3 font-medium text-gray-700 text-right">合計金額<br><span
-                                        class="text-xs text-gray-500">Tổng tiền</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700 text-right">追跡番号<br><span
-                                        class="text-xs text-gray-500">Tracking Number</span></th>
-                                <th class="px-4 py-3 font-medium text-gray-700">ステータス<br><span
-                                        class="text-xs text-gray-500">Trạng thái</span></th>
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    受注日<br><span class="text-xs text-gray-500">Order Date</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    購入者<br><span class="text-xs text-gray-500">Customer</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    顧客区分<br><span class="text-xs text-gray-500">Customer Type</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700 max-w-[200px]">
+                                    住所<br><span class="text-xs text-gray-500">Address</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    支払方法<br><span class="text-xs text-gray-500">Payment</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    配送方法<br><span class="text-xs text-gray-500">Delivery</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700 text-right">
+                                    商品金額<br><span class="text-xs text-gray-500">Goods</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700 text-right">
+                                    送料<br><span class="text-xs text-gray-500">Shipping</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    お問い合わせ番号<br>
+                                    <span class="text-xs text-gray-500">Tracking Number</span>
+                                </th>
+
+                                <th class="px-4 py-3 font-medium text-gray-700">
+                                    ステータス<br><span class="text-xs text-gray-500">Status</span>
+                                </th>
                                 <th class="px-4 py-3 font-medium text-gray-700">お問い合わせ番号<br><span
                                         class="text-xs text-gray-500">Hành động</span></th>
                             </tr>
@@ -165,44 +216,60 @@
                                         <input type="checkbox" name="order_ids[]" value="{{ $order->id }}"
                                             class="order-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">{{ $order->shop->shop_name ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-blue-600 font-medium cursor-pointer hover:underline">
-                                        {{ $order->receipt_receipt_id }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">
-                                        {{ $order->receive_order_date ? $order->receive_order_date->format('Y-m-d') : '-' }}
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        {{ $order->shop->shop_name ?? '-' }}
                                     </td>
 
-                                    {{-- Đổ dữ liệu các cột mới --}}
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_id ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">{{ $order->purchaser_name }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_phone ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->purchaser_email ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600 max-w-[150px] truncate"
-                                        title="{{ $order->shipping_address }}">{{ $order->shipping_address ?? '-' }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600">{{ $order->carrier_name ?? '-' }}</td>
+                                    <td class="px-4 py-3 text-sm text-blue-600 font-medium">
+                                        {{ $order->receive_order_id }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        {{ $order->receive_order_date?->format('Y-m-d') ?? '-' }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        {{ $order->receive_order_creator_name ?? '-' }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        {{ $order->receive_order_customer_type_name ?? '-' }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate"
+                                        title="{{ $order->receive_order_purchaser_address1 }} {{ $order->receive_order_purchaser_address2 }}">
+                                        {{ $order->receive_order_purchaser_address1 }}
+                                        {{ $order->receive_order_purchaser_address2 }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        {{ $order->receive_order_payment_method_name ?? '-' }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-600">
+                                        {{ $order->receive_order_delivery_id ?? '-' }}
+                                    </td>
 
                                     <td class="px-4 py-3 text-sm text-gray-900 text-right font-medium">
-                                        ¥{{ number_format($order->receive_order_total_amount) }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-900">
-                                        {{ $order->shipping_delivery_tracking_number ?? '未登録 (Chưa có)' }}</td>
-                                    <td class="px-4 py-3 text-sm">
-                                        @php
-                                            $statusClass = match ($order->status) {
-                                                '新規受付', 'pending' => 'bg-red-100 text-red-700',
-                                                '印刷待ち', 'processing' => 'bg-yellow-100 text-yellow-700',
-                                                '出荷済み', 'shipped' => 'bg-green-100 text-green-700',
-                                                default => 'bg-gray-100 text-gray-700',
-                                            };
-                                            $statusLabel = match ($order->status) {
-                                                'pending' => '新規受付',
-                                                'processing' => '印刷待ち',
-                                                'shipped' => '出荷済み',
-                                                default => $order->status,
-                                            };
-                                        @endphp
-                                        <span
-                                            class="px-2 py-1 rounded text-xs font-semibold {{ $statusClass }}">{{ $statusLabel }}</span>
+                                        ¥{{ number_format($order->receive_order_goods_amount ?? 0) }}
                                     </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-900 text-right">
+                                        ¥{{ number_format($order->receive_order_delivery_fee_amount ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm text-gray-900">
+                                        {{ $order->tracking_number ?? '-' }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-sm">
+
+                                        <span class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">
+                                            {{ $order->receive_order_status_label ?? '-' }}
+                                        </span>
+
+                                    </td>
+
                                     <td class="px-4 py-3 text-sm text-gray-600">
                                         <div class="flex items-center gap-2">
                                             <button type="button"

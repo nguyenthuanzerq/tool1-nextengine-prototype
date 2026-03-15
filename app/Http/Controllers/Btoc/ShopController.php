@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use App\Services\NextEngine\NextEngineAuthService;
+use App\Models\NextEngineOrder;
 
 class ShopController extends Controller
 {
@@ -125,5 +126,53 @@ class ShopController extends Controller
         ]);
         $baseUri = config('services.next_engine.base_uri');
         return redirect("$baseUri/users/sign_in?{$query}");
+    }
+
+    public function syncOrder(Request $request)
+    {   
+        $shop = Shop::findOrFail($request->id);
+        $response = Http::asForm()->post(
+            config('services.next_engine.api_uri') . '/api_v1_receiveorder_base/search',
+            [
+                'access_token'  => $shop->access_token,
+                'refresh_token' => $shop->refresh_token,
+                'wait_flag'     => 1,
+                'fields' => 'receive_order_date,receive_order_import_date,receive_order_delivery_id,receive_order_include_possible_order_id,receive_order_customer_type_name,receive_order_purchaser_address1,receive_order_creator_name,receive_order_delivery_fee_amount,receive_order_goods_amount,receive_order_purchaser_address2,receive_order_payment_method_name,receive_order_id,receive_order_last_modified_date,receive_order_confirm_check_id,receive_order_confirm_ids,receive_order_confirm_check_name,receive_order_order_status_id'
+            ]
+        );
+        $result = $response->json();
+        if ($result['result'] !== 'success') {
+            return response()->json($result);
+        }
+        foreach ($result['data'] as $row) {
+
+            NextEngineOrder::updateOrCreate(
+                [
+                    'receive_order_id' => $row['receive_order_id'],
+                ],
+                [
+                    'shop_id' => $shop->id,
+                    'receive_order_date' => $row['receive_order_date'],
+                    'receive_order_import_date' => $row['receive_order_import_date'],
+                    'receive_order_delivery_id' => $row['receive_order_delivery_id'],
+                    'receive_order_include_possible_order_id' => $row['receive_order_include_possible_order_id'],
+                    'receive_order_customer_type_name' => $row['receive_order_customer_type_name'],
+                    'receive_order_purchaser_address1' => $row['receive_order_purchaser_address1'],
+                    'receive_order_creator_name' => $row['receive_order_creator_name'],
+                    'receive_order_delivery_fee_amount' => $row['receive_order_delivery_fee_amount'],
+                    'receive_order_goods_amount' => $row['receive_order_goods_amount'],
+                    'receive_order_purchaser_address2' => $row['receive_order_purchaser_address2'],
+                    'receive_order_payment_method_name' => $row['receive_order_payment_method_name'],
+                    'receive_order_last_modified_date' => $row['receive_order_last_modified_date'],
+                    'receive_order_confirm_check_id' => $row['receive_order_confirm_check_id'],
+                    'receive_order_confirm_ids' => $row['receive_order_confirm_ids'],
+                    'receive_order_confirm_check_name' => $row['receive_order_confirm_check_name'],
+                    'receive_order_order_status_id' => $row['receive_order_order_status_id'],
+                    'raw_response' => json_encode($row)
+                ]
+            );
+    
+        }
+        return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
     }
 }
