@@ -99,12 +99,14 @@
                             <button type="submit" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">保存
                                 (Lưu)</button>
                         </div>
-                        <div class="flex gap-3 mt-4">
-                            <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
-                                class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                                NextEngine 接続 (Kết nối NextEngine)
-                            </a>
-                        </div>
+                        @if ($shop->client_id && $shop->client_secret)
+                            <div class="flex gap-3 mt-4">
+                                <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
+                                    class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                                    NextEngine 接続 (Kết nối NextEngine)
+                                </a>
+                            </div>
+                        @endif
                         @if ($shop->access_token)
                             <div class="flex gap-3 mt-4">
                                 <a href="{{ route('nextengine.sync.order', ['id' => $shop->id]) }}"
