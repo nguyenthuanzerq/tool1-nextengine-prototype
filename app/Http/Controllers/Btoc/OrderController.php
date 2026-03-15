@@ -173,9 +173,8 @@ class OrderController extends Controller
         ]);
 
         $order->update($validated);
-
-        // Gửi mail (Nếu cần)
-        // $mailService->sendOrderCreatedMail($order);
+        // Gửi mail khi tracking number được cập nhật
+        $mailService->sendOrderCreatedMail($order);
 
         // Nếu Request gọi từ Javascript (fetch/AJAX), trả về JSON
         if ($request->wantsJson() || $request->ajax()) {
