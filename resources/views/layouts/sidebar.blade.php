@@ -21,10 +21,26 @@
             </div>
         </a>
 
+        <a href="{{ route('btoc.ec-platforms.index') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.ec-platforms.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50'}}">
+            {{-- Icon quả địa cầu / mạng lưới --}}
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.ec-platforms.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9">
+                    </path>
+                </svg>
+            </span>
+            <div>
+                ECプラットフォーム<br>
+                <span class="text-[10px] text-gray-500 font-normal">Nền tảng EC</span>
+            </div>
+        </a>
+
         <a href="{{ route('btoc.shop.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.shop.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
             <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.shop.index') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.shop.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 21h18M4 21V7l8-4 8 4v14M9 21v-8h6v8" />
                 </svg>
@@ -36,9 +52,9 @@
         </a>
 
         <a href="{{ route('btoc.orders.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.orders.index') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.orders.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
             <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.orders.index') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.orders.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 6h15l-2 9H8L6 6z" />
                     <path d="M6 6H3" />
@@ -53,11 +69,11 @@
         </a>
 
         <a href="{{ route('btoc.inventory') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.inventory*')
+            class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.inventory.*')
                 ? 'bg-blue-50 text-blue-700 border border-blue-100'
                 : 'hover:bg-gray-50' }}">
             <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.inventory*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.inventory.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
                     <path
                         d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -68,7 +84,7 @@
                 <div class="text-xs text-gray-500">Tồn kho &amp; Xuất hàng</div>
             </div>
         </a>
-        
+
         {{-- Cấu hình email --}}
         {{-- <a href="{{ route('btoc.email.settings') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.email.settings*')

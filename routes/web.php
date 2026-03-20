@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Btoc\EcPlatformController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Btoc\DashboardController;
@@ -82,6 +83,15 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     // ================= DASHBOARD =================
     Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
+    // --- 0. QUẢN LÝ NỀN TẢNG ---
+    Route::prefix('ec-platforms')->name('ec-platforms.')->group(function () {
+        Route::get('/', [EcPlatformController::class, 'index'])->name('index');
+        Route::get('/create', [EcPlatformController::class, 'create'])->name('create');
+        Route::post('/', [EcPlatformController::class, 'store'])->name('store');
+        Route::get('/{ec_platform}/edit', [EcPlatformController::class, 'edit'])->name('edit');
+        Route::put('/{ec_platform}', [EcPlatformController::class, 'update'])->name('update');
+        Route::delete('/{ec_platform}', [EcPlatformController::class, 'destroy'])->name('destroy');
+    });
 
     // --- 1. QUẢN LÝ SHOP ---
     Route::prefix('shop')->name('shop.')->group(function () {
