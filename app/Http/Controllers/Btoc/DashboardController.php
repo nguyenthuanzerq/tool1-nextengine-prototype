@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shop;
 use App\Models\Order;
+use App\Models\Shop;
 use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
@@ -21,8 +21,6 @@ class DashboardController extends Controller
         $shopCount = Shop::count();
 
         $todayOrders = Order::whereDate('created_at', today())->count();
-
-        // Defensive: chỉ query nếu cột tồn tại trong DB (tránh 500 khi migration chưa chạy)
         $unshipped = Schema::hasColumn('orders', 'status')
             ? Order::where('status', 'pending')->count()
             : 0;

@@ -25,7 +25,7 @@ return new class extends Migration
                 'purchaser_id',
                 'shipping_address',
                 'purchaser_phone',
-                'purchaser_email'
+                'purchaser_email',
             ]);
         });
     }

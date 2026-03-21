@@ -3,54 +3,51 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Shop;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
-use App\Services\NextEngine\NextEngineAuthService;
 use App\Models\NextEngineOrder;
+use App\Models\Shop;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class ShopController extends Controller
 {
     public function index()
     {
         $shops = Shop::orderBy('id', 'desc')->paginate(10);
-        
+
         return view('btoc.shop.index', [
-            'shops' => $shops
+            'shops' => $shops,
         ]);
     }
 
     public function show($id)
     {
         $shop = Shop::findOrFail($id);
-        
+
         return view('btoc.shop.detail', [
-            'shop' => $shop
+            'shop' => $shop,
         ]);
     }
 
     public function create()
     {
         $isCreate = true;
-        $shop = new Shop(); 
-        
+        $shop = new Shop;
+
         return view('btoc.shop.save', [
             'isCreate' => $isCreate,
-            'shop' => $shop
+            'shop' => $shop,
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'shop_code'     => 'required|string|max:255|unique:shops,shop_code',
-            'shop_name'     => 'required|string|max:255',
+            'shop_code' => 'required|string|max:255|unique:shops,shop_code',
+            'shop_name' => 'required|string|max:255',
 
         ], [
             'shop_code.required' => '店舗コードを空白のままにすることはできません。',
-            'shop_code.unique'   => 'このショップコードは既に存在します。',
+            'shop_code.unique' => 'このショップコードは既に存在します。',
             'shop_name.required' => 'ショップ名は空欄にできません。',
         ]);
 
@@ -62,11 +59,11 @@ class ShopController extends Controller
     public function edit($id)
     {
         $isCreate = false;
-        $shop = Shop::findOrFail($id); 
-        
+        $shop = Shop::findOrFail($id);
+
         return view('btoc.shop.save', [
             'isCreate' => $isCreate,
-            'shop' => $shop
+            'shop' => $shop,
         ]);
     }
 
@@ -75,8 +72,10 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($id);
 
         $validated = $request->validate([
-            'shop_code'     => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
-            'shop_name'     => 'required|string|max:255',
+            'shop_code' => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
+            'shop_name' => 'required|string|max:255',
+            'client_id' => 'required|string|max:255',
+            'client_secret' => 'required|string|max:255',
         ]);
 
         $shop->update($validated);
@@ -92,7 +91,7 @@ class ShopController extends Controller
         return redirect()->route('btoc.shop.index')->with('success', 'Đã xóa shop thành công.');
     }
 
-    public function callback(Request $request, NextEngineAuthService $authService)
+    public function callback(Request $request)
     {
         $shopId = $request->query('shop_id');
         $uid = $request->query('uid');
@@ -102,10 +101,10 @@ class ShopController extends Controller
         $response = Http::asForm()->post(
             config('services.next_engine.api_uri') . '/api_neauth',
             [
-                'client_id'     => $shop->client_id,
+                'client_id' => $shop->client_id,
                 'client_secret' => $shop->client_secret,
-                'uid'           => $uid,
-                'state'         => $state
+                'uid' => $uid,
+                'state' => $state,
             ]
         );
 
@@ -113,7 +112,7 @@ class ShopController extends Controller
         $shop->refresh_token = $response->json()['refresh_token'] ?? null;
         $shop->save();
 
-        return redirect()->route("btoc.shop.edit", ['id' => $shop->id]);
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id]);
     }
 
     public function connect(Request $request)
@@ -121,23 +120,24 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($request->id);
         $redirectUri = config('services.next_engine.redirect_uri') . '?shop_id=' . $shop->id;
         $query = http_build_query([
-            'client_id'    => $shop->client_id,
+            'client_id' => $shop->client_id,
             'redirect_uri' => $redirectUri,
         ]);
         $baseUri = config('services.next_engine.base_uri');
+
         return redirect("$baseUri/users/sign_in?{$query}");
     }
 
     public function syncOrder(Request $request)
-    {   
+    {
         $shop = Shop::findOrFail($request->id);
         $response = Http::asForm()->post(
             config('services.next_engine.api_uri') . '/api_v1_receiveorder_base/search',
             [
-                'access_token'  => $shop->access_token,
+                'access_token' => $shop->access_token,
                 'refresh_token' => $shop->refresh_token,
-                'wait_flag'     => 1,
-                'fields' => 'receive_order_date,receive_order_import_date,receive_order_delivery_id,receive_order_include_possible_order_id,receive_order_customer_type_name,receive_order_purchaser_address1,receive_order_creator_name,receive_order_delivery_fee_amount,receive_order_goods_amount,receive_order_purchaser_address2,receive_order_payment_method_name,receive_order_id,receive_order_last_modified_date,receive_order_confirm_check_id,receive_order_confirm_ids,receive_order_confirm_check_name,receive_order_order_status_id'
+                'wait_flag' => 1,
+                'fields' => 'receive_order_date,receive_order_import_date,receive_order_delivery_id,receive_order_include_possible_order_id,receive_order_customer_type_name,receive_order_purchaser_address1,receive_order_creator_name,receive_order_delivery_fee_amount,receive_order_goods_amount,receive_order_purchaser_address2,receive_order_payment_method_name,receive_order_id,receive_order_last_modified_date,receive_order_confirm_check_id,receive_order_confirm_ids,receive_order_confirm_check_name,receive_order_order_status_id',
             ]
         );
         $result = $response->json();
@@ -168,11 +168,41 @@ class ShopController extends Controller
                     'receive_order_confirm_ids' => $row['receive_order_confirm_ids'],
                     'receive_order_confirm_check_name' => $row['receive_order_confirm_check_name'],
                     'receive_order_order_status_id' => $row['receive_order_order_status_id'],
-                    'raw_response' => json_encode($row)
+                    'raw_response' => json_encode($row),
                 ]
             );
-    
         }
+
         return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
+    }
+
+    /**
+     * Store NextEngine client credentials for a shop.
+     */
+    public function storeNextEngineConnection(Request $request, $id)
+    {
+        $shop = Shop::findOrFail($id);
+
+        $validated = $request->validate([
+            'client_id' => 'required|string|max:255',
+            'client_secret' => 'required|string|max:255',
+        ]);
+
+        $credentialsChanged = ($validated['client_id'] !== $shop->client_id)
+            || ($validated['client_secret'] !== $shop->client_secret);
+
+        $shop->client_id = $validated['client_id'];
+        $shop->client_secret = $validated['client_secret'];
+
+        if ($credentialsChanged) {
+            // Clear tokens when credentials change to avoid using invalid tokens
+            $shop->access_token = null;
+            $shop->refresh_token = null;
+        }
+
+        $shop->save();
+
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', 'NextEngine credentials saved.');
     }
 }

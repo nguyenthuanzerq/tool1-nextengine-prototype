@@ -9,15 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::table('inventories', function (Blueprint $table) {
-        $table->foreignId('mall_id')
-              ->nullable()
-              ->constrained('malls')
-              ->nullOnDelete();
-    });
-}
+    public function up(): void
+    {
+        Schema::table('inventories', function (Blueprint $table) {
+            $table->foreignId('mall_id')
+                ->nullable()
+                ->constrained('malls')
+                ->nullOnDelete();
+        });
+    }
 
     /**
      * Reverse the migrations.

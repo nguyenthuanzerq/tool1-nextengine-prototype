@@ -12,12 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withProviders(require base_path('bootstrap/providers.php'))
     ->withMiddleware(function (Middleware $middleware): void {
-    $middleware->validateCsrfTokens(except: [
-        'orders/sync-next-engine',
-    ]);
-})
+        $middleware->validateCsrfTokens(except: [
+            'orders/sync-next-engine',
+        ]);
+    })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
-
-   

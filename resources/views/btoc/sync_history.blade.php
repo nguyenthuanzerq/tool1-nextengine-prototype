@@ -98,11 +98,8 @@ $isFail = $log->status === '失敗';
 
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-4 text-sm">
-                                <a href="{{ route('btoc.sync.detail', $log->sync_code) }}"
-                                   class="text-blue-600 hover:underline">
-                                    {{ $log->sync_code }}
-                                </a>
-                            </td>
+                                    <span class="text-gray-800">{{ $log->sync_code }}</span>
+                                </td>
 
                             <td class="px-6 py-4 text-sm">
                                 {{ $log->shop_name }}

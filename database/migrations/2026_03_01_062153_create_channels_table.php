@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('channels', function (Blueprint $table) {
-    $table->id();
-    $table->string('code')->unique();      // yahoo, rakuten, shopify...
-    $table->string('name');                // Yahoo, 楽天市場...
-    $table->boolean('is_active')->default(true);
-    $table->timestamps();
-});
+        Schema::create('channels', function (Blueprint $table) {
+            $table->id();
+            $table->string('code')->unique();      // yahoo, rakuten, shopify...
+            $table->string('name');                // Yahoo, 楽天市場...
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

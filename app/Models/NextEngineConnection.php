@@ -7,6 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class NextEngineConnection extends Model
 {
     protected $guarded = [];
-protected $table = 'next_engine_connections';
 
+    protected $table = 'next_engine_connections';
 }

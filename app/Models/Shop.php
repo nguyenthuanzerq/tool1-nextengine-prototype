@@ -16,7 +16,7 @@ class Shop extends Model
         'client_secret',
         'access_token',
         'refresh_token',
-        'token_expires_at'
+        'token_expires_at',
     ];
 
     protected function casts(): array

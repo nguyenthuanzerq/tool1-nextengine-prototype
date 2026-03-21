@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Models;
-use App\Models\Shop;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Mall extends Model
@@ -12,10 +12,10 @@ class Mall extends Model
         'mall_code',
     ];
 
-   public function shop()
-{
-    return $this->belongsTo(Shop::class)->withDefault();
-}
+    public function shop()
+    {
+        return $this->belongsTo(Shop::class)->withDefault();
+    }
 
     public function inventories()
     {
@@ -23,7 +23,7 @@ class Mall extends Model
     }
 
     public function channel()
-{
-    return $this->belongsTo(Channel::class);
-}
+    {
+        return $this->belongsTo(Channel::class);
+    }
 }

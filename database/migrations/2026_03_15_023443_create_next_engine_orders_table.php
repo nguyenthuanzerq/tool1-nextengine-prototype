@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('next_engine_orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('shop_id')->constrained()->cascadeOnDelete();
-                    
+
             $table->dateTime('receive_order_date')->nullable();
             $table->dateTime('receive_order_import_date')->nullable();
             $table->string('receive_order_delivery_id')->nullable();
@@ -26,10 +26,10 @@ return new class extends Migration
             $table->decimal('receive_order_goods_amount', 12, 2)->nullable();
             $table->string('receive_order_purchaser_address2')->nullable();
             $table->string('receive_order_payment_method_name')->nullable();
-    
+
             $table->string('receive_order_id')->index();
             $table->dateTime('receive_order_last_modified_date')->nullable();
-    
+
             $table->string('receive_order_confirm_check_id')->nullable();
             $table->string('receive_order_confirm_ids')->nullable();
             $table->string('receive_order_confirm_check_name')->nullable();

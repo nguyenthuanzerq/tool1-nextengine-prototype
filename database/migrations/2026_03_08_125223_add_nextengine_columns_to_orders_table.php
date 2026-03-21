@@ -36,7 +36,7 @@ return new class extends Migration
                 'receipt_receipt_id',
                 'receive_order_date',
                 'receive_order_total_amount',
-                'purchaser_name'
+                'purchaser_name',
             ]);
 
             // Đổi tên cột lại như cũ

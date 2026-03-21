@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Services\Btoc\InventoryService;
-use App\Models\Shop;
-use App\Models\Mall;
 use App\Models\Channel;
+use App\Models\Mall;
+use App\Models\Shop;
+use App\Services\Btoc\InventoryService;
+use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
@@ -20,9 +20,6 @@ class InventoryController extends Controller
 
     public function inventoryShipment(Request $request)
     {
-        // =====================================================
-        // 1) Filters (Controller chỉ orchestration)
-        // =====================================================
         $filters = $request->only([
             'shop_id',
             'mall_id',
@@ -30,15 +27,8 @@ class InventoryController extends Controller
             'product_code',
         ]);
 
-        // =====================================================
-        // 2) Inventory + Shipment
-        // =====================================================
         $inventoryData = $this->inventoryService->filter($filters);
-        $shipmentData  = $this->inventoryService->getShipment();
-
-        // =====================================================
-        // 3) Dropdown data
-        // =====================================================
+        $shipmentData = $this->inventoryService->getShipment();
         $shops = Shop::query()->orderBy('id')->get();
 
         $malls = Mall::query()
@@ -53,21 +43,18 @@ class InventoryController extends Controller
             ->orderBy('id')
             ->get();
 
-        // =====================================================
-        // 🔒 TBD hiển thị UI (song ngữ JP–VN)
-        // =====================================================
         $channelTbdList = [
             [
                 'jp' => 'Channel は管理画面から追加可能にしますか？',
-                'vn' => 'Channel có cho phép thêm mới từ màn hình Admin không?'
+                'vn' => 'Channel có cho phép thêm mới từ màn hình Admin không?',
             ],
             [
                 'jp' => 'Channel ごとに API 認証情報（Client ID / Secret）は必要ですか？',
-                'vn' => 'Mỗi Channel có cần credential riêng không?'
+                'vn' => 'Mỗi Channel có cần credential riêng không?',
             ],
             [
                 'jp' => '非アクティブの Channel はフィルターから非表示にしますか？',
-                'vn' => 'Channel inactive có ẩn khỏi filter không?'
+                'vn' => 'Channel inactive có ẩn khỏi filter không?',
             ],
         ];
 

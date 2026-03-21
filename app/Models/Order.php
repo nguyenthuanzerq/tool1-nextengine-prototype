@@ -23,8 +23,8 @@ class Order extends Model
         'receive_order_order_status_id',
         'shipping_delivery_tracking_number',
         'carrier_name',
-        'status', 
-        'shipped_at'
+        'status',
+        'shipped_at',
     ];
 
     // Tự động ép kiểu dữ liệu
