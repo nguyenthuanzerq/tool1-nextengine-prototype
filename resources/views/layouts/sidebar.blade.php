@@ -68,7 +68,7 @@
             </div>
         </a>
 
-        <a href="{{ route('btoc.inventory') }}"
+        <a href="{{ route('btoc.inventory.index') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.inventory.*')
                 ? 'bg-blue-50 text-blue-700 border border-blue-100'
                 : 'hover:bg-gray-50' }}">
@@ -84,40 +84,6 @@
                 <div class="text-xs text-gray-500">Tồn kho &amp; Xuất hàng</div>
             </div>
         </a>
-
-        {{-- Cấu hình email --}}
-        {{-- <a href="{{ route('btoc.email.settings') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.email.settings*')
-                ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                : 'hover:bg-gray-50' }}">
-            <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.email.settings*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 4h16v16H4z" />
-                    <path d="M22 6l-10 7L2 6" />
-                </svg>
-            </span>
-            <div class="leading-tight">
-                <div class="font-semibold">発送メール設定</div>
-                <div class="text-xs text-gray-500">Cấu hình email gửi hàng</div>
-            </div>
-        </a> --}}
-
-        {{-- Cấu hình đồng bộ --}}
-        {{-- <a href="{{ route('btoc.sync.history') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.sync.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
-            <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.sync.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 8v4l3 3" />
-                    <path d="M3 12a9 9 0 1 0 18 0 9 9 0 0 0-18 0z" />
-                </svg>
-            </span>
-            <div class="leading-tight">
-                <div class="font-semibold">同期履歴・ログ</div>
-                <div class="text-xs text-gray-500">Lịch sử đồng bộ &amp; Log</div>
-            </div>
-        </a> --}}
 
     </nav>
 

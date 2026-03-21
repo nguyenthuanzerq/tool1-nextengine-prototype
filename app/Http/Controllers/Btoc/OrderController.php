@@ -17,12 +17,6 @@ use App\Models\NextEngineOrder;
 
 class OrderController extends Controller
 {
-    protected OrderService $orderService;
-
-    public function __construct(OrderService $orderService)
-    {
-        $this->orderService = $orderService;
-    }
 
     /**
      * Hiển thị danh sách đơn hàng kèm Bộ lọc & Phân trang
@@ -78,7 +72,7 @@ class OrderController extends Controller
     public function create()
     {
         $isCreate = true;
-        $Order = new Order();
+        $Order = new NextEngineOrder();
         $shops = Shop::all();
         return view('btoc.orders.save', [
             'isCreate' => $isCreate,
@@ -130,7 +124,7 @@ class OrderController extends Controller
             // 'shipping_delivery_tracking_number.max' => 'お問い合わせ番号は255文字以下でなければなりません.(Mã vận đơn không được vượt quá 255 ký tự)',
         ]);
 
-        $order = Order::create($validated);
+        $order = NextEngineOrder::create($validated);
         return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
     }
 
@@ -192,68 +186,7 @@ class OrderController extends Controller
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に削除されました。');
     }
 
-    /**
-     * Xuất danh sách đơn hàng ra file Excel (作業指示書)
-     */
-    public function exportInstruction(Request $request)
-    {
-        $orderIds = $request->input('order_ids', []);
-
-        if (empty($orderIds)) {
-            return redirect()->back()->with('error', 'Vui lòng chọn ít nhất một đơn hàng để xuất file.');
-        }
-
-        // Lấy dữ liệu
-        $orders = Order::with(['shop', 'products'])->whereIn('id', $orderIds)->get();
-
-        // Tạo tên file Excel đuôi .xlsx
-        $fileName = '作業指示書_' . date('Ymd_His') . '.xlsx';
-
-        // Gọi class Export để tải file về
-        // return Excel::download(new WorkInstructionExport($orders), $fileName);
-    }
-
-    /**
-     * Đồng bộ đơn hàng từ NextEngine
-     */
-
-
-    /**
-     * Cập nhật trạng thái xuất hàng hàng loạt
-     */
-
-    public function shippingNotify(Request $request)
-    {
-        $orderIds = $request->input('order_ids', []);
-
-        if (empty($orderIds)) {
-            return redirect()->back()->with('error', '少なくとも 1 つの注文を選択してください。');
-        }
-
-        Order::whereIn('id', $orderIds)->update([
-            'status' => 'shipped',
-            'shipped_at' => now()
-        ]);
-
-        return redirect()->back()->with('success', count($orderIds) . ' 注文は「配達済み」に更新されました。');
-    }
-
-    public function registerTracking(Request $request)
-    {
-        $validated = $request->validate([
-            'order_id'        => 'required|exists:orders,id',
-            'tracking_number' => 'required|string|max:255',
-        ]);
-
-        $dto = new RegisterTrackingDTO(
-            (int) $validated['order_id'],
-            (string) $validated['tracking_number']
-        );
-
-        $this->orderService->registerTracking($dto);
-
-        return redirect()
-            ->route('btoc.index')
-            ->with('success', '発送番号を登録しました。');
-    }
+    
+    
+    
 }
