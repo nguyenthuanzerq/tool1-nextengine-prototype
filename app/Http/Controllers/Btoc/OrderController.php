@@ -39,9 +39,9 @@ class OrderController extends Controller
             });
         }
 
-        $query->where(function ($q) {
-            $q->whereNull('tracking_number')->orWhere('tracking_number', '');
-        });
+        // $query->where(function ($q) {
+        //     $q->whereNull('tracking_number')->orWhere('tracking_number', '');
+        // });
 
         $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
 
