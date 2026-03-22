@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
 use App\Models\NextEngineOrder;
-use App\Models\Order;
+// use App\Models\Order;
 use App\Models\Shop;
 use App\Services\Btoc\MailService;
 use Illuminate\Http\Request;
@@ -15,35 +15,36 @@ class OrderController extends Controller
     {
         $query = NextEngineOrder::with('shop');
 
-        if ($request->filled('shop_id')) {
-            $query->where('shop_id', $request->shop_id);
-        }
+        // if ($request->filled('shop_id')) {
+        //     $query->where('shop_id', $request->shop_id);
+        // }
 
-        if ($request->status) {
-            $query->where('receive_order_order_status_id', $request->status);
-        }
+        // if ($request->status) {
+        //     $query->where('receive_order_order_status_id', $request->status);
+        // }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('receive_order_import_date', '>=', $request->date_from);
-        }
+        // if ($request->filled('date_from')) {
+        //     $query->whereDate('receive_order_import_date', '>=', $request->date_from);
+        // }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('receive_order_date', '<=', $request->date_to);
-        }
+        // if ($request->filled('date_to')) {
+        //     $query->whereDate('receive_order_date', '<=', $request->date_to);
+        // }
 
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('receive_order_id', 'like', "%{$keyword}%")
-                    ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
-            });
-        }
+        // if ($request->filled('keyword')) {
+        //     $keyword = $request->keyword;
+        //     $query->where(function ($q) use ($keyword) {
+        //         $q->where('receive_order_id', 'like', "%{$keyword}%")
+        //             ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
+        //     });
+        // }
 
         // $query->where(function ($q) {
         //     $q->whereNull('tracking_number')->orWhere('tracking_number', '');
         // });
 
-        $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
+        // $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
+            $orders = $query->orderBy('created_at', 'desc')->paginate(20);
 
         $shops = Shop::all();
 
@@ -57,7 +58,7 @@ class OrderController extends Controller
     public function create()
     {
         $isCreate = true;
-        $Order = new Order;
+        $Order = new NextEngineOrder();
         $shops = Shop::all();
 
         return view('btoc.orders.save', [

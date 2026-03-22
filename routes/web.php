@@ -31,6 +31,7 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{id}', [OrderController::class, 'show'])->name('show');
         Route::get('/create', [OrderController::class, 'create'])->name('create');
         Route::put('/{id}', [OrderController::class, 'update'])->name('update');
     });
