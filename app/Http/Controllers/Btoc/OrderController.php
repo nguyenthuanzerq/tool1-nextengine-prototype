@@ -44,10 +44,9 @@ class OrderController extends Controller
         // });
 
         // $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
-            $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+            $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
 
         $shops = Shop::all();
-
         return view('btoc.orders.index', [
             'orders' => $orders,
             'shops' => $shops,
