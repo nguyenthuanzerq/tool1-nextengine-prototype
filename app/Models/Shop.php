@@ -12,22 +12,16 @@ class Shop extends Model
     protected $fillable = [
         'shop_code',
         'shop_name',
-        'client_id',
-        'client_secret',
-        'access_token',
-        'refresh_token',
-        'token_expires_at',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'token_expires_at' => 'datetime',
-        ];
-    }
 
     public function nextEngineOrders()
     {
         return $this->hasMany(NextEngineOrder::class);
+    }
+    
+    public function nextEngineConnection()
+    {
+        return $this->hasOne(NextEngineConnection::class, 'shop_id', 'id');
     }
 }

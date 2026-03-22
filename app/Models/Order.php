@@ -43,14 +43,6 @@ class Order extends Model
     }
 
     /**
-     * Quan hệ: Một đơn hàng có nhiều Sản phẩm (Order Products)
-     */
-    public function products()
-    {
-        return $this->hasMany(OrderProduct::class, 'order_id', 'id');
-    }
-
-    /**
      * Quan hệ: Liên kết với dữ liệu thô từ NextEngine
      */
     public function nextEngineOrder()
