@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\Mall;
 
 class Inventory extends Model
 {
@@ -33,25 +31,25 @@ class Inventory extends Model
     | Không phá cấu trúc cũ
     */
     public function mall()
-{
-    return $this->belongsTo(Mall::class)->withDefault();
-}
+    {
+        return $this->belongsTo(Mall::class)->withDefault();
+    }
 
-   public function scopeFilter($query, array $filters)
-{
-    return $query
-        ->when($filters['shop_id'] ?? null, function ($q, $shopId) {
-            $q->whereHas('mall.shop', function ($qq) use ($shopId) {
-                $qq->where('id', $shopId);
+    public function scopeFilter($query, array $filters)
+    {
+        return $query
+            ->when($filters['shop_id'] ?? null, function ($q, $shopId) {
+                $q->whereHas('mall.shop', function ($qq) use ($shopId) {
+                    $qq->where('id', $shopId);
+                });
+            })
+            ->when($filters['mall_id'] ?? null, function ($q, $mallId) {
+                $q->where('mall_id', $mallId);
+            })
+            ->when($filters['product_code'] ?? null, function ($q, $code) {
+                $q->where('product_code', 'like', '%'.$code.'%');
             });
-        })
-        ->when($filters['mall_id'] ?? null, function ($q, $mallId) {
-            $q->where('mall_id', $mallId);
-        })
-        ->when($filters['product_code'] ?? null, function ($q, $code) {
-            $q->where('product_code', 'like', '%' . $code . '%');
-        });
-}
+    }
 
     /*
     |--------------------------------------------------------------------------

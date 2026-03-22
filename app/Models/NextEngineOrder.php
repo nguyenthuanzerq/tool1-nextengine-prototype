@@ -6,25 +6,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class NextEngineOrder extends Model
 {
-    public const ORDER_STATUS_IMPORT_INFO_LACK      = 0;
-    public const ORDER_STATUS_EMAIL_IMPORTED        = 1;
-    public const ORDER_STATUS_CREATED               = 2;
-    public const ORDER_STATUS_INVOICE_WAITING       = 20;
-    public const ORDER_STATUS_INVOICE_PRINTING      = 30;
-    public const ORDER_STATUS_INVOICE_PRINTED       = 40;
-    public const ORDER_STATUS_SHIPMENT_COMPLETED    = 50;
+    public const ORDER_STATUS_IMPORT_INFO_LACK = 0;
+
+    public const ORDER_STATUS_EMAIL_IMPORTED = 1;
+
+    public const ORDER_STATUS_CREATED = 2;
+
+    public const ORDER_STATUS_INVOICE_WAITING = 20;
+
+    public const ORDER_STATUS_INVOICE_PRINTING = 30;
+
+    public const ORDER_STATUS_INVOICE_PRINTED = 40;
+
+    public const ORDER_STATUS_SHIPMENT_COMPLETED = 50;
 
     public function getReceiveOrderStatusLabelAttribute(): string
     {
         return match ((int) $this->receive_order_order_status_id) {
-            self::ORDER_STATUS_IMPORT_INFO_LACK   => '取込情報不足',
-            self::ORDER_STATUS_EMAIL_IMPORTED     => '受注メール取込済',
-            self::ORDER_STATUS_CREATED            => '起票済(CSV/手入力)',
-            self::ORDER_STATUS_INVOICE_WAITING    => '納品書印刷待ち',
-            self::ORDER_STATUS_INVOICE_PRINTING   => '納品書印刷中',
-            self::ORDER_STATUS_INVOICE_PRINTED    => '納品書印刷済',
+            self::ORDER_STATUS_IMPORT_INFO_LACK => '取込情報不足',
+            self::ORDER_STATUS_EMAIL_IMPORTED => '受注メール取込済',
+            self::ORDER_STATUS_CREATED => '起票済(CSV/手入力)',
+            self::ORDER_STATUS_INVOICE_WAITING => '納品書印刷待ち',
+            self::ORDER_STATUS_INVOICE_PRINTING => '納品書印刷中',
+            self::ORDER_STATUS_INVOICE_PRINTED => '納品書印刷済',
             self::ORDER_STATUS_SHIPMENT_COMPLETED => '出荷確定済（完了）',
-            default                               => '不明',
+            default => '不明',
         };
     }
 
@@ -50,7 +56,7 @@ class NextEngineOrder extends Model
         'receive_order_confirm_check_name',
         'receive_order_order_status_id',
         'tracking_number',
-        'raw_response'
+        'raw_response',
     ];
 
     protected $casts = [

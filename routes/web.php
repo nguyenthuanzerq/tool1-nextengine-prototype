@@ -5,6 +5,7 @@ use App\Http\Controllers\Btoc\EcPlatformController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Btoc\DashboardController;
+use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\OrderController;
 use App\Http\Controllers\Btoc\ShopController;
 use App\Http\Controllers\Btoc\InventoryController;
@@ -21,7 +22,6 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
 
-    // ================= DASHBOARD =================
     Route::get('/', [DashboardController::class, 'dashboard'])->name('dashboard');
     // --- 0. QUẢN LÝ NỀN TẢNG ---
     Route::prefix('ec-platforms')->name('ec-platforms.')->group(function () {
@@ -44,15 +44,18 @@ Route::prefix('btoc')->name('btoc.')->middleware('auth')->group(function () {
         Route::delete('/{id}', [ShopController::class, 'destroy'])->name('destroy');
     });
 
-    // --- 2. XÁC THỰC API NEXTENGINE ---
-    Route::get('/shop/{id}/re-authorize', [ShopController::class, 'reAuthorize'])->name('shop.reAuthorize');
-    Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
-    Route::post('/shop/{id}/test-connection', [ShopController::class, 'testConnection'])->name('shop.testConnection');
-
-    // --- 3. QUẢN LÝ ĐƠN HÀNG (管理画面 - KANRI GAMEN) ---
-    // Hiển thị danh sách đơn hàng (Sidebar của bạn đang gọi route 'btoc.index')
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/{id}', [OrderController::class, 'show'])->name('show');
+        Route::get('/create', [OrderController::class, 'create'])->name('create');
+        Route::put('/{id}', [OrderController::class, 'update'])->name('update');
+    });
+
+    Route::post('/shop/{id}/nextengine-connection', [ShopController::class, 'storeNextEngineConnection'])->name('shop.nextengine_connection');
+
+    Route::get('/inventory', [InventoryController::class, 'inventoryShipment'])->name('inventory');
+    Route::post('/inventory/refresh', [InventoryController::class, 'refreshInventory'])->name('inventory.refresh');
+});
         Route::get('/create', [OrderController::class, 'create'])->name('create'); 
         Route::post('/', [OrderController::class, 'store'])->name('store'); 
         // Route::get('/{id}', [OrderController::class, 'show'])->name('show'); 
@@ -75,5 +78,5 @@ Route::post('/orders/sync-next-engine', [OrderController::class, 'syncNextEngine
     ->name('orders.sync-next-engine');
 
 Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
-Route::get('/nextengine/connect', [ShopController::class, 'connect'])->name('nextengine.connect');;
+Route::get('/nextengine/connect', [ShopController::class, 'connect'])->name('nextengine.connect');
 Route::get('/nextengine/sync/order', [ShopController::class, 'syncOrder'])->name('nextengine.sync.order');

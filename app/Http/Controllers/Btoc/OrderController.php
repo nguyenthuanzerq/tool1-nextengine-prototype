@@ -2,18 +2,12 @@
 
 namespace App\Http\Controllers\Btoc;
 
-use App\DTO\Btoc\RegisterTrackingDTO;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Order;
-use App\Models\Shop;
-use App\Services\Btoc\OrderService;
-use Illuminate\Support\Facades\Response;
-use App\Exports\WorkInstructionExport;
-use App\Services\Btoc\MailService;
-use Vtiful\Kernel\Excel;
 use App\Models\NextEngineOrder;
-
+// use App\Models\Order;
+use App\Models\Shop;
+use App\Services\Btoc\MailService;
+use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
@@ -25,59 +19,57 @@ class OrderController extends Controller
     {
         $query = NextEngineOrder::with('shop');
 
-        if ($request->filled('shop_id')) {
-            $query->where('shop_id', $request->shop_id);
-        }
+        // if ($request->filled('shop_id')) {
+        //     $query->where('shop_id', $request->shop_id);
+        // }
 
-        if ($request->status) {
-            $query->where('receive_order_order_status_id', $request->status);
-        }
+        // if ($request->status) {
+        //     $query->where('receive_order_order_status_id', $request->status);
+        // }
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('receive_order_import_date', '>=', $request->date_from);
-        }
+        // if ($request->filled('date_from')) {
+        //     $query->whereDate('receive_order_import_date', '>=', $request->date_from);
+        // }
 
-        if ($request->filled('date_to')) {
-            $query->whereDate('receive_order_date', '<=', $request->date_to);
-        }
+        // if ($request->filled('date_to')) {
+        //     $query->whereDate('receive_order_date', '<=', $request->date_to);
+        // }
 
-        if ($request->filled('keyword')) {
-            $keyword = $request->keyword;
-            $query->where(function ($q) use ($keyword) {
-                $q->where('receive_order_id', 'like', "%{$keyword}%")
-                    ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
-            });
-        }
+        // if ($request->filled('keyword')) {
+        //     $keyword = $request->keyword;
+        //     $query->where(function ($q) use ($keyword) {
+        //         $q->where('receive_order_id', 'like', "%{$keyword}%")
+        //             ->orWhere('receive_order_creator_name', 'like', "%{$keyword}%");
+        //     });
+        // }
 
-        // Lọc ra những order có trường tracking_number là rỗng
-        $query->where(function ($q) {
-            $q->whereNull('tracking_number')->orWhere('tracking_number', '');
-        });
+        // $query->where(function ($q) {
+        //     $q->whereNull('tracking_number')->orWhere('tracking_number', '');
+        // });
 
-        $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
+        // $orders = $query->orderBy('receive_order_date', 'desc')->paginate(20);
+            $orders = $query->orderBy('created_at', 'desc')->paginate(20);
 
         $shops = Shop::all();
 
         return view('btoc.orders.index', [
             'orders' => $orders,
             'shops' => $shops,
-            'filters' => $request->only(['shop_id', 'status', 'date_from', 'date_to', 'keyword'])
+            'filters' => $request->only(['shop_id', 'status', 'date_from', 'date_to', 'keyword']),
         ]);
     }
-
-    /**
-     * Hiển thị trang thêm mới đơn hàng
-     */
 
     public function create()
     {
         $isCreate = true;
         $Order = new NextEngineOrder();
+        $Order = new NextEngineOrder();
         $shops = Shop::all();
+
         return view('btoc.orders.save', [
             'isCreate' => $isCreate,
             'order' => $Order,
-            'shops' => $shops
+            'shops' => $shops,
         ]);
     }
 
@@ -131,46 +123,30 @@ class OrderController extends Controller
     public function show($id)
     {
         $order = NextEngineOrder::with('shop')->findOrFail($id);
+
         return view('btoc.orders.detail', ['order' => $order]);
     }
 
     public function edit($id)
     {
         $order = NextEngineOrder::with('shop')->findOrFail($id);
+
         return view('btoc.orders.save', [
-            'order' => $order
+            'order' => $order,
         ]);
     }
 
-    // public function update(Request $request, $id, MailService $mailService)
-    // {
-    //     $order = NextEngineOrder::findOrFail($id);
-
-    //     $validated = $request->validate([
-    //         'tracking_number' => 'nullable|string|max:255',
-    //     ]);
-
-    //     $order->update($validated);
-    //     $mailService->sendOrderCreatedMail($order);
-
-    //     return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
-    // }
-
-    // Trường update lại tracking number tại danh sách đơn hàng
     public function update(Request $request, $id, MailService $mailService)
     {
         $order = NextEngineOrder::findOrFail($id);
 
-        // Validation lại cho đúng key gửi từ Javascript
         $validated = $request->validate([
             'tracking_number' => 'required|string|max:255',
         ]);
 
         $order->update($validated);
-        // Gửi mail khi tracking number được cập nhật
         $mailService->sendOrderCreatedMail($order);
 
-        // Nếu Request gọi từ Javascript (fetch/AJAX), trả về JSON
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json(['success' => true, 'message' => 'Lưu thành công']);
         }

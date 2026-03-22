@@ -9,18 +9,18 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up()
-{
-    Schema::create('shipments', function (Blueprint $table) {
-        $table->id();
-        $table->string('order_id');
-        $table->string('shipment_status');
-        $table->date('shipment_date')->nullable();
-        $table->string('carrier')->nullable();
-        $table->string('tracking_number')->nullable();
-        $table->timestamps();
-    });
-}
+    public function up()
+    {
+        Schema::create('shipments', function (Blueprint $table) {
+            $table->id();
+            $table->string('order_id');
+            $table->string('shipment_status');
+            $table->date('shipment_date')->nullable();
+            $table->string('carrier')->nullable();
+            $table->string('tracking_number')->nullable();
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -10,18 +10,18 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-{
-    Schema::create('inventories', function (Blueprint $table) {
-        $table->id();
-        $table->string('shop_name');
-        $table->string('product_code');
-        $table->string('product_name');
-        $table->integer('stock');
-        $table->integer('available_stock');
-        $table->timestamp('last_updated')->nullable();
-        $table->timestamps();
-    });
-}
+    {
+        Schema::create('inventories', function (Blueprint $table) {
+            $table->id();
+            $table->string('shop_name');
+            $table->string('product_code');
+            $table->string('product_name');
+            $table->integer('stock');
+            $table->integer('available_stock');
+            $table->timestamp('last_updated')->nullable();
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

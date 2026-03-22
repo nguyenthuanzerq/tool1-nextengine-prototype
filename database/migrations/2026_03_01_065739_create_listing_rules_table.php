@@ -6,12 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   
     /**
      * 出品制御（Listing Control）
      * Skeleton version – Architecture-first
      */
-     public function up(): void
+    public function up(): void
     {
         Schema::create('listing_rules', function (Blueprint $table) {
             $table->id();

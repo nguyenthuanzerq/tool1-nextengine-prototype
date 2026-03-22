@@ -207,6 +207,9 @@
                                         </span>
                                     </td>
                                     <td class="px-2 py-1.5 text-gray-600 text-center">
+                                        <button type="button" onclick="window.location.href='{{ route('btoc.orders.show', $order->id) }}'" class="px-2 py-1 bg-gray-800 hover:bg-black text-white rounded text-[11px] font-medium transition shadow-sm whitespace-nowrap">
+                                            見る (Xem)
+                                        </button>
                                         <button type="button" onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')" class="px-2 py-1 bg-gray-800 hover:bg-black text-white rounded text-[11px] font-medium transition shadow-sm whitespace-nowrap">
                                             登録 (Lưu)
                                         </button>

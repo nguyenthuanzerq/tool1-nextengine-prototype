@@ -10,9 +10,9 @@
         <h1 class="text-2xl font-semibold text-gray-900">
             注文詳細 <span class="block text-sm text-gray-500 font-normal mt-1">Chi tiết Đơn hàng</span>
         </h1>
-        <a href="{{ route('btoc.orders.edit', $order->id) }}" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition">
+        {{-- <a href="{{ route('btoc.orders.edit', $order->id) }}" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition">
             編集する (Chỉnh sửa)
-        </a>
+        </a> --}}
     </div>
 
     <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-x-8">
