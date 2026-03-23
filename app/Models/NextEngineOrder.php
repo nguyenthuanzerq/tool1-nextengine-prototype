@@ -55,6 +55,10 @@ class NextEngineOrder extends Model
         'receive_order_confirm_ids',
         'receive_order_confirm_check_name',
         'receive_order_order_status_id',
+        'receive_order_purchaser_id',           // Mới thêm
+        'receive_order_purchaser_tel',          // Mới thêm
+        'receive_order_purchaser_mail_address', // Mới thêm
+        'receive_order_delivery_method_name',   // Mới thêm
         'tracking_number',
         'raw_response',
     ];
