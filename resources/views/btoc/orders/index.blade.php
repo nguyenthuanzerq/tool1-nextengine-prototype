@@ -32,6 +32,13 @@
                     class="px-4 py-2 bg-[#00B900] hover:bg-[#00A000] text-white rounded-lg text-sm font-medium transition shadow-sm">
                     出荷通知 (Thông báo giao hàng)
                 </button> --}}
+                {{-- Nút Đồng bộ Đơn hàng --}}
+                <form action="{{ route('btoc.orders.sync', ['shopId' => 1]) }}" method="POST" class="inline-block">
+                    @csrf
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow">
+                        <i class="fas fa-sync-alt mr-2"></i> 注文を同期する (Đồng bộ Next Engine)
+                    </button>
+                </form>
             </div>
         </div>
 

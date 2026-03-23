@@ -4,13 +4,22 @@ namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
 use App\Models\NextEngineOrder;
-// use App\Models\Order;
 use App\Models\Shop;
+use App\Repositories\NextEngine\NextEngineOrderRepository;
 use App\Services\Btoc\MailService;
+use App\Services\ECPlatforms\PlatformFactory;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
 {
+    private PlatformFactory $platformFactory;
+    private NextEngineOrderRepository $orderRepository;
+
+    public function __construct(PlatformFactory $platformFactory, NextEngineOrderRepository $orderRepository)
+    {
+        $this->platformFactory = $platformFactory;
+        $this->orderRepository = $orderRepository;
+    }
 
     /**
      * Hiển thị danh sách đơn hàng kèm Bộ lọc & Phân trang
@@ -161,7 +170,24 @@ class OrderController extends Controller
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に削除されました。');
     }
 
-    
-    
-    
+    /**
+     * Sync orders from the EC platform API into the local database.
+     */
+    public function syncOrders(Request $request, $shopId)
+    {
+        $shop = Shop::with('ecPlatform')->findOrFail($shopId);
+
+        $platformCode = $shop->ecPlatform->code;
+        $apiClient    = $this->platformFactory->makeApiClient($platformCode);
+
+        // Fetch orders from the platform (real API or mock fallback)
+        $apiResponse = $apiClient->fetchOrders($shop, $request->only(['date_from', 'date_to']));
+
+        // Persist into next_engine_orders
+        $synced = $this->orderRepository->syncFromApiResponse($shop->id, $apiResponse);
+
+        return redirect()
+            ->route('btoc.orders.index')
+            ->with('success', "注文同期完了: {$synced} 件の注文を取得しました。(Đồng bộ hoàn tất: {$synced} đơn hàng)");
+    }
 }

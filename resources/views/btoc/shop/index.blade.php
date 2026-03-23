@@ -13,6 +13,12 @@
         <a href="{{ route('btoc.shop.create') }}" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
             + 新規追加 (Thêm mới)
         </a>
+        <div class="mt-4 p-4 bg-white border rounded shadow-sm">
+            <h3 class="text-lg font-bold mb-2">Test kết nối API</h3>
+            <a href="{{ url('/btoc/auth/1/redirect') }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Liên kết tài khoản Next Engine
+            </a>
+        </div>
     </div>
 
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">

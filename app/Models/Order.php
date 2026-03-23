@@ -27,7 +27,7 @@ class Order extends Model
         'shipped_at',
     ];
 
-    // Tự động ép kiểu dữ liệu
+    // Auto cast data type
     protected $casts = [
         'receive_order_date' => 'datetime',
         'receive_order_import_date' => 'datetime',
@@ -35,7 +35,7 @@ class Order extends Model
     ];
 
     /**
-     * Quan hệ: Một đơn hàng thuộc về một Shop
+     * Relationship: One order belongs to one shop
      */
     public function shop()
     {
@@ -43,7 +43,7 @@ class Order extends Model
     }
 
     /**
-     * Quan hệ: Liên kết với dữ liệu thô từ NextEngine
+     * Relationship: Link to raw data from NextEngine
      */
     public function nextEngineOrder()
     {

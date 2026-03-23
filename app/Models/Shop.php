@@ -10,9 +10,15 @@ class Shop extends Model
     use HasFactory;
 
     protected $fillable = [
+        'ec_platform_id',
         'shop_code',
         'shop_name',
     ];
+
+    public function ecPlatform()
+    {
+        return $this->belongsTo(EcPlatform::class, 'ec_platform_id', 'id');
+    }
 
 
     public function nextEngineOrders()

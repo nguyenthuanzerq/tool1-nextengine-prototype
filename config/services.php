@@ -35,10 +35,11 @@ return [
         ],
     ],
 
-    'next_engine' => [
-        'base_uri' => env('NEXT_ENGINE_BASE_URI'),
-        'api_uri' => env('NEXT_ENGINE_API_URI'),
-        'redirect_uri' => env('NEXT_ENGINE_REDIRECT_URI'),
+    'nextengine' => [
+        'client_id'     => env('NEXTENGINE_CLIENT_ID'),
+        'client_secret' => env('NEXTENGINE_CLIENT_SECRET'),
+        'redirect_uri'  => env('NEXTENGINE_REDIRECT_URI'),
+        'base_url'      => env('NEXTENGINE_BASE_URL', 'https://base.next-engine.org'),
     ],
 
 ];

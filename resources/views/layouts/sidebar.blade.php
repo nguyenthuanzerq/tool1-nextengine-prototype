@@ -5,10 +5,9 @@
 
     <nav class="px-4 py-2 space-y-2 text-sm flex-1 overflow-y-auto">
 
-        <a href="{{ route('btoc.dashboard') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.dashboard')
-                ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                : 'hover:bg-gray-50' }}">
+        <a href="{{ route('btoc.dashboard') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.dashboard')
+    ? 'bg-blue-50 text-blue-700 border border-blue-100'
+    : 'hover:bg-gray-50' }}">
             <span
                 class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.dashboard') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
                 <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
@@ -21,19 +20,17 @@
             </div>
         </a>
 
-        <a href="{{ route('btoc.ec-platforms.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.ec-platforms.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50'}}">
-            {{-- Icon quả địa cầu / mạng lưới --}}
-            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.ec-platforms.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9">
-                    </path>
+        <a href="{{ route('btoc.platforms.index') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl {{ request()->routeIs('btoc.platforms.*') ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'hover:bg-gray-50' }}">
+            <span
+                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.platforms.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
+                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 21h18M4 21V7l8-4 8 4v14M9 21v-8h6v8" />
                 </svg>
             </span>
-            <div>
-                ECプラットフォーム<br>
-                <span class="text-[10px] text-gray-500 font-normal">Nền tảng EC</span>
+            <div class="leading-tight">
+                <div class="font-semibold">ECプラットフォーム管理</div>
+                <div class="text-xs text-gray-500">Quản lý EC Platforms  </div>
             </div>
         </a>
 
@@ -47,7 +44,7 @@
             </span>
             <div class="leading-tight">
                 <div class="font-semibold">ショップ管理</div>
-                <div class="text-xs text-gray-500">Quản lý Shop</div>
+                <div class="text-xs text-gray-500">Quản lý cửa hàng</div>
             </div>
         </a>
 
@@ -65,23 +62,6 @@
             <div class="leading-tight">
                 <div class="font-semibold">管理画面</div>
                 <div class="text-xs text-gray-500">Quản lý đơn hàng</div>
-            </div>
-        </a>
-
-        <a href="{{ route('btoc.inventory.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl  {{ request()->routeIs('btoc.inventory.*')
-                ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                : 'hover:bg-gray-50' }}">
-            <span
-                class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ request()->routeIs('btoc.inventory.*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700' }}">
-                <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                </svg>
-            </span>
-            <div class="leading-tight">
-                <div class="font-semibold">在庫・出庫</div>
-                <div class="text-xs text-gray-500">Tồn kho &amp; Xuất hàng</div>
             </div>
         </a>
 

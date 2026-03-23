@@ -13,7 +13,6 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Sử dụng updateOrCreate để tránh lỗi trùng lặp nếu bạn chạy lệnh seed nhiều lần
         User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [

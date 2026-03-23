@@ -12,23 +12,17 @@ class ShopSeeder extends Seeder
     {
         $now = Carbon::now();
 
+        // DB::table('shops')->truncate(); 
+
         DB::table('shops')->insert([
             [
-
-                'shop_code' => 'SHOP-01',
-                'shop_name' => '楽天市場店 (Rakuten)',
-                'status' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
-            [
-
-                'shop_code' => 'SHOP-02',
-                'shop_name' => 'Amazon店 (Amazon)',
-                'status' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ],
+                'ec_platform_id' => 1, 
+                'shop_code'      => 'NE-TEST-01',
+                'shop_name'      => 'Shop Test NextEngine',
+                'status'         => 1,
+                'created_at'     => $now,
+                'updated_at'     => $now,
+            ]
         ]);
     }
 }
