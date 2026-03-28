@@ -115,4 +115,14 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Email
+    |--------------------------------------------------------------------------
+    | Hardcoded recipient for shipment notification emails.
+    | Set NOTIFICATION_EMAIL in .env to override.
+    |
+    */
+    'notification_email' => env('NOTIFICATION_EMAIL'),
+
 ];

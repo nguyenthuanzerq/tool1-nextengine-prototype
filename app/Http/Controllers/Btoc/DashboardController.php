@@ -3,33 +3,20 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
+use App\Models\PlatformOrder;
 use App\Models\Shop;
-use Illuminate\Support\Facades\Schema;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        $orders = Order::with('orderProducts')->get();
-
-        return view('btoc.kanri_gamen', compact('orders'));
-    }
-
     public function dashboard()
     {
         $shopCount = Shop::count();
 
-        $todayOrders = Order::whereDate('created_at', today())->count();
-        $unshipped = Schema::hasColumn('orders', 'status')
-            ? Order::where('status', 'pending')->count()
-            : 0;
+        $todayOrders = PlatformOrder::whereDate('ordered_at', today())->count();
+        $unshipped   = PlatformOrder::whereNull('shipped_at')->count();
+        $todayShipped = PlatformOrder::whereDate('shipped_at', today())->count();
 
-        $todayShipped = Schema::hasColumn('orders', 'shipped_at')
-            ? Order::whereDate('shipped_at', today())->count()
-            : 0;
-
-        $shops = Shop::all();
+        $shops = Shop::with(['platform', 'platformConnections', 'latestSyncHistory'])->get();
 
         return view('btoc.dashboard', compact(
             'shopCount',

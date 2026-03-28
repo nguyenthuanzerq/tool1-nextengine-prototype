@@ -1,82 +1,165 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="p-6 max-w-[1440px] mx-auto">
-    <a href="{{ route('btoc.orders.index') }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 mb-6 transition">
-        ← 戻る (Quay lại)
+<div class="max-w-[1440px]">
+    <a href="{{ route('btoc.orders.index') }}" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-5 transition">
+        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 18l-6-6 6-6" />
+        </svg>
+        受注一覧に戻る
     </a>
 
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-900">
-            注文詳細 <span class="block text-sm text-gray-500 font-normal mt-1">Chi tiết Đơn hàng</span>
-        </h1>
-        <a href="{{ route('btoc.orders.edit', $order->id) }}" class="px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-lg text-sm transition">
-            編集する (Chỉnh sửa)
-        </a>
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">注文詳細</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Order Detail</p>
+        </div>
     </div>
 
-    <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-x-8">
-        {{-- Cột 1: Thông tin đơn hàng --}}
-        <div>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Thông tin Đơn hàng</h3>
+    {{-- Order info grid --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-0 mb-6 overflow-hidden">
+        {{-- Column 1: Order Info --}}
+        <div class="p-6 md:border-r border-gray-100">
+            <h3 class="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">注文情報 / Order Info</h3>
             <dl class="divide-y divide-gray-100">
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Mã Đơn hàng</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receipt_receipt_id }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">プラットフォーム</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->platform->name ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Cửa hàng</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shop->shop_name ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">ショップ</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->shop->shop_name ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Ngày Đặt hàng</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->receive_order_date }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">注文番号</dt>
+                    <dd class="text-sm text-gray-700 col-span-2 font-mono">{{ $order->platform_order_id ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Tổng Tiền</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0 font-semibold text-red-600">¥{{ number_format($order->receive_order_total_amount) }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">受注日</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->ordered_at?->format('Y-m-d H:i') ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Trạng Thái</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->status }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">ステータス</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                            {{ $order->platform_order_status ?? '-' }}
+                        </span>
+                    </dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">支払方法</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->payment_method ?? '-' }}</dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">商品金額</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">¥{{ number_format($order->goods_amount ?? 0) }}</dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">送料</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">¥{{ number_format($order->delivery_fee ?? 0) }}</dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">合計金額</dt>
+                    <dd class="text-sm font-semibold text-gray-900 col-span-2">¥{{ number_format($order->total_amount ?? 0) }}</dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">追跡番号</dt>
+                    <dd class="text-sm text-blue-600 col-span-2 font-mono">{{ $order->tracking_number ?? '-' }}</dd>
                 </div>
             </dl>
         </div>
 
-        {{-- Cột 2: Thông tin Khách hàng & Giao hàng --}}
-        <div>
-            <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">Thông tin Khách hàng & Giao hàng</h3>
+        {{-- Column 2: Customer & Delivery --}}
+        <div class="p-6">
+            <h3 class="text-sm font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-100">購入者・配送情報 / Customer &amp; Delivery</h3>
             <dl class="divide-y divide-gray-100">
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">ID Người mua</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_id ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">購入者名</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->buyer_name ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Tên Khách hàng</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_name }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">Email</dt>
+                    <dd class="text-sm text-gray-700 col-span-2 break-all">{{ $order->buyer_email ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Số điện thoại</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_phone ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">電話番号</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->buyer_phone ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Email</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->purchaser_email ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">郵便番号</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->buyer_zip ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Địa chỉ</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->shipping_address ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">住所</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->buyer_address ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Hãng vận chuyển</dt>
-                    <dd class="mt-1 text-sm text-gray-700 sm:col-span-2 sm:mt-0">{{ $order->carrier_name ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">配送先名</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->delivery_name ?? '-' }}</dd>
                 </div>
-                <div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-                    <dt class="text-sm font-medium text-gray-900">Mã Vận đơn</dt>
-                    <dd class="mt-1 text-sm text-blue-600 sm:col-span-2 sm:mt-0">{{ $order->shipping_delivery_tracking_number ?? '-' }}</dd>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">配送先住所</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">
+                        {{ $order->delivery_zip ? '〒' . $order->delivery_zip . ' ' : '' }}{{ $order->delivery_address ?? '-' }}
+                    </dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">配送方法</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->delivery_method ?? '-' }}</dd>
+                </div>
+                <div class="py-2.5 grid grid-cols-3 gap-4">
+                    <dt class="text-xs font-medium text-gray-500 col-span-1 self-center">出荷日</dt>
+                    <dd class="text-sm text-gray-700 col-span-2">{{ $order->shipped_at?->format('Y-m-d') ?? '-' }}</dd>
                 </div>
             </dl>
         </div>
+    </div>
+
+    {{-- Line items --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm max-w-4xl overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-sm font-semibold text-gray-800">注文明細 / Order Items</h3>
+        </div>
+
+        @if($order->items->isEmpty())
+            <div class="px-6 py-10 text-center">
+                <p class="text-sm text-gray-500">明細データがありません。同期後に表示されます。</p>
+                <p class="text-xs text-gray-400 mt-1">No item data. Will appear after sync.</p>
+            </div>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU / 商品コード</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名 / Product</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">数量 / Qty</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">単価 / Unit Price</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">小計 / Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @foreach($order->items as $item)
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="px-4 py-4 text-sm text-gray-700 font-mono">{{ $item->product_code ?? '-' }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700">{{ $item->product_name ?? '-' }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 text-right">{{ $item->quantity }}</td>
+                            <td class="px-4 py-4 text-sm text-gray-700 text-right">¥{{ number_format($item->unit_price) }}</td>
+                            <td class="px-4 py-4 text-sm font-medium text-gray-900 text-right">¥{{ number_format($item->total_price) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="bg-gray-50 border-t border-gray-200">
+                        <tr>
+                            <td colspan="4" class="px-4 py-3 text-right text-sm font-medium text-gray-700">合計 / Total</td>
+                            <td class="px-4 py-3 text-right text-sm font-semibold text-gray-900">
+                                ¥{{ number_format($order->items->sum('total_price')) }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        @endif
     </div>
 </div>
 @endsection

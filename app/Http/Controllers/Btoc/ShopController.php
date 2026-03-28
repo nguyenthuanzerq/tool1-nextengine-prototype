@@ -2,17 +2,22 @@
 
 namespace App\Http\Controllers\Btoc;
 
+use App\Connectors\NextEngineConnector;
 use App\Http\Controllers\Controller;
-use App\Models\NextEngineOrder;
+use App\Models\Platform;
+use App\Models\PlatformConnection;
 use App\Models\Shop;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ShopController extends Controller
 {
     public function index()
     {
-        $shops = Shop::orderBy('id', 'desc')->paginate(10);
+        $shops = Shop::with(['platform', 'platformConnections', 'latestSyncHistory'])
+            ->orderBy('id', 'desc')
+            ->paginate(15)
+            ->withQueryString();
 
         return view('btoc.shop.index', [
             'shops' => $shops,
@@ -21,49 +26,69 @@ class ShopController extends Controller
 
     public function show($id)
     {
-        $shop = Shop::findOrFail($id);
+        $shop = Shop::with(['platform', 'platformConnections'])->findOrFail($id);
+
+        $connection = $shop->platform_id
+            ? PlatformConnection::where(['platform_id' => $shop->platform_id, 'shop_id' => $shop->id])->first()
+            : null;
+
+        $histories = \App\Models\SyncHistory::where('shop_id', $shop->id)
+            ->latest('started_at')
+            ->limit(20)
+            ->get();
+
+        $platforms = Platform::orderBy('name')->get();
 
         return view('btoc.shop.detail', [
-            'shop' => $shop,
+            'shop'       => $shop,
+            'connection' => $connection,
+            'histories'  => $histories,
+            'platforms'  => $platforms,
         ]);
     }
 
     public function create()
     {
-        $isCreate = true;
-        $shop = new Shop;
-
         return view('btoc.shop.save', [
-            'isCreate' => $isCreate,
-            'shop' => $shop,
+            'isCreate'   => true,
+            'shop'       => new Shop,
+            'platforms'  => Platform::orderBy('name')->get(),
+            'connection' => null,
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'shop_code' => 'required|string|max:255|unique:shops,shop_code',
-            'shop_name' => 'required|string|max:255',
-
+            'shop_code'   => 'required|string|max:255|unique:shops,shop_code',
+            'shop_name'   => 'required|string|max:255',
+            'platform_id' => 'required|exists:platforms,id',
         ], [
-            'shop_code.required' => '店舗コードを空白のままにすることはできません。',
-            'shop_code.unique' => 'このショップコードは既に存在します。',
-            'shop_name.required' => 'ショップ名は空欄にできません。',
+            'shop_code.required'   => '店舗コードを空白のままにすることはできません。',
+            'shop_code.unique'     => 'このショップコードは既に存在します。',
+            'shop_name.required'   => 'ショップ名は空欄にできません。',
+            'platform_id.required' => 'Vui lòng chọn platform.',
+            'platform_id.exists'   => '無効なプラットフォームです。',
         ]);
 
         Shop::create($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'Đã thêm shop mới thành công.');
+        return redirect()->route('btoc.shop.index')->with('success', 'ショップを追加しました。');
     }
 
     public function edit($id)
     {
-        $isCreate = false;
         $shop = Shop::findOrFail($id);
 
+        $connection = $shop->platform_id
+            ? PlatformConnection::where(['platform_id' => $shop->platform_id, 'shop_id' => $shop->id])->first()
+            : null;
+
         return view('btoc.shop.save', [
-            'isCreate' => $isCreate,
-            'shop' => $shop,
+            'isCreate'   => false,
+            'shop'       => $shop,
+            'platforms'  => Platform::orderBy('name')->get(),
+            'connection' => $connection,
         ]);
     }
 
@@ -72,15 +97,14 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($id);
 
         $validated = $request->validate([
-            'shop_code' => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
-            'shop_name' => 'required|string|max:255',
-            'client_id' => 'required|string|max:255',
-            'client_secret' => 'required|string|max:255',
+            'shop_code'   => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
+            'shop_name'   => 'required|string|max:255',
+            'platform_id' => 'required|exists:platforms,id',
         ]);
 
         $shop->update($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'Đã cập nhật thông tin shop thành công.');
+        return redirect()->route('btoc.shop.index')->with('success', 'ショップ情報を更新しました。');
     }
 
     public function destroy($id)
@@ -88,92 +112,49 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($id);
         $shop->delete();
 
-        return redirect()->route('btoc.shop.index')->with('success', 'Đã xóa shop thành công.');
+        return redirect()->route('btoc.shop.index')->with('success', 'ショップを削除しました。');
     }
 
-    public function callback(Request $request)
+    public function connect(Request $request, NextEngineConnector $connector)
     {
-        $shopId = $request->query('shop_id');
-        $uid = $request->query('uid');
-        $state = $request->query('state');
+        $shop = Shop::findOrFail($request->query('id'));
+
+        // Store shop_id in session with a nonce so the callback can verify it
+        // without relying on a query-string parameter that could be tampered with.
+        $nonce = bin2hex(random_bytes(16));
+        session([
+            'ne_oauth_shop_id' => $shop->id,
+            'ne_oauth_nonce'   => $nonce,
+        ]);
+
+        return redirect($connector->getAuthUrl($shop));
+    }
+
+    public function callback(Request $request, NextEngineConnector $connector)
+    {
+        // Validate session — shop_id must come from session, not from the URL
+        $shopId = session('ne_oauth_shop_id');
+        $nonce  = session('ne_oauth_nonce');
+
+        if (! $shopId || ! $nonce) {
+            abort(403, 'OAuth session expired or invalid. Please start the connection again.');
+        }
+
+        // Consume the nonce so the callback cannot be replayed
+        session()->forget(['ne_oauth_shop_id', 'ne_oauth_nonce']);
+
         $shop = Shop::findOrFail($shopId);
 
-        $response = Http::asForm()->post(
-            config('services.next_engine.api_uri') . '/api_neauth',
-            [
-                'client_id' => $shop->client_id,
-                'client_secret' => $shop->client_secret,
-                'uid' => $uid,
-                'state' => $state,
-            ]
-        );
+        // Delegate token exchange to NextEngineConnector
+        $connection = $connector->handleCallback($request, $shop);
 
-        $shop->access_token = $response->json()['access_token'] ?? null;
-        $shop->refresh_token = $response->json()['refresh_token'] ?? null;
-        $shop->save();
-
-        return redirect()->route('btoc.shop.edit', ['id' => $shop->id]);
-    }
-
-    public function connect(Request $request)
-    {
-        $shop = Shop::findOrFail($request->id);
-        $redirectUri = config('services.next_engine.redirect_uri') . '?shop_id=' . $shop->id;
-        $query = http_build_query([
-            'client_id' => $shop->client_id,
-            'redirect_uri' => $redirectUri,
+        Log::info('NextEngine callback via connector', [
+            'shop_id'   => $shop->id,
+            'has_token' => (bool) $connection->access_token,
         ]);
-        $baseUri = config('services.next_engine.base_uri');
 
-        return redirect("$baseUri/users/sign_in?{$query}");
-    }
-
-    public function syncOrder(Request $request)
-    {
-        $shop = Shop::findOrFail($request->id);
-        $response = Http::asForm()->post(
-            config('services.next_engine.api_uri') . '/api_v1_receiveorder_base/search',
-            [
-                'access_token' => $shop->access_token,
-                'refresh_token' => $shop->refresh_token,
-                'wait_flag' => 1,
-                'fields' => 'receive_order_date,receive_order_import_date,receive_order_delivery_id,receive_order_include_possible_order_id,receive_order_customer_type_name,receive_order_purchaser_address1,receive_order_creator_name,receive_order_delivery_fee_amount,receive_order_goods_amount,receive_order_purchaser_address2,receive_order_payment_method_name,receive_order_id,receive_order_last_modified_date,receive_order_confirm_check_id,receive_order_confirm_ids,receive_order_confirm_check_name,receive_order_order_status_id',
-            ]
-        );
-        $result = $response->json();
-        if ($result['result'] !== 'success') {
-            return response()->json($result);
-        }
-        foreach ($result['data'] as $row) {
-
-            NextEngineOrder::updateOrCreate(
-                [
-                    'receive_order_id' => $row['receive_order_id'],
-                ],
-                [
-                    'shop_id' => $shop->id,
-                    'receive_order_date' => $row['receive_order_date'],
-                    'receive_order_import_date' => $row['receive_order_import_date'],
-                    'receive_order_delivery_id' => $row['receive_order_delivery_id'],
-                    'receive_order_include_possible_order_id' => $row['receive_order_include_possible_order_id'],
-                    'receive_order_customer_type_name' => $row['receive_order_customer_type_name'],
-                    'receive_order_purchaser_address1' => $row['receive_order_purchaser_address1'],
-                    'receive_order_creator_name' => $row['receive_order_creator_name'],
-                    'receive_order_delivery_fee_amount' => $row['receive_order_delivery_fee_amount'],
-                    'receive_order_goods_amount' => $row['receive_order_goods_amount'],
-                    'receive_order_purchaser_address2' => $row['receive_order_purchaser_address2'],
-                    'receive_order_payment_method_name' => $row['receive_order_payment_method_name'],
-                    'receive_order_last_modified_date' => $row['receive_order_last_modified_date'],
-                    'receive_order_confirm_check_id' => $row['receive_order_confirm_check_id'],
-                    'receive_order_confirm_ids' => $row['receive_order_confirm_ids'],
-                    'receive_order_confirm_check_name' => $row['receive_order_confirm_check_name'],
-                    'receive_order_order_status_id' => $row['receive_order_order_status_id'],
-                    'raw_response' => json_encode($row),
-                ]
-            );
-        }
-
-        return redirect()->route('btoc.orders.index')->with('success', '新しい注文が正常に追加されました。');
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', '✓ NextEngine connected via connector.');
     }
 
     /**
@@ -184,25 +165,38 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($id);
 
         $validated = $request->validate([
-            'client_id' => 'required|string|max:255',
+            'client_id'     => 'required|string|max:255',
             'client_secret' => 'required|string|max:255',
         ]);
 
-        $credentialsChanged = ($validated['client_id'] !== $shop->client_id)
-            || ($validated['client_secret'] !== $shop->client_secret);
+        $platform = Platform::where('key', 'nextengine')->firstOrFail();
 
-        $shop->client_id = $validated['client_id'];
-        $shop->client_secret = $validated['client_secret'];
+        $conn = PlatformConnection::firstOrNew([
+            'platform_id' => $platform->id,
+            'shop_id'     => $shop->id,
+        ]);
+
+        $credentialsChanged = ($validated['client_id'] !== $conn->client_id)
+            || ($validated['client_secret'] !== $conn->client_secret);
+
+        $conn->client_id     = $validated['client_id'];
+        $conn->client_secret = $validated['client_secret'];
 
         if ($credentialsChanged) {
-            // Clear tokens when credentials change to avoid using invalid tokens
-            $shop->access_token = null;
-            $shop->refresh_token = null;
+            $conn->access_token  = null;
+            $conn->refresh_token = null;
         }
 
-        $shop->save();
+        $conn->save();
+
+        // Ensure shop.platform_id is set
+        if (! $shop->platform_id) {
+            $shop->platform_id = $platform->id;
+            $shop->save();
+        }
 
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
-            ->with('success', 'NextEngine credentials saved.');
+            ->with('success', '✓ Credentials đã lưu vào platform_connections.');
     }
+
 }

@@ -1,316 +1,281 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="p-2 sm:p-4 w-full mx-auto">
+<div class="max-w-[1440px] flex flex-col h-full">
 
-        {{-- Alert Messages --}}
-        @if (session('success'))
-            <div class="mb-3 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg shadow-sm text-sm">
-                {{ session('success') }}
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="mb-3 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg shadow-sm text-sm">
-                {{ session('error') }}
-            </div>
-        @endif
+    @if (session('success'))
+        <div class="mb-4 flex-shrink-0 bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="mb-4 flex-shrink-0 bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3 text-sm">{{ session('error') }}</div>
+    @endif
 
-        {{-- Tiêu đề & Nút thao tác (Action Buttons) --}}
-        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-            <h1 class="text-xl font-semibold text-gray-900">
-                管理画面
-                <span class="block text-xs text-gray-500 font-normal mt-0.5">Quản lý Đơn hàng</span>
-            </h1>
-
-            <div class="flex flex-wrap items-center gap-3">
-                {{-- Các nút thao tác hàng loạt (Sẽ submit form bảng dữ liệu) --}}
-                {{-- <button type="button" onclick="submitBulkAction('{{ route('btoc.orders.export') }}')"
-                    class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition shadow-sm">
-                    作業指示書出力 (Xuất file chỉ thị)
-                </button>
-                <button type="button" onclick="submitBulkAction('{{ route('btoc.orders.shipping_notify') }}')"
-                    class="px-4 py-2 bg-[#00B900] hover:bg-[#00A000] text-white rounded-lg text-sm font-medium transition shadow-sm">
-                    出荷通知 (Thông báo giao hàng)
-                </button> --}}
-            </div>
+    <div class="mb-6 flex-shrink-0 flex items-center justify-between">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900">受注管理</h1>
+            <p class="text-sm text-gray-500 mt-0.5">Order Management</p>
         </div>
-
-        {{-- Bộ lọc tìm kiếm (検索条件) --}}
-        {{-- <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 shadow-sm">
-            <form method="GET" action="{{ route('btoc.orders.index') }}"
-                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">店舗 (Shop)</label>
-                    <select name="shop_id"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        <option value="">すべてのショップ (Tất cả)</option>
-                        @foreach ($shops as $shop)
-                            <option value="{{ $shop->id }}" {{ request('shop_id') == $shop->id ? 'selected' : '' }}>
-                                {{ $shop->shop_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        ステータス (Trạng thái)
-                    </label>
-
-                    <select name="status"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
-
-                        <option value="">すべて (Tất cả)</option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_IMPORT_INFO_LACK }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_IMPORT_INFO_LACK ? 'selected' : '' }}>
-                            取込情報不足
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_EMAIL_IMPORTED }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_EMAIL_IMPORTED ? 'selected' : '' }}>
-                            受注メール取込済
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_CREATED }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_CREATED ? 'selected' : '' }}>
-                            起票済(CSV/手入力)
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_WAITING }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_WAITING ? 'selected' : '' }}>
-                            納品書印刷待ち
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTING }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTING ? 'selected' : '' }}>
-                            納品書印刷中
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTED }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_INVOICE_PRINTED ? 'selected' : '' }}>
-                            納品書印刷済
-                        </option>
-
-                        <option value="{{ \App\Models\NextEngineOrder::ORDER_STATUS_SHIPMENT_COMPLETED }}"
-                            {{ request('status') == \App\Models\NextEngineOrder::ORDER_STATUS_SHIPMENT_COMPLETED ? 'selected' : '' }}>
-                            出荷確定済（完了）
-                        </option>
-
-                    </select>
-                </div>
-
-                <div class="lg:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">受注日 (Ngày đặt hàng)</label>
-                    <div class="flex items-center gap-2">
-                        <input type="date" name="date_from" value="{{ request('date_from') }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 text-sm">
-                        <span class="text-gray-500">~</span>
-                        <input type="date" name="date_to" value="{{ request('date_to') }}"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 text-sm">
-                    </div>
-                </div>
-
-                <div class="lg:col-span-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">フリーワード (Tìm kiếm tự do)</label>
-                    <input type="text" name="keyword" value="{{ request('keyword') }}"
-                        placeholder="受注番号 (Mã ĐH), 購入者名 (Tên người mua)..."
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 text-sm">
-                </div>
-
-                <div class="flex items-end gap-3">
-                    <a href="{{ route('btoc.orders.index') }}"
-                        class="w-1/3 px-4 py-2 border border-gray-300 text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm text-center transition">
-                        クリア
-                    </a>
-                    <button type="submit"
-                        class="w-2/3 px-4 py-2 bg-[#1e293b] hover:bg-black text-white rounded-lg text-sm font-medium transition shadow-sm">
-                        検索 (Tìm kiếm)
-                    </button>
-                </div>
-            </form>
-        </div> --}}
-
-        {{-- Bảng dữ liệu (受注リスト) --}}
-        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h2 class="text-sm font-semibold text-gray-800">受注リスト (Danh sách đơn hàng)</h2>
-                <span class="text-xs text-gray-500">Tổng cộng: {{ $orders->total() ?? 0 }} đơn</span>
-            </div>
-
-            <form id="bulk-action-form" method="POST" action="">
-                @csrf
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead>
-                            <tr class="bg-gray-100 border-b border-gray-200 text-[12px] leading-tight">
-                                <th class="px-2 py-2 text-center w-8">
-                                    <input type="checkbox" id="check-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                </th>
-                                <th class="px-2 py-2 font-medium text-gray-700">店舗<br><span class="text-[10px] text-gray-500">Shop</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">受注番号<br><span class="text-[10px] text-gray-500">Order ID</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">受注日<br><span class="text-[10px] text-gray-500">Order Date</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">購入者<br><span class="text-[10px] text-gray-500">Customer</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">顧客区分<br><span class="text-[10px] text-gray-500">Type</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700 max-w-[120px]">住所<br><span class="text-[10px] text-gray-500">Address</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">支払方法<br><span class="text-[10px] text-gray-500">Payment</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">配送方法<br><span class="text-[10px] text-gray-500">Delivery</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700 text-right">商品金額<br><span class="text-[10px] text-gray-500">Goods</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700 text-right">送料<br><span class="text-[10px] text-gray-500">Shipping</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700 ">追跡番号<br><span class="text-[10px] text-gray-500">Tracking No.</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700">ステータス<br><span class="text-[10px] text-gray-500">Status</span></th>
-                                <th class="px-2 py-2 font-medium text-gray-700 text-center">操作<br><span class="text-[10px] text-gray-500">Hành động</span></th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            @forelse($orders ?? [] as $order)
-                                <tr class="hover:bg-blue-50 transition text-[12px]">
-                                    <td class="px-2 py-1.5 text-center">
-                                        <input type="checkbox" name="order_ids[]" value="{{ $order->id }}" class="order-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-900 truncate max-w-[80px]" title="{{ $order->shop->shop_name ?? '-' }}">
-                                        {{ $order->shop->shop_name ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-blue-600 font-medium">
-                                        {{ $order->receive_order_id }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600">
-                                        {{ $order->receive_order_date?->format('Y-m-d') ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-900 truncate max-w-[90px]" title="{{ $order->receive_order_creator_name ?? '-' }}">
-                                        {{ $order->receive_order_creator_name ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600 truncate max-w-[70px]" title="{{ $order->receive_order_customer_type_name ?? '-' }}">
-                                        {{ $order->receive_order_customer_type_name ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600 max-w-[120px] truncate" title="{{ trim(($order->receive_order_purchaser_address1 ?? '') . ' ' . ($order->receive_order_purchaser_address2 ?? '')) }}">
-                                        {{ trim(($order->receive_order_purchaser_address1 ?? '') . ' ' . ($order->receive_order_purchaser_address2 ?? '')) ?: '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600 truncate max-w-[70px]" title="{{ $order->receive_order_payment_method_name ?? '-' }}">
-                                        {{ $order->receive_order_payment_method_name ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600 truncate max-w-[70px]" title="{{ $order->receive_order_delivery_id ?? '-' }}">
-                                        {{ $order->receive_order_delivery_id ?? '-' }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-900 text-right font-medium">
-                                        ¥{{ number_format($order->receive_order_goods_amount ?? 0) }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-900 text-right">
-                                        ¥{{ number_format($order->receive_order_delivery_fee_amount ?? 0) }}
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-900 bg-blue-50/30">
-                                        <input type="text" id="tracking_number_{{ $order->id }}" value="{{ $order->tracking_number ?? '' }}" placeholder="Nhập mã..." class="w-24 border border-gray-300 rounded py-1 px-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 text-[12px]">
-                                    </td>
-                                    <td class="px-2 py-1.5">
-                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 whitespace-nowrap">
-                                            {{ $order->receive_order_status_label ?? '-' }}
-                                        </span>
-                                    </td>
-                                    <td class="px-2 py-1.5 text-gray-600 text-center">
-                                        <button type="button" onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')" class="px-2 py-1 bg-gray-800 hover:bg-black text-white rounded text-[11px] font-medium transition shadow-sm whitespace-nowrap">
-                                            登録 (Lưu)
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="14" class="px-4 py-8 text-center text-gray-500">
-                                        条件に一致する受注はありません。<br>(Không tìm thấy đơn hàng nào phù hợp)
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </form>
-            
-            {{-- Form xóa dùng chung --}}
-            <form id="master-delete-form" method="POST" class="hidden">
-                @csrf
-                @method('DELETE')
-            </form>
-            
-            {{-- Phân trang --}}
-            @if (isset($orders) && $orders->hasPages())
-                <div class="px-4 py-3 border-t border-gray-200 text-sm">
-                    {{ $orders->appends(request()->query())->links() }}
-                </div>
-            @endif
-        </div>
+        <span class="text-sm text-gray-400">{{ $orders->total() ?? 0 }} 件</span>
     </div>
 
-    {{-- Script xử lý UI --}}
-    <script>
-        document.getElementById('check-all').addEventListener('change', function() {
-            let checkboxes = document.querySelectorAll('.order-checkbox');
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-        });
+    {{-- Filter bar --}}
+    <form method="GET" action="{{ route('btoc.orders.index') }}"
+        class="flex-shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4 flex flex-wrap gap-3 items-end">
 
-        function submitBulkAction(actionUrl) {
-            let form = document.getElementById('bulk-action-form');
-            let checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                alert('対象の受注を選択してください。(Vui lòng chọn ít nhất một đơn hàng)');
-                return;
-            }
+        <div class="flex-1 min-w-[150px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">店舗 / Shop</label>
+            <select name="shop_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">すべての店舗</option>
+                @foreach ($shops as $shop)
+                    <option value="{{ $shop->id }}" {{ ($filters['shop_id'] ?? '') == $shop->id ? 'selected' : '' }}>
+                        {{ $shop->shop_name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="flex-1 min-w-[120px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">開始日 / From</label>
+            <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div class="flex-1 min-w-[120px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">終了日 / To</label>
+            <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div class="flex-1 min-w-[180px]">
+            <label class="block text-sm font-medium text-gray-700 mb-1">キーワード / Keyword</label>
+            <input type="text" name="keyword" value="{{ $filters['keyword'] ?? '' }}"
+                placeholder="注文番号・購入者名"
+                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        </div>
+
+        <div class="flex gap-2">
+            <button type="submit"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
+                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+                </svg>
+                検索
+            </button>
+            <a href="{{ route('btoc.orders.index') }}"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                クリア
+            </a>
+        </div>
+    </form>
+
+    {{-- Table --}}
+    <div class="flex-1 flex flex-col min-h-0 bg-white rounded-xl border border-gray-200 shadow-sm">
+        <form id="bulk-action-form" method="POST" action="" class="flex-1 flex flex-col min-h-0">
+            @csrf
+            <div class="flex-1 overflow-auto min-h-0">
+                <table class="w-full text-left">
+                    <thead class="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="px-4 py-3 w-8">
+                                <input type="checkbox" id="check-all" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                注文番号
+                                <span class="block font-normal normal-case text-gray-400">Order ID</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ショップ
+                                <span class="block font-normal normal-case text-gray-400">Shop</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                購入者
+                                <span class="block font-normal normal-case text-gray-400">Customer</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                受注日
+                                <span class="block font-normal normal-case text-gray-400">Order Date</span>
+                            </th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                合計
+                                <span class="block font-normal normal-case text-gray-400">Total</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                追跡番号
+                                <span class="block font-normal normal-case text-gray-400">Tracking</span>
+                            </th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                ステータス
+                                <span class="block font-normal normal-case text-gray-400">Status</span>
+                            </th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse($orders ?? [] as $order)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <input type="checkbox" name="order_ids[]" value="{{ $order->id }}" class="order-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <div class="font-medium text-blue-600 font-mono text-xs">{{ $order->platform_order_id }}</div>
+                                    @if($order->platform)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700 mt-0.5">
+                                            {{ $order->platform->name }}
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <div class="font-medium truncate max-w-[120px]" title="{{ $order->shop->shop_name ?? '-' }}">{{ $order->shop->shop_name ?? '-' }}</div>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <div class="font-medium truncate max-w-[110px]" title="{{ $order->buyer_name ?? '-' }}">{{ $order->buyer_name ?? '-' }}</div>
+                                    @if($order->customer_type)
+                                        <div class="text-xs text-gray-400 mt-0.5">{{ $order->customer_type }}</div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    {{ $order->ordered_at?->format('Y-m-d') ?? '-' }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700 text-right font-medium">
+                                    ¥{{ number_format($order->total_amount ?? 0) }}
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <input type="text" id="tracking_number_{{ $order->id }}"
+                                           value="{{ $order->tracking_number ?? '' }}"
+                                           placeholder="追跡番号"
+                                           class="w-36 rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 whitespace-nowrap">
+                                        {{ $order->platform_order_status ?? '-' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-4 text-sm text-gray-700 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <button type="button"
+                                                id="register-btn-{{ $order->id }}"
+                                                onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')"
+                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
+                                            登録
+                                        </button>
+                                        <a href="{{ route('btoc.orders.show', $order->id) }}"
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
+                                            詳細
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="px-4 py-12 text-center text-sm text-gray-400">
+                                    条件に一致する受注はありません。
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        {{-- Delete form (shared) --}}
+        <form id="master-delete-form" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
+
+        {{-- Pagination --}}
+        <div class="flex-shrink-0 px-4 py-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <span>{{ $orders->firstItem() ?? 0 }}–{{ $orders->lastItem() ?? 0 }} / {{ $orders->total() }} 件</span>
+            {{ $orders->links() }}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('check-all').addEventListener('change', function() {
+        let checkboxes = document.querySelectorAll('.order-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+
+    function submitBulkAction(actionUrl) {
+        let form = document.getElementById('bulk-action-form');
+        let checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+        if (checkedBoxes.length === 0) {
+            alert('対象の受注を選択してください。/ Please select at least one order.');
+            return;
+        }
+        form.action = actionUrl;
+        form.submit();
+    }
+
+    function deleteOrder(actionUrl) {
+        if (confirm('削除してもよろしいですか？ / Are you sure you want to delete this order?')) {
+            let form = document.getElementById('master-delete-form');
             form.action = actionUrl;
             form.submit();
         }
+    }
 
-        function deleteOrder(actionUrl) {
-            if (confirm('削除してもよろしいですか？ (Bạn có chắc chắn muốn xóa đơn hàng này không?)')) {
-                let form = document.getElementById('master-delete-form');
-                form.action = actionUrl;
-                form.submit();
-            }
+    function updateTrackingNumber(orderId, updateUrl) {
+        const trackingInput = document.getElementById(`tracking_number_${orderId}`);
+        const trackingNumber = trackingInput.value.trim();
+        const btn = document.getElementById(`register-btn-${orderId}`);
+
+        if (!trackingNumber) {
+            alert('追跡番号を入力してください。/ Please enter a tracking number.');
+            return;
         }
 
-        function updateTrackingNumber(orderId, updateUrl) {
-            const trackingInput = document.getElementById(`tracking_number_${orderId}`);
-            const trackingNumber = trackingInput.value.trim();
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        const inputToken = document.querySelector('input[name="_token"]');
+        const csrfToken = metaToken ? metaToken.getAttribute('content') : (inputToken ? inputToken.value : '');
 
-            if (!trackingNumber) {
-                alert('追跡番号を入力してください。(Vui lòng nhập mã vận đơn)');
-                return;
-            }
-
-            const metaToken = document.querySelector('meta[name="csrf-token"]');
-            const inputToken = document.querySelector('input[name="_token"]');
-            const csrfToken = metaToken ? metaToken.getAttribute('content') : (inputToken ? inputToken.value : '');
-
-            if (!csrfToken) {
-                alert('Lỗi bảo mật: Không tìm thấy CSRF Token trên trang.');
-                return;
-            }
-
-            fetch(updateUrl, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    tracking_number: trackingNumber
-                })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Lỗi mạng hoặc server');
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    location.reload(); 
-                } else {
-                    alert('追跡番号の更新中にエラーが発生しました。(Đã xảy ra lỗi khi lưu)');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('サーバーエラーが発生しました。(Đã xảy ra lỗi máy chủ)');
-            });
+        if (!csrfToken) {
+            alert('セキュリティエラー: CSRF Token not found.');
+            return;
         }
-    </script>
+
+        btn.disabled = true;
+        btn.textContent = '送信中…';
+        btn.classList.add('opacity-60', 'cursor-not-allowed');
+
+        fetch(updateUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                tracking_number: trackingNumber
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('server error');
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                btn.textContent = '完了';
+                btn.classList.remove('bg-white', 'border-gray-300', 'text-gray-700', 'hover:bg-gray-50', 'opacity-60', 'cursor-not-allowed');
+                btn.classList.add('bg-green-600', 'text-white', 'border-green-600');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                btn.disabled = false;
+                btn.textContent = '登録';
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                alert('追跡番号の更新中にエラーが発生しました。/ Failed to save.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.textContent = '登録';
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            alert('サーバーエラーが発生しました。/ A server error occurred.');
+        });
+    }
+</script>
 @endsection

@@ -10,6 +10,7 @@ class Shop extends Model
     use HasFactory;
 
     protected $fillable = [
+        'platform_id',
         'shop_code',
         'shop_name',
         'client_id',
@@ -26,8 +27,28 @@ class Shop extends Model
         ];
     }
 
-    public function nextEngineOrders()
+    public function platform()
     {
-        return $this->hasMany(NextEngineOrder::class);
+        return $this->belongsTo(Platform::class);
+    }
+
+    public function platformConnections()
+    {
+        return $this->hasMany(PlatformConnection::class);
+    }
+
+    public function platformConnection(Platform $platform)
+    {
+        return $this->platformConnections()->where('platform_id', $platform->id)->first();
+    }
+
+    public function syncHistories()
+    {
+        return $this->hasMany(SyncHistory::class);
+    }
+
+    public function latestSyncHistory()
+    {
+        return $this->hasOne(SyncHistory::class)->latestOfMany('started_at');
     }
 }
