@@ -265,8 +265,6 @@ class NextEngineConnector implements OAuthConnector
             'buyer_name'            => $raw['receive_order_creator_name'] ?? null,
             'buyer_email'           => $raw['receive_order_purchaser_mail_address'] ?? null,  
             'buyer_phone'           => $raw['receive_order_purchaser_tel'] ?? null,
-            'buyer_email'           => null,
-            'buyer_phone'           => null,
             'buyer_zip'             => null,
             'buyer_address'         => $buyerAddress,
             'customer_type'         => $raw['receive_order_customer_type_name'] ?? null,
