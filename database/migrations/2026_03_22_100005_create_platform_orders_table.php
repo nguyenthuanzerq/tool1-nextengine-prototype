@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('payment_method')->nullable();
 
             // Buyer info
+            $table->string('buyer_id')->nullable();
             $table->string('buyer_name')->nullable();
             $table->string('buyer_email')->nullable();
             $table->string('buyer_phone')->nullable();

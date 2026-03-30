@@ -18,6 +18,7 @@ class PlatformOrder extends Model
         'delivery_fee',
         'total_amount',
         // --- Buyer ---
+        'buyer_id',
         'buyer_name',
         'buyer_email',
         'buyer_phone',
