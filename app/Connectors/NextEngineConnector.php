@@ -93,12 +93,16 @@ class NextEngineConnector implements OAuthConnector
                     'receive_order_import_date',
                     'receive_order_last_modified_date',
                     // Buyer (confirmed valid fields)
+                    'receive_order_purchaser_id',
                     'receive_order_creator_name',
+                    'receive_order_purchaser_tel',
+                    'receive_order_purchaser_mail_address',
                     'receive_order_purchaser_address1',
                     'receive_order_purchaser_address2',
                     'receive_order_customer_type_name',
                     // Delivery
                     'receive_order_delivery_id',
+                    'receive_order_delivery_method_name',
                     // Payment & amounts
                     'receive_order_payment_method_name',
                     'receive_order_goods_amount',
@@ -257,7 +261,10 @@ class NextEngineConnector implements OAuthConnector
             // Date
             'ordered_at'            => $raw['receive_order_date'] ?? null,
             // Buyer
+            'buyer_id'              => $raw['receive_order_purchaser_id'] ?? null,
             'buyer_name'            => $raw['receive_order_creator_name'] ?? null,
+            'buyer_email'           => $raw['receive_order_purchaser_mail_address'] ?? null,  
+            'buyer_phone'           => $raw['receive_order_purchaser_tel'] ?? null,
             'buyer_email'           => null,
             'buyer_phone'           => null,
             'buyer_zip'             => null,
@@ -267,7 +274,7 @@ class NextEngineConnector implements OAuthConnector
             'delivery_name'         => null,
             'delivery_zip'          => null,
             'delivery_address'      => null,
-            'delivery_method'       => $raw['receive_order_delivery_id'] ?? null,
+            'delivery_method'       => $raw['receive_order_delivery_method_name'] ?? ($raw['receive_order_delivery_id'] ?? null),
             // Payment
             'payment_method'        => $raw['receive_order_payment_method_name'] ?? null,
             // Amounts
