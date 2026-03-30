@@ -11,7 +11,7 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // $this->app['request']->server->set('HTTPS', true);
+        $this->app['request']->server->set('HTTPS', true);
 
         // Register PlatformConnectorFactory as a singleton so all controllers
         // share the same instance (and any runtime overrides are preserved).
@@ -26,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useTailwind();
-        // URL::forceScheme('https');
+        URL::forceScheme('https');
     }
 }
