@@ -43,6 +43,7 @@
                         <td class="px-4 py-4 text-xs font-mono text-gray-500">{{ $h->sync_code }}</td>
                         <td class="px-4 py-4 text-sm text-gray-700">{{ $h->shop->shop_name ?? $h->shop_name ?? '—' }}</td>
                         <td class="px-4 py-4 text-sm text-gray-500">{{ $h->platform->name ?? '—' }}</td>
+                        {{-- INVENTORY LEGACY MARKER: sync history table still renders inventory rows --}}
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                 {{ $h->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">

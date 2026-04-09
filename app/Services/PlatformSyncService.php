@@ -34,7 +34,7 @@ class PlatformSyncService
     }
 
     /**
-     * Dispatch an inventory sync job for the given shop.
+     * INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow.
      */
     public function dispatchInventorySync(Shop $shop): SyncHistory
     {
@@ -160,7 +160,7 @@ class PlatformSyncService
     }
 
     /**
-     * Run inventory sync synchronously (used by SyncController).
+     * INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow.
      * Returns count of rows processed.
      */
     public function syncInventoryNow(Shop $shop): int
@@ -198,6 +198,7 @@ class PlatformSyncService
      * Uses connector->normalizeInventory() to map platform fields → standard fields.
      * Returns the number of rows upserted.
      */
+    // INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow
     public function persistInventory(iterable $rows, Shop $shop, PlatformConnection $conn, PlatformConnector $connector): int
     {
         $count = 0;

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>NextEngine管理</title>
+    <title>NextEngine の注文エクスポート</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -33,7 +33,7 @@
                         <path d="M18 6 6 18M6 6l12 12"/>
                     </svg>
                 </button>
-                <span class="text-sm font-bold text-gray-900">NextEngine管理</span>
+                <span class="text-sm font-bold text-gray-900">NextEngine の注文エクスポート</span>
                 <div class="w-9"></div>{{-- spacer to center title --}}
             </div>
 

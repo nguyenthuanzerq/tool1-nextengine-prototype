@@ -69,6 +69,9 @@
                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
                     クリア
                 </a>
+                <button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition"  >
+                    輸出
+                </button>
             </div>
         </form>
 
@@ -169,10 +172,12 @@
                                         {{ $order->delivery_method ?? '-' }}
                                     </td>
 
-                                    <td class="px-1 py-3 align-middle">
-                                        <input type="text" id="tracking_number_{{ $order->id }}"
+                                    <td class="px-1 py-3 text-[11px] text-gray-700 align-middle" title="{{$order->tracking_number ?? '-'}}">
+                                        {{-- Todo delete --}}
+                                        {{-- <input type="text" id="tracking_number_{{ $order->id }}"
                                             value="{{ $order->tracking_number ?? '' }}" placeholder="入力"
-                                            class="w-full rounded border border-gray-300 px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm">
+                                            class="w-full rounded border border-gray-300 px-1.5 py-1 text-[11px] focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-sm"> --}}
+                                        {{ $order->tracking_number ?? '-'}}
                                     </td>
 
                                     <td class="px-1 py-3 text-[11px] text-gray-700 font-mono truncate align-middle"
@@ -204,11 +209,11 @@
 
                                     <td class="px-1 py-3 align-middle text-center">
                                         <div class="flex flex-col gap-1">
-                                            <button type="button" id="register-btn-{{ $order->id }}"
+                                            {{-- <button type="button" id="register-btn-{{ $order->id }}"
                                                 onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')"
                                                 class="w-full inline-flex justify-center items-center px-1 py-1.5 rounded text-[10px] font-bold bg-[#1e293b] hover:bg-gray-800 text-white transition shadow-sm">
                                                 登録
-                                            </button>
+                                            </button> --}}
 
                                             <a href="{{ route('btoc.orders.show', $order->id) }}"
                                                 class="w-full inline-flex justify-center items-center px-1 py-1.5 rounded text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm">
@@ -245,6 +250,14 @@
     </div>
 
     <script>
+        const exportButton = document.querySelector('form[action="{{ route('btoc.orders.index') }}"] button.bg-green-600');
+        if (exportButton) {
+            exportButton.addEventListener('click', function(event) {
+                event.preventDefault();
+                submitBulkAction('{{ route('btoc.orders.export') }}');
+            });
+        }
+
         document.getElementById('check-all').addEventListener('change', function() {
             let checkboxes = document.querySelectorAll('.order-checkbox');
             checkboxes.forEach(checkbox => {

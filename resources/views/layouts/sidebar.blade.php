@@ -3,7 +3,7 @@
               -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out">
 
     <div class="px-5 py-4 border-b border-gray-100 flex-shrink-0">
-        <div class="text-base font-bold text-gray-900">NextEngine管理</div>
+        <div class="text-base font-bold text-gray-900">NextEngine の注文エクスポート</div>
         <div class="text-xs text-gray-400 mt-0.5">Admin Panel</div>
     </div>
 
@@ -58,8 +58,8 @@
                 <div class="text-xs text-gray-400">Order Management</div>
             </div>
         </a>
-
-        <a href="{{ route('btoc.inventory') }}"
+        {{-- INVENTORY LEGACY BLOCK: sidebar entry kept commented out, candidate for deletion --}}
+        {{-- <a href="{{ route('btoc.inventory') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
                 {{ request()->routeIs('btoc.inventory*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50' }}">
             <span class="inline-flex h-8 w-8 items-center justify-center rounded-md flex-shrink-0
@@ -73,7 +73,8 @@
                 <div class="font-semibold text-sm truncate">在庫管理</div>
                 <div class="text-xs text-gray-400">Inventory</div>
             </div>
-        </a>
+        </a> --}}
+        {{-- END INVENTORY LEGACY BLOCK --}}
 
         <a href="{{ route('btoc.sync.history') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors

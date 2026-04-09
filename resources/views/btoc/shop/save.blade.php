@@ -40,32 +40,42 @@
 
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップコード <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップコード <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" name="shop_code" value="{{ old('shop_code', $shop->shop_code) }}"
                                 placeholder="例: shop-001"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
                             <p class="text-xs text-gray-400 mt-1">Shop Code</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップ名 <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップ名 <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" name="shop_name" value="{{ old('shop_name', $shop->shop_name) }}"
                                 placeholder="例: NextEngineショップ"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
                             <p class="text-xs text-gray-400 mt-1">Shop Name</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">プラットフォーム <span class="text-red-500">*</span></label>
-                            <select name="platform_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">プラットフォーム <span
+                                    class="text-red-500">*</span></label>
+                            <select name="platform_id"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 required>
                                 <option value="">-- プラットフォームを選択 --</option>
-                                @foreach ($platforms as $platform)
+                                {{-- @foreach ($platforms as $platform)
                                     <option value="{{ $platform->id }}"
                                         {{ old('platform_id', $shop->platform_id) == $platform->id ? 'selected' : '' }}>
                                         {{ $platform->name }} ({{ $platform->auth_type }})
                                     </option>
-                                @endforeach
+                                @endforeach --}}
+                                <option value="1"
+                                    {{ old('platform_id', $shop->platform_id) == 1 ? 'selected' : '' }}>
+                                    NextEngine (oauth2)
+                                </option>
                             </select>
                             <p class="text-xs text-gray-400 mt-1">Platform</p>
                         </div>
@@ -76,7 +86,8 @@
                             class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
                             キャンセル
                         </a>
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
+                        <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                                 <polyline points="17 21 17 13 7 13 7 21" />
@@ -95,7 +106,9 @@
 
                     {{-- Pass platform auth_type map to JS --}}
                     @php
-                        $platformMap = $platforms->mapWithKeys(fn($p) => [$p->id => ['auth_type' => $p->auth_type, 'name' => $p->name]])->toJson();
+                        $platformMap = $platforms
+                            ->mapWithKeys(fn($p) => [$p->id => ['auth_type' => $p->auth_type, 'name' => $p->name]])
+                            ->toJson();
                         $authType = $shop->platform?->auth_type ?? 'oauth2';
                     @endphp
                     <script>
@@ -108,11 +121,13 @@
 
                             {{-- Platform badge (dynamic) --}}
                             <div class="flex items-center gap-2 pb-3 border-b border-gray-100" id="platform-badge">
-                                @if($shop->platform)
-                                <span class="text-xs text-gray-500">Platform:</span>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700" id="badge-label">
-                                    {{ $shop->platform->name }} ({{ $shop->platform->auth_type }})
-                                </span>
+                                @if ($shop->platform)
+                                    <span class="text-xs text-gray-500">Platform:</span>
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+                                        id="badge-label">
+                                        {{ $shop->platform->name }} ({{ $shop->platform->auth_type }})
+                                    </span>
                                 @endif
                             </div>
 
@@ -138,12 +153,14 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Access Token</label>
                                     <input type="text" value="{{ $connection?->access_token ? '設定済み (set)' : '—' }}"
-                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50" readonly>
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50"
+                                        readonly>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Refresh Token</label>
                                     <input type="text" value="{{ $connection?->refresh_token ? '設定済み (set)' : '—' }}"
-                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50" readonly>
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50"
+                                        readonly>
                                 </div>
                             </div>
 
@@ -172,7 +189,8 @@
                         <div class="flex flex-wrap gap-3 mt-4">
                             <button type="submit"
                                 class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
-                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor"
+                                    stroke-width="2">
                                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                                     <polyline points="17 21 17 13 7 13 7 21" />
                                     <polyline points="7 3 7 8 15 8" />
@@ -181,10 +199,11 @@
                             </button>
 
                             {{-- OAuth2: show connect button after credentials saved --}}
-                            @if($connection?->client_id && $authType !== 'api_key')
+                            @if ($connection?->client_id && $authType !== 'api_key')
                                 <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor"
+                                        stroke-width="2">
                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                                     </svg>
@@ -193,11 +212,13 @@
                             @endif
 
                             {{-- Link to Sync tab after token obtained --}}
-                            @if($connection?->access_token)
+                            @if ($connection?->access_token)
                                 <a href="{{ route('btoc.shop.show', $shop->id) }}?tab=sync"
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M1 4v6h6M23 20v-6h-6" />
+                                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
                                     </svg>
                                     同期タブへ
                                 </a>
@@ -211,7 +232,7 @@
     </div>
 
     <script>
-        (function () {
+        (function() {
             const sel = document.querySelector('select[name="platform_id"]');
             if (!sel) return;
 
@@ -237,7 +258,7 @@
                 }
             }
 
-            sel.addEventListener('change', function () {
+            sel.addEventListener('change', function() {
                 applyAuthType(this.value);
             });
 

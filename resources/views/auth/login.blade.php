@@ -17,10 +17,10 @@
 
             <div class="text-center mb-8">
                 <h1 class="text-2xl font-bold text-gray-900">
-                    NextEngine 管理 / NextEngine Management
+                    NextEngine の注文エクスポート / NextEngine Order Export
                 </h1>
                 <p class="text-sm text-gray-500 mt-2">
-                    BtoC NextEngine Management Tool
+                    BtoC NextEngine Export Tool
                 </p>
             </div>
 

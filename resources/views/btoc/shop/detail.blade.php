@@ -16,7 +16,7 @@
     } else {
         $connStatus = 'disconnected';
     }
-
+    $connStatus = 'connected'; // TESTING - MUST DELETE
     $statusBadge = match($connStatus) {
         'connected'    => ['bg-green-100 text-green-700',  '接続済み'],
         'expired'      => ['bg-amber-100  text-amber-700', '期限切れ'],
@@ -157,6 +157,7 @@
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
                 </div>
                 @endif
+                
             </div>
 
             <div class="flex flex-wrap gap-3 mt-4">
@@ -213,22 +214,6 @@
                 </button>
             </form>
         </div>
-
-        {{-- Sync Inventory --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <h2 class="text-sm font-semibold text-gray-800 mb-1">在庫同期</h2>
-            <p class="text-xs text-gray-400 mb-4">Sync Inventory</p>
-            <form method="POST" action="{{ route('btoc.sync.inventory', $shop->id) }}">
-                @csrf
-                <button type="submit" {{ $connStatus !== 'connected' ? 'disabled' : '' }}
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition">
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
-                    </svg>
-                    在庫同期を開始
-                </button>
-            </form>
-        </div>
     </div>
     @endif
 
@@ -263,6 +248,7 @@
                     @endphp
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-4 py-4 text-xs font-mono text-gray-500">{{ $h->sync_code }}</td>
+                        {{-- INVENTORY LEGACY MARKER: history badge still supports inventory sync records --}}
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
                                 {{ $h->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">

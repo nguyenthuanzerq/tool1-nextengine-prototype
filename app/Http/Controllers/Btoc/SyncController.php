@@ -32,7 +32,7 @@ class SyncController extends Controller
     }
 
     /**
-     * Trigger inventory sync for a shop (queued).
+     * INVENTORY LEGACY ACTION: candidate for deletion when inventory sync is removed.
      */
     public function syncInventory(Request $request, int $shopId)
     {

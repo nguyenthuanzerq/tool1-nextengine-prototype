@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Btoc;
 
+use App\Exports\SelectedOrdersExport;
 use App\Http\Controllers\Controller;
 use App\Mail\ShipmentNotificationMail;
 use App\Models\PlatformOrder;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PlatformOrder::with(['shop', 'platform']);
+        $query = PlatformOrder::with(['shop', 'platform', 'items']);
 
         if ($request->filled('shop_id')) {
             $query->where('shop_id', $request->shop_id);
@@ -83,5 +85,18 @@ class OrderController extends Controller
         PlatformOrder::findOrFail($id)->delete();
 
         return response()->json(['success' => true]);
+    }
+
+    public function exportToExcel(Request $request)
+    {
+        $validated = $request->validate([
+            'order_ids' => ['required', 'array', 'min:1'],
+            'order_ids.*' => ['integer', 'exists:platform_orders,id'],
+        ]);
+
+        $orderIds = array_values(array_unique($validated['order_ids']));
+        $fileName = 'selected-orders-' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new SelectedOrdersExport($orderIds), $fileName);
     }
 }

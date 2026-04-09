@@ -48,6 +48,7 @@
                         } else {
                             $connStatus = 'disconnected';
                         }
+                        $connStatus = 'connected'; // TESTING - MUST DELETE
                         $lastSync = $shop->latestSyncHistory;
                     @endphp
                     <tr class="hover:bg-gray-50 transition">
@@ -115,7 +116,8 @@
                                             受注同期
                                         </button>
                                     </form>
-                                    <form action="{{ route('btoc.sync.inventory', $shop->id) }}" method="POST" class="inline">
+                                    {{-- INVENTORY LEGACY BLOCK: sync button kept commented out, candidate for deletion --}}
+                                    {{-- <form action="{{ route('btoc.sync.inventory', $shop->id) }}" method="POST" class="inline">
                                         @csrf
                                         <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 transition">
                                             <svg viewBox="0 0 24 24" class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2">
@@ -123,7 +125,8 @@
                                             </svg>
                                             在庫同期
                                         </button>
-                                    </form>
+                                    </form> --}}
+                                    {{-- END INVENTORY LEGACY BLOCK --}}
                                 @elseif($connStatus === 'expired')
                                     <a href="{{ route('btoc.shop.show', $shop->id) }}?tab=connection"
                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 transition">

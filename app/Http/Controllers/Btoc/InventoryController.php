@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
+// INVENTORY LEGACY CONTROLLER: candidate for deletion with related route/view/model
 use App\Models\Platform;
 use App\Models\PlatformInventory;
 use App\Models\Shop;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
+    // INVENTORY LEGACY ACTION: candidate for deletion
     public function index(Request $request)
     {
         $shops     = Shop::with('platform')->orderBy('shop_name')->get();

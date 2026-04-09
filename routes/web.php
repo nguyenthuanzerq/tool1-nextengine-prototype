@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Btoc\DashboardController;
+// INVENTORY LEGACY IMPORT: remove when inventory routes/controller are deleted
 use App\Http\Controllers\Btoc\InventoryController;
 use App\Http\Controllers\Btoc\OrderController;
 use App\Http\Controllers\Btoc\ShopController;
@@ -38,17 +39,20 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
     // Orders
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/',        [OrderController::class, 'index'])->name('index');
+        Route::post('/export', [OrderController::class, 'exportToExcel'])->name('export');
         Route::get('/{id}',    [OrderController::class, 'show'])->name('show');
         Route::put('/{id}',    [OrderController::class, 'update'])->name('update');
         Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
     });
 
+    // INVENTORY LEGACY ROUTE GROUP: candidate for deletion
     // Inventory
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
 
     // Sync
     Route::prefix('shops/{shopId}/sync')->name('sync.')->group(function () {
         Route::post('/orders',    [SyncController::class, 'syncOrders'])->name('orders');
+        // INVENTORY LEGACY ROUTE: candidate for deletion
         Route::post('/inventory', [SyncController::class, 'syncInventory'])->name('inventory');
     });
     Route::get('/sync/history',      [SyncController::class, 'history'])->name('sync.history');

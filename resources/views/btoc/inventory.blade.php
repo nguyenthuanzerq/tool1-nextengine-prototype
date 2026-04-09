@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- INVENTORY LEGACY PAGE: dedicated inventory screen, candidate for deletion --}}
 <div class="max-w-[1440px] flex flex-col h-full">
 
     <div class="mb-6 flex-shrink-0 flex items-center justify-between">

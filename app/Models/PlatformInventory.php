@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+// INVENTORY LEGACY MODEL: candidate for deletion with inventory feature removal
 use Illuminate\Database\Eloquent\Model;
 
 class PlatformInventory extends Model
