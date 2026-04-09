@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('platform_id')->nullable()->constrained()->nullOnDelete();
             $table->string('sync_code');
             $table->string('shop_name')->nullable();   // denormalized for display after shop deletion
-            $table->string('sync_type');               // 'orders' | 'inventory'
+            $table->string('sync_type');               // 'orders' 
             $table->timestamp('started_at');
             $table->timestamp('ended_at')->nullable();
             $table->string('status');                  // 'running' | 'success' | 'failed'

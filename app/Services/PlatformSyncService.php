@@ -36,15 +36,15 @@ class PlatformSyncService
     /**
      * INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow.
      */
-    public function dispatchInventorySync(Shop $shop): SyncHistory
-    {
-        $conn    = $this->resolveConnection($shop);
-        $history = $this->createHistory($shop, $conn, 'inventory');
+    // public function dispatchInventorySync(Shop $shop): SyncHistory
+    // {
+    //     $conn    = $this->resolveConnection($shop);
+    //     $history = $this->createHistory($shop, $conn, 'inventory');
 
-        PlatformSyncJob::dispatch($shop->id, $conn->id, 'inventory', $history->id);
+    //     PlatformSyncJob::dispatch($shop->id, $conn->id, 'inventory', $history->id);
 
-        return $history;
-    }
+    //     return $history;
+    // }
 
     /**
      * Run order sync synchronously (used by ShopController for now).
@@ -163,35 +163,35 @@ class PlatformSyncService
      * INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow.
      * Returns count of rows processed.
      */
-    public function syncInventoryNow(Shop $shop): int
-    {
-        $conn      = $this->resolveConnection($shop);
-        $connector = $this->factory->resolve($shop->platform->key);
-        $history   = $this->createHistory($shop, $conn, 'inventory');
+    // public function syncInventoryNow(Shop $shop): int
+    // {
+    //     $conn      = $this->resolveConnection($shop);
+    //     $connector = $this->factory->resolve($shop->platform->key);
+    //     $history   = $this->createHistory($shop, $conn, 'inventory');
 
-        try {
-            if ($connector instanceof OAuthConnector) {
-                $connector->refreshTokenIfNeeded($conn);
-            }
-            $rows  = $connector->fetchInventory($conn);
-            $count = $this->persistInventory($rows, $shop, $conn, $connector);
+    //     try {
+    //         if ($connector instanceof OAuthConnector) {
+    //             $connector->refreshTokenIfNeeded($conn);
+    //         }
+    //         $rows  = $connector->fetchInventory($conn);
+    //         $count = $this->persistInventory($rows, $shop, $conn, $connector);
 
-            $history->update([
-                'status'   => 'success',
-                'ended_at' => now(),
-                'meta'     => ['synced_count' => $count],
-            ]);
+    //         $history->update([
+    //             'status'   => 'success',
+    //             'ended_at' => now(),
+    //             'meta'     => ['synced_count' => $count],
+    //         ]);
 
-            return $count;
-        } catch (\Throwable $e) {
-            $history->update([
-                'status'        => 'failed',
-                'ended_at'      => now(),
-                'error_message' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
-    }
+    //         return $count;
+    //     } catch (\Throwable $e) {
+    //         $history->update([
+    //             'status'        => 'failed',
+    //             'ended_at'      => now(),
+    //             'error_message' => $e->getMessage(),
+    //         ]);
+    //         throw $e;
+    //     }
+    // }
 
     /**
      * Persist raw inventory rows from connector into platform_inventories.
@@ -199,27 +199,27 @@ class PlatformSyncService
      * Returns the number of rows upserted.
      */
     // INVENTORY LEGACY SERVICE METHOD: candidate for deletion with inventory sync flow
-    public function persistInventory(iterable $rows, Shop $shop, PlatformConnection $conn, PlatformConnector $connector): int
-    {
-        $count = 0;
-        foreach ($rows as $row) {
-            $normalized = $connector->normalizeInventory($row);
+    // public function persistInventory(iterable $rows, Shop $shop, PlatformConnection $conn, PlatformConnector $connector): int
+    // {
+    //     $count = 0;
+    //     foreach ($rows as $row) {
+    //         $normalized = $connector->normalizeInventory($row);
 
-            \App\Models\PlatformInventory::updateOrCreate(
-                [
-                    'platform_id'  => $conn->platform_id,
-                    'shop_id'      => $shop->id,
-                    'product_code' => $normalized['product_code'],
-                ],
-                array_merge($normalized, [
-                    'last_synced_at' => now(),
-                    'meta'           => $row,
-                ])
-            );
-            $count++;
-        }
-        return $count;
-    }
+    //         \App\Models\PlatformInventory::updateOrCreate(
+    //             [
+    //                 'platform_id'  => $conn->platform_id,
+    //                 'shop_id'      => $shop->id,
+    //                 'product_code' => $normalized['product_code'],
+    //             ],
+    //             array_merge($normalized, [
+    //                 'last_synced_at' => now(),
+    //                 'meta'           => $row,
+    //             ])
+    //         );
+    //         $count++;
+    //     }
+    //     return $count;
+    // }
 
     // -------------------------------------------------------------------------
     // Helpers

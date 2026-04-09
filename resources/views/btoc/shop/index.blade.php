@@ -48,7 +48,6 @@
                         } else {
                             $connStatus = 'disconnected';
                         }
-                        $connStatus = 'connected'; // TESTING - MUST DELETE
                         $lastSync = $shop->latestSyncHistory;
                     @endphp
                     <tr class="hover:bg-gray-50 transition">

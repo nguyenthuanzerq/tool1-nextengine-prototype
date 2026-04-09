@@ -47,13 +47,13 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
 
     // INVENTORY LEGACY ROUTE GROUP: candidate for deletion
     // Inventory
-    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
+    // Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
 
     // Sync
     Route::prefix('shops/{shopId}/sync')->name('sync.')->group(function () {
         Route::post('/orders',    [SyncController::class, 'syncOrders'])->name('orders');
         // INVENTORY LEGACY ROUTE: candidate for deletion
-        Route::post('/inventory', [SyncController::class, 'syncInventory'])->name('inventory');
+        // Route::post('/inventory', [SyncController::class, 'syncInventory'])->name('inventory');
     });
     Route::get('/sync/history',      [SyncController::class, 'history'])->name('sync.history');
     Route::get('/sync/history/{id}', [SyncController::class, 'historyDetail'])->name('sync.history.detail');

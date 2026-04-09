@@ -17,7 +17,7 @@ interface PlatformConnector
     public function fetchOrders(PlatformConnection $conn, array $opts = []): iterable;
 
     /** Fetch inventory from the platform. Yields/returns array of raw platform rows. */
-    public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable;
+    // public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable;
 
     /**
      * Map a single raw order row from this platform into our standard field set.
@@ -41,7 +41,7 @@ interface PlatformConnector
      * Standard fields (all nullable):
      *   sku, product_name, quantity, warehouse_code, synced_at
      */
-    public function normalizeInventory(array $raw): array;
+    // public function normalizeInventory(array $raw): array;
 
     /**
      * Batch-fetch line items for a set of order IDs from the platform.

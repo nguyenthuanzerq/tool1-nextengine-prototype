@@ -34,20 +34,20 @@ class SyncController extends Controller
     /**
      * INVENTORY LEGACY ACTION: candidate for deletion when inventory sync is removed.
      */
-    public function syncInventory(Request $request, int $shopId)
-    {
-        $shop = Shop::findOrFail($shopId);
+    // public function syncInventory(Request $request, int $shopId)
+    // {
+    //     $shop = Shop::findOrFail($shopId);
 
-        try {
-            $count = $this->syncService->syncInventoryNow($shop);
+    //     try {
+    //         $count = $this->syncService->syncInventoryNow($shop);
 
-            return redirect()->back()
-                ->with('success', "✓ Inventory synced: {$count} records updated.");
-        } catch (\Throwable $e) {
-            return redirect()->back()
-                ->with('error', 'Sync failed: ' . $e->getMessage());
-        }
-    }
+    //         return redirect()->back()
+    //             ->with('success', "✓ Inventory synced: {$count} records updated.");
+    //     } catch (\Throwable $e) {
+    //         return redirect()->back()
+    //             ->with('error', 'Sync failed: ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * Show sync history list.

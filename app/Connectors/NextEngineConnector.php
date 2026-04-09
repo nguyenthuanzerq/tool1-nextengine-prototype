@@ -138,61 +138,61 @@ class NextEngineConnector implements OAuthConnector
         return $result['data'] ?? [];
     }
 
-    public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable
-    {
-        $settings = $this->settings();
+    // public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable
+    // {
+    //     $settings = $this->settings();
 
-        $response = Http::asForm()->post(
-            $settings['api_uri'] . '/api_v1_master_stock/search',
-            [
-                'access_token'  => $conn->access_token,
-                'refresh_token' => $conn->refresh_token,
-                'wait_flag'     => 1,
-                'fields'        => implode(',', [
-                    'stock_goods_id',
-                    'stock_quantity',
-                    'stock_allocation_quantity',
-                    'stock_defective_quantity',
-                    'stock_remaining_order_quantity',
-                    'stock_out_quantity',
-                    'stock_free_quantity',
-                    'stock_advance_order_quantity',
-                    'stock_advance_order_allocation_quantity',
-                    'stock_advance_order_free_quantity',
-                    'stock_deleted_flag',
-                    'stock_creation_date',
-                    'stock_last_modified_date',
-                    'stock_last_modified_null_safe_date',
-                    'stock_creator_id',
-                    'stock_creator_name',
-                    'stock_last_modified_by_id',
-                    'stock_last_modified_by_null_safe_id',
-                    'stock_last_modified_by_name',
-                    'stock_last_modified_by_null_safe_name',
-                ]),
-            ]
-        );
+    //     $response = Http::asForm()->post(
+    //         $settings['api_uri'] . '/api_v1_master_stock/search',
+    //         [
+    //             'access_token'  => $conn->access_token,
+    //             'refresh_token' => $conn->refresh_token,
+    //             'wait_flag'     => 1,
+    //             'fields'        => implode(',', [
+    //                 'stock_goods_id',
+    //                 'stock_quantity',
+    //                 'stock_allocation_quantity',
+    //                 'stock_defective_quantity',
+    //                 'stock_remaining_order_quantity',
+    //                 'stock_out_quantity',
+    //                 'stock_free_quantity',
+    //                 'stock_advance_order_quantity',
+    //                 'stock_advance_order_allocation_quantity',
+    //                 'stock_advance_order_free_quantity',
+    //                 'stock_deleted_flag',
+    //                 'stock_creation_date',
+    //                 'stock_last_modified_date',
+    //                 'stock_last_modified_null_safe_date',
+    //                 'stock_creator_id',
+    //                 'stock_creator_name',
+    //                 'stock_last_modified_by_id',
+    //                 'stock_last_modified_by_null_safe_id',
+    //                 'stock_last_modified_by_name',
+    //                 'stock_last_modified_by_null_safe_name',
+    //             ]),
+    //         ]
+    //     );
 
-        $result = $response->json();
+    //     $result = $response->json();
 
-        Log::info('NextEngine fetchInventory response', [
-            'result'     => $result['result'] ?? null,
-            'count'      => $result['count'] ?? null,
-            'data_count' => isset($result['data']) ? count($result['data']) : 0,
-            'error'      => $result['error'] ?? null,
-            'message'    => $result['message'] ?? null,
-        ]);
+    //     Log::info('NextEngine fetchInventory response', [
+    //         'result'     => $result['result'] ?? null,
+    //         'count'      => $result['count'] ?? null,
+    //         'data_count' => isset($result['data']) ? count($result['data']) : 0,
+    //         'error'      => $result['error'] ?? null,
+    //         'message'    => $result['message'] ?? null,
+    //     ]);
 
-        if (($result['result'] ?? '') !== 'success') {
-            Log::warning('NextEngine fetchInventory failed', ['result' => $result]);
-            return [];
-        }
+    //     if (($result['result'] ?? '') !== 'success') {
+    //         Log::warning('NextEngine fetchInventory failed', ['result' => $result]);
+    //         return [];
+    //     }
 
-        // NE returns refreshed tokens in every response — persist them
-        $this->updateTokens($conn, $result);
+    //     // NE returns refreshed tokens in every response — persist them
+    //     $this->updateTokens($conn, $result);
 
-        return $result['data'] ?? [];
-    }
+    //     return $result['data'] ?? [];
+    // }
 
     public function fetchOrderItems(PlatformConnection $conn, array $orderIds): iterable
     {
@@ -294,19 +294,19 @@ class NextEngineConnector implements OAuthConnector
         ];
     }
 
-    public function normalizeInventory(array $raw): array
-    {
-        // Endpoint: POST /api_v1_master_stock/search
-        // stock_goods_id is the only product identifier on this endpoint.
-        // product_name is not available here; fetch from /api_v1_master_goods/search if needed.
-        return [
-            'product_code'    => $raw['stock_goods_id'] ?? null,
-            'product_name'    => null,
-            'stock'           => (int) ($raw['stock_quantity'] ?? 0),
-            'available_stock' => (int) ($raw['stock_free_quantity'] ?? 0),
-            'reserved_stock'  => (int) ($raw['stock_allocation_quantity'] ?? 0),
-        ];
-    }
+    // public function normalizeInventory(array $raw): array
+    // {
+    //     // Endpoint: POST /api_v1_master_stock/search
+    //     // stock_goods_id is the only product identifier on this endpoint.
+    //     // product_name is not available here; fetch from /api_v1_master_goods/search if needed.
+    //     return [
+    //         'product_code'    => $raw['stock_goods_id'] ?? null,
+    //         'product_name'    => null,
+    //         'stock'           => (int) ($raw['stock_quantity'] ?? 0),
+    //         'available_stock' => (int) ($raw['stock_free_quantity'] ?? 0),
+    //         'reserved_stock'  => (int) ($raw['stock_allocation_quantity'] ?? 0),
+    //     ];
+    // }
 
     // -------------------------------------------------------------------------
     // Misc

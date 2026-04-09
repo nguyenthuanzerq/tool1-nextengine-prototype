@@ -16,7 +16,6 @@
     } else {
         $connStatus = 'disconnected';
     }
-    $connStatus = 'connected'; // TESTING - MUST DELETE
     $statusBadge = match($connStatus) {
         'connected'    => ['bg-green-100 text-green-700',  '接続済み'],
         'expired'      => ['bg-amber-100  text-amber-700', '期限切れ'],
@@ -251,7 +250,7 @@
                         {{-- INVENTORY LEGACY MARKER: history badge still supports inventory sync records --}}
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                {{ $h->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
+                                {{ $h->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-red-700' }}">
                                 {{ $h->sync_type === 'orders' ? '注文' : '在庫' }}
                             </span>
                         </td>

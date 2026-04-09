@@ -29,9 +29,9 @@
                 </a>
             @endif
             {{-- INVENTORY LEGACY MARKER: retry route still branches to inventory sync for old history records --}}
-            {{-- @if($history->status === 'failed' && $history->shop_id)
-            <form method="POST"
-                  action="{{ route('btoc.sync.' . ($history->sync_type === 'inventory' ? 'inventory' : 'orders'), $history->shop_id) }}">
+            @if($history->status === 'failed' && $history->shop_id)
+            <form method="POST"lt
+                  action="{{ route('btoc.sync.orders', $history->shop_id) }}">
                 @csrf
                 <button type="submit"
                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
@@ -41,7 +41,7 @@
                     再同期
                 </button>
             </form>
-            @endif --}}
+            @endif
         </div>
     </div>
 
@@ -64,13 +64,12 @@
                     {{ $history->platform->name ?? '—' }}
                 </dd>
             </div>
-            {{-- INVENTORY LEGACY MARKER: sync type badge still renders inventory entries from history --}}
             <div class="py-3 grid grid-cols-3 gap-4">
                 <dt class="text-sm font-medium text-gray-500">種別 / Type</dt>
                 <dd class="text-sm col-span-2">
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                        {{ $history->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
-                        {{-- {{ $history->sync_type === 'orders' ? '注文 / Orders' : '在庫 / Inventory' }} --}}
+                        {{ $history->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700' }}">
+                        {{ $history->sync_type === 'orders' ? '注文 / Orders' : 'N/A' }}
                     </span>
                 </dd>
             </div>
