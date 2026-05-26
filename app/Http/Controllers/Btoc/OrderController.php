@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
 use App\Mail\ShipmentNotificationMail;
+use App\Models\PlatformConnection;
 use App\Models\PlatformOrder;
 use App\Models\Shop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
@@ -58,13 +61,118 @@ class OrderController extends Controller
 
     public function update(Request $request, $id)
     {
-        $order = PlatformOrder::findOrFail($id);
+        $order = PlatformOrder::with('platform')->findOrFail($id);
 
         $validated = $request->validate([
             'tracking_number' => 'required|string|max:255',
         ]);
 
-        $order->update($validated);
+        $platformKey = strtolower((string) optional($order->platform)->key);
+
+        // Only sync with NextEngine orders; other platforms update local tracking only.
+        if ($platformKey === 'nextengine') {
+            $connection = PlatformConnection::query()
+                ->where('platform_id', $order->platform_id)
+                ->where('shop_id', $order->shop_id)
+                ->first();
+
+            $accessToken = $connection?->access_token;
+            $refreshToken = $connection?->refresh_token;
+
+            if (empty($accessToken) || empty($refreshToken)) {
+                return $this->updateFailedResponse($request, 'このショップのNextEngineトークンが未設定です。/ NextEngine token is not configured for this shop.');
+            }
+
+            $baseUrl = 'https://api.next-engine.org/api_v1_receiveorder_base';
+            $receiveOrderId = (string) ($order->platform_order_id ?: $order->id);
+
+            $httpClient = Http::asForm()->timeout(20);
+            // Local Testing
+            // if (app()->isLocal()) {
+            //     $httpClient = $httpClient->withoutVerifying();
+            // }
+
+            // Call API to get receive_order_last_modified_date value in Next Engine
+            try {
+                $searchResponse = $httpClient->post("$baseUrl/search", [
+                    'access_token' => $accessToken,
+                    'refresh_token' => $refreshToken,
+                    'receive_order_id-eq' => $receiveOrderId,
+                    'fields' => 'receive_order_last_modified_date',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('NextEngine search request failed with exception.', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return $this->updateFailedResponse($request, 'NextEngineへの接続に失敗しました（SSL/接続エラー）。/ Could not connect to NextEngine (SSL/connection error).');
+            }
+
+            //Error Handing
+            if (! $searchResponse->successful() || $searchResponse->json('result') !== 'success') {
+                Log::warning('NextEngine search failed while updating tracking number.', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'response' => $searchResponse->json(),
+                ]);
+
+                return $this->updateFailedResponse($request, 'NextEngineから受注情報の取得に失敗しました。/ Failed to fetch order information from NextEngine.');
+            }
+            
+            //Set XML data
+            $lastModifiedDate = $searchResponse->json('data.0.receive_order_last_modified_date');
+            if (! $lastModifiedDate) {
+                return $this->updateFailedResponse($request, 'NextEngineの最終更新日時を取得できませんでした。/ Could not get receive_order_last_modified_date from NextEngine.');
+            }
+
+            $trackingNumberXml = htmlspecialchars(
+                $validated['tracking_number'],
+                ENT_XML1 | ENT_COMPAT,
+                'UTF-8'
+            );
+
+            $xmlData = '<?xml version="1.0" encoding="utf-8"?><root><receiveorder_base><receive_order_delivery_cut_form_id>'
+                . $trackingNumberXml
+                . '</receive_order_delivery_cut_form_id></receiveorder_base></root>';
+            // Call API to update tracking number
+            try {
+                $updateResponse = $httpClient->post("$baseUrl/update", [
+                    'access_token' => $accessToken,
+                    'refresh_token' => $refreshToken,
+                    'receive_order_id' => $receiveOrderId,
+                    'receive_order_last_modified_date' => $lastModifiedDate,
+                    'data' => $xmlData,
+                    'receive_order_shipped_update_flag' => 1,
+                    'wait_flag' => 1,
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('NextEngine update request failed with exception.', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return $this->updateFailedResponse($request, 'NextEngineの更新に失敗しました（SSL/接続エラー）。/ Could not update NextEngine (SSL/connection error).');
+            }
+
+            $result = $updateResponse->json();
+            // Error Handing
+            if (! $updateResponse->successful() || ($result['result'] ?? null) !== 'success') {
+                Log::warning('NextEngine update failed while updating tracking number.', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'response' => $result,
+                ]);
+
+                return $this->updateFailedResponse($request, 'NextEngine更新エラー: / NextEngine update error: ' . ($result['message'] ?? 'Unknown error'));
+            }
+        }
+        // Update tracking number in DB
+        $order->update([
+            'tracking_number' => $validated['tracking_number'],
+        ]);
 
         $notifyEmail = config('mail.notification_email');
         if ($notifyEmail) {
@@ -76,6 +184,18 @@ class OrderController extends Controller
         }
 
         return redirect()->route('btoc.orders.index')->with('success', '注文が正常に更新されました。');
+    }
+
+    private function updateFailedResponse(Request $request, string $message)
+    {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 422);
+        }
+
+        return redirect()->back()->withInput()->with('error', $message);
     }
 
     public function destroy($id)

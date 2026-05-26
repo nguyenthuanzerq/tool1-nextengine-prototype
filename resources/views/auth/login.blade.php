@@ -94,10 +94,14 @@
                 </button>
             </form>
 
-            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+            <div class="mt-8 pt-6 border-t border-gray-100 flex items-center justify-center gap-4">
                 <p class="text-xs text-gray-400 uppercase tracking-widest">
                     © 2026 NextEngine Tool
                 </p>
+                <a href="{{ route('policy') }}"
+                   class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-[#1e293b]">
+                    Policy
+                </a>
             </div>
         </div>
     </div>

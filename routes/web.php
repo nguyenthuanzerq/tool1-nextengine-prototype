@@ -13,6 +13,10 @@ Route::get('/', function () {
     return response('OK', 200);
 });
 
+Route::get('/policy', function () {
+    return view('policy');
+})->name('policy');
+
 // ── Auth ───────────────────────────────────────────────────────────────────────
 Route::get('/login',  [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1');
