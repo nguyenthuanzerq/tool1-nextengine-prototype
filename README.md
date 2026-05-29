@@ -27,7 +27,7 @@ All sensitive customer information and API keys are highly secured using databas
 
 *   **Backend Core:** PHP ^8.2, Laravel ^12.0
 *   **Frontend Core:** Blade Templates, Tailwind CSS ^4.0, Vite ^7.0, Axios
-*   **Database:** Flexible support for SQLite (local/testing environments) or MySQL (staging/production environments).
+*   **Database:** MySQL (Recommended for full compatibility and stable queue/data synchronization).
 *   **Job & Queue:** Database Queue Driver for background processing of heavy synchronization tasks.
 *   **Mail Service:** Integrates email delivery for shipment tracking updates to customers when tracking numbers are entered.
 
@@ -185,7 +185,7 @@ To prepare this system for production environments, the following core technical
 *   PHP >= 8.2 (Required)
 *   Composer
 *   Node.js & npm (For asset compiling)
-*   MySQL/MariaDB or SQLite
+*   MySQL / MariaDB (Recommended to ensure reliable queue and data synchronization)
 
 ### Setup Steps
 
@@ -208,9 +208,15 @@ Ensure your PHP version is **8.2.0 or higher**. If you do not have PHP or Compos
 ```bash
 composer run setup
 ```
-*This command automatically executes: composer package installations, node package installations, environment file copy from `.env.example`, generation of the `APP_KEY`, creation of a blank SQLite database, and executes database migrations & database seeding.*
+*This command automatically executes: Composer package installations (`composer install`), environment configuration file copy (`.env` from `.env.example` if not exists), application key generation (`key:generate`), database migrations (`migrate --force`), Node packages installation (`npm install`), and compiles the frontend assets (`npm run build`).*
 
-**Step 4: Update NextEngine configuration**
+**Step 4: Run the database seeder to initialize default data:**
+```bash
+php artisan db:seed
+```
+*This command runs the `DatabaseSeeder`, which seeds the platform definitions (NextEngine, Yahoo Shopping, Rakuten) via `PlatformSeeder` and generates the default administrator account via `UserSeeder`.*
+
+**Step 5: Update NextEngine configuration (if needed):**
 Open the generated `.env` file and insert NextEngine parameters if available:
 ```env
 NEXT_ENGINE_BASE_URI=https://base.next-engine.org
@@ -222,11 +228,11 @@ NEXT_ENGINE_REDIRECT_URI=http://localhost:8000/nextengine/callback
 php artisan db:seed --class=PlatformSeeder
 ```
 
-**Step 5: Start the development server:**
+**Step 6: Start the development server:**
 ```bash
-composer run dev
+php artisan serve
 ```
-*This script launches the local Web Server (`artisan serve`), the Queue worker (`queue:listen`), the CLI log viewer (`pail`), and the Vite asset bundler concurrently.*
+
 
 ### Default Admin Login
 *   **Dashboard URL:** [http://127.0.0.1:8000/btoc](http://127.0.0.1:8000/btoc) (requires login)

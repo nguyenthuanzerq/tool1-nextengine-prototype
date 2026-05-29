@@ -79,3 +79,9 @@ Route::get('/nextengine/connect', [ShopController::class, 'connect'])
 // callback has no auth middleware — NE redirects here after sign-in (external browser hop)
 // shop_id is validated via session nonce set in connect(), NOT from the query string
 Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+
+// ── Yahoo Shopping OAuth ───────────────────────────────────────────────────────
+Route::get('/yahoo/connect', [ShopController::class, 'connectYahoo'])
+    ->middleware('auth')
+    ->name('yahoo.connect');
+Route::get('/yahoo/callback', [ShopController::class, 'callbackYahoo'])->name('yahoo.callback');

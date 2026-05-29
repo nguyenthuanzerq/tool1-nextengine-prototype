@@ -168,6 +168,85 @@ class OrderController extends Controller
 
                 return $this->updateFailedResponse($request, 'NextEngine更新エラー: / NextEngine update error: ' . ($result['message'] ?? 'Unknown error'));
             }
+        } elseif ($platformKey === 'yahoo') {
+            $connection = PlatformConnection::query()
+                ->where('platform_id', $order->platform_id)
+                ->where('shop_id', $order->shop_id)
+                ->first();
+
+            if (!$connection) {
+                return $this->updateFailedResponse($request, 'このショップのYahoo Shopping認証情報が未設定です。/ Yahoo Shopping credentials not found.');
+            }
+
+            // Ensure access token is refreshed
+            try {
+                $connector = app(\App\Connectors\YahooConnector::class);
+                $connector->refreshTokenIfNeeded($connection);
+            } catch (\Throwable $e) {
+                return $this->updateFailedResponse($request, 'Yahoo Shoppingアクセストークンの更新に失敗しました: ' . $e->getMessage());
+            }
+
+            $accessToken = $connection->access_token;
+            if (empty($accessToken)) {
+                return $this->updateFailedResponse($request, 'Yahoo Shoppingトークンが未設定です。/ Yahoo Shopping token is not configured.');
+            }
+
+            $trackingNumberXml = htmlspecialchars(
+                $validated['tracking_number'],
+                ENT_XML1 | ENT_COMPAT,
+                'UTF-8'
+            );
+
+            $xmlData = '<?xml version="1.0" encoding="UTF-8"?>' .
+                '<Req>' .
+                '    <Target>' .
+                '        <OrderId>' . htmlspecialchars($order->platform_order_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</OrderId>' .
+                '        <IsPointFix>true</IsPointFix>' .
+                '        <OperationUser>System</OperationUser>' .
+                '    </Target>' .
+                '    <Order>' .
+                '        <Ship>' .
+                '            <ShipStatus>3</ShipStatus>' . // 3 = Shipped
+                '            <ShipInvoiceNumber1>' . $trackingNumberXml . '</ShipInvoiceNumber1>' .
+                '        </Ship>' .
+                '    </Order>' .
+                '    <SellerId>' . htmlspecialchars($connection->seller_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</SellerId>' .
+                '</Req>';
+
+            try {
+                $response = Http::withToken($accessToken)
+                    ->withHeaders(['Content-Type' => 'application/xml'])
+                    ->post('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderShipStatusChange', $xmlData);
+            } catch (\Throwable $e) {
+                Log::error('Yahoo orderShipStatusChange request failed', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'error' => $e->getMessage(),
+                ]);
+                return $this->updateFailedResponse($request, 'Yahoo Shoppingへの接続に失敗しました。/ Could not connect to Yahoo Shopping.');
+            }
+
+            if (!$response->successful()) {
+                Log::warning('Yahoo orderShipStatusChange failed', [
+                    'order_id' => $order->id,
+                    'platform_order_id' => $order->platform_order_id,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                return $this->updateFailedResponse($request, 'Yahoo Shopping更新エラー: HTTP ' . $response->status());
+            }
+
+            try {
+                $xml = simplexml_load_string($response->body());
+                if ($xml && $xml->getName() === 'Error') {
+                    return $this->updateFailedResponse($request, 'Yahoo Shoppingエラー: ' . (string) $xml->Message . ' (' . (string) $xml->Code . ')');
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to parse Yahoo response XML', [
+                    'body' => $response->body(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
         // Update tracking number in DB
         $order->update([
