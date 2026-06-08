@@ -88,6 +88,6 @@ Route::get('/yahoo/connect', [ShopController::class, 'connectYahoo'])
 Route::get('/yahoo/callback', [ShopController::class, 'callbackYahoo'])->name('yahoo.callback');
 
 // ── Debug / Logs ───────────────────────────────────────────────────────────────
-Route::get('/debug/logs', [\App\Http\Controllers\Debug\LogViewerController::class, 'index'])->name('debug.logs');
-Route::get('/debug/logs/api/{id}', [\App\Http\Controllers\Debug\LogViewerController::class, 'apiDetail'])->name('debug.logs.api');
-Route::get('/debug/logs/state/{id}', [\App\Http\Controllers\Debug\LogViewerController::class, 'stateDetail'])->name('debug.logs.state');
+Route::get('/debug/logs', [LogViewerController::class, 'index'])->name('debug.logs');
+Route::get('/debug/logs/api/{id}', [LogViewerController::class, 'apiDetail'])->name('debug.logs.api');
+Route::get('/debug/logs/state/{id}', [LogViewerController::class, 'stateDetail'])->name('debug.logs.state');

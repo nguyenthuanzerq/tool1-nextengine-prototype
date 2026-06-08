@@ -34,6 +34,8 @@ class UserController extends Controller
             'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::min(8)],
+            'email_smtp' => ['nullable', 'email', 'max:255'],
+            'app_password' => ['nullable', 'string', 'max:255'],
         ], [
             'name.required'     => '名前を入力してください。',
             'email.required'    => 'メールアドレスを入力してください。',
@@ -47,6 +49,8 @@ class UserController extends Controller
             'email'     => $validated['email'],
             'password'  => Hash::make($validated['password']),
             'is_active' => true,
+            'email_smtp' => $validated['email_smtp'] ?? null,
+            'app_password' => $validated['app_password'] ?? null,
         ]);
 
         return redirect()->route('btoc.users.index')->with('success', 'ユーザーを追加しました。');
@@ -70,6 +74,8 @@ class UserController extends Controller
             'name'      => ['required', 'string', 'max:255'],
             'email'     => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'is_active' => ['sometimes', 'boolean'],
+            'email_smtp' => ['nullable', 'email', 'max:255'],
+            'app_password' => ['nullable', 'string', 'max:255'],
         ], [
             'name.required'  => '名前を入力してください。',
             'email.required' => 'メールアドレスを入力してください。',
