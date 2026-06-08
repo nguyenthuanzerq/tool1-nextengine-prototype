@@ -41,4 +41,8 @@ return [
         'redirect_uri' => env('NEXT_ENGINE_REDIRECT_URI'),
     ],
 
+    'yahoo' => [
+        'redirect_uri' => env('YAHOO_REDIRECT_URI'),
+    ],
+
 ];

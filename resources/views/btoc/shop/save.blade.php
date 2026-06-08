@@ -95,11 +95,11 @@
 
                     {{-- Pass platform auth_type map to JS --}}
                     @php
-                        $platformMap = $platforms->mapWithKeys(fn($p) => [$p->id => ['auth_type' => $p->auth_type, 'name' => $p->name]])->toJson();
+                        $platformMap = $platforms->mapWithKeys(fn($p) => [$p->id => ['key' => $p->key, 'auth_type' => $p->auth_type, 'name' => $p->name]])->toJson();
                         $authType = $shop->platform?->auth_type ?? 'oauth2';
                     @endphp
                     <script>
-                        const PLATFORM_MAP = @json($platforms->mapWithKeys(fn($p) => [$p->id => ['auth_type' => $p->auth_type, 'name' => $p->name]]));
+                        const PLATFORM_MAP = @json($platforms->mapWithKeys(fn($p) => [$p->id => ['key' => $p->key, 'auth_type' => $p->auth_type, 'name' => $p->name]]));
                     </script>
 
                     <form method="POST" action="{{ route('btoc.shop.nextengine_connection', $shop->id) }}">
@@ -118,6 +118,14 @@
 
                             {{-- oauth2: Client ID + Client Secret --}}
                             <div id="block-oauth2" class="{{ $authType !== 'api_key' ? '' : 'hidden' }} space-y-4">
+                                <div id="yahoo-seller-id-block" class="hidden">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Seller ID <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="seller_id" id="seller_id_input"
+                                        value="{{ old('seller_id', $connection?->seller_id) }}"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Client ID <span class="text-red-500">*</span>
@@ -182,14 +190,25 @@
 
                             {{-- OAuth2: show connect button after credentials saved --}}
                             @if($connection?->client_id && $authType !== 'api_key')
-                                <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
-                                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                                    </svg>
-                                    OAuth 連携 / Connect
-                                </a>
+                                @if($shop->platform?->key === 'yahoo')
+                                    <a href="{{ route('yahoo.connect', ['id' => $shop->id]) }}"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                        </svg>
+                                        OAuth 連携 / Connect (Yahoo)
+                                    </a>
+                                @else
+                                    <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                        </svg>
+                                        OAuth 連携 / Connect
+                                    </a>
+                                @endif
                             @endif
 
                             {{-- Link to Sync tab after token obtained --}}
@@ -219,17 +238,31 @@
                 const info = PLATFORM_MAP[platformId];
                 const authType = info ? info.auth_type : 'oauth2';
                 const name = info ? info.name : '';
+                const key = info ? info.key : '';
 
                 const blockOauth2 = document.getElementById('block-oauth2');
                 const blockApikey = document.getElementById('block-apikey');
+                const yahooSellerIdBlock = document.getElementById('yahoo-seller-id-block');
+                const sellerIdInput = document.getElementById('seller_id_input');
                 const isApiKey = authType === 'api_key';
+                const isYahoo = key === 'yahoo';
 
                 blockOauth2.classList.toggle('hidden', isApiKey);
                 blockApikey.classList.toggle('hidden', !isApiKey);
 
                 // Disable inputs in hidden block so they don't overwrite submitted values
-                blockOauth2.querySelectorAll('input').forEach(el => el.disabled = isApiKey);
+                blockOauth2.querySelectorAll('input').forEach(el => {
+                    if (el.id !== 'seller_id_input') {
+                        el.disabled = isApiKey;
+                    }
+                });
                 blockApikey.querySelectorAll('input').forEach(el => el.disabled = !isApiKey);
+
+                // Handle Yahoo Seller ID dynamic block
+                if (yahooSellerIdBlock && sellerIdInput) {
+                    yahooSellerIdBlock.classList.toggle('hidden', !isYahoo);
+                    sellerIdInput.disabled = !isYahoo;
+                }
 
                 const badge = document.getElementById('badge-label');
                 if (badge && name) {

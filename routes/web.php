@@ -7,6 +7,7 @@ use App\Http\Controllers\Btoc\OrderController;
 use App\Http\Controllers\Btoc\ShopController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\UserController;
+use App\Http\Controllers\Debug\LogViewerController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -79,3 +80,14 @@ Route::get('/nextengine/connect', [ShopController::class, 'connect'])
 // callback has no auth middleware — NE redirects here after sign-in (external browser hop)
 // shop_id is validated via session nonce set in connect(), NOT from the query string
 Route::get('/nextengine/callback', [ShopController::class, 'callback'])->name('nextengine.callback');
+
+// ── Yahoo Shopping OAuth ───────────────────────────────────────────────────────
+Route::get('/yahoo/connect', [ShopController::class, 'connectYahoo'])
+    ->middleware('auth')
+    ->name('yahoo.connect');
+Route::get('/yahoo/callback', [ShopController::class, 'callbackYahoo'])->name('yahoo.callback');
+
+// ── Debug / Logs ───────────────────────────────────────────────────────────────
+Route::get('/debug/logs', [LogViewerController::class, 'index'])->name('debug.logs');
+Route::get('/debug/logs/api/{id}', [LogViewerController::class, 'apiDetail'])->name('debug.logs.api');
+Route::get('/debug/logs/state/{id}', [LogViewerController::class, 'stateDetail'])->name('debug.logs.state');

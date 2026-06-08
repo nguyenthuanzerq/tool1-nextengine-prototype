@@ -10,6 +10,7 @@ class PlatformConnection extends Model
     protected $fillable = [
         'platform_id',
         'shop_id',
+        'seller_id',
         'client_id',
         'client_secret',
         'access_token',

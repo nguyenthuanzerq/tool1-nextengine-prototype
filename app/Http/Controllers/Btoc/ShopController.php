@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Connectors\NextEngineConnector;
+use App\Connectors\YahooConnector;
 use App\Http\Controllers\Controller;
 use App\Models\Platform;
 use App\Models\PlatformConnection;
@@ -164,12 +165,20 @@ class ShopController extends Controller
     {
         $shop = Shop::findOrFail($id);
 
-        $validated = $request->validate([
+        $rules = [
             'client_id'     => 'required|string|max:255',
             'client_secret' => 'required|string|max:255',
-        ]);
+        ];
 
-        $platform = Platform::where('key', 'nextengine')->firstOrFail();
+        // If the platform is Yahoo, seller_id is also required
+        $platform = $shop->platform;
+        if ($platform && $platform->key === 'yahoo') {
+            $rules['seller_id'] = 'required|string|max:255';
+        }
+
+        $validated = $request->validate($rules);
+
+        $platform = $platform ?: Platform::where('key', 'nextengine')->firstOrFail();
 
         $conn = PlatformConnection::firstOrNew([
             'platform_id' => $platform->id,
@@ -177,14 +186,19 @@ class ShopController extends Controller
         ]);
 
         $credentialsChanged = ($validated['client_id'] !== $conn->client_id)
-            || ($validated['client_secret'] !== $conn->client_secret);
+            || ($validated['client_secret'] !== $conn->client_secret)
+            || (isset($validated['seller_id']) && $validated['seller_id'] !== $conn->seller_id);
 
         $conn->client_id     = $validated['client_id'];
         $conn->client_secret = $validated['client_secret'];
+        if (isset($validated['seller_id'])) {
+            $conn->seller_id = $validated['seller_id'];
+        }
 
         if ($credentialsChanged) {
             $conn->access_token  = null;
             $conn->refresh_token = null;
+            $conn->token_expires_at = null;
         }
 
         $conn->save();
@@ -197,6 +211,48 @@ class ShopController extends Controller
 
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
             ->with('success', '✓ Credentials đã lưu vào platform_connections.');
+    }
+
+    public function connectYahoo(Request $request, YahooConnector $connector)
+    {
+        $shop = Shop::findOrFail($request->query('id'));
+
+        $nonce = bin2hex(random_bytes(16));
+        session([
+            'yahoo_oauth_shop_id' => $shop->id,
+            'yahoo_oauth_nonce'   => $nonce,
+        ]);
+
+        return redirect($connector->getAuthUrl($shop));
+    }
+
+    public function callbackYahoo(Request $request, YahooConnector $connector)
+    {
+        $shopId = session('yahoo_oauth_shop_id');
+        $nonce  = session('yahoo_oauth_nonce');
+
+        if (! $shopId || ! $nonce) {
+            abort(403, 'OAuth session expired or invalid. Please start the connection again.');
+        }
+
+        // Validate state
+        if ($request->query('state') !== $nonce) {
+            abort(403, 'Invalid state parameter. Possible CSRF attack.');
+        }
+
+        session()->forget(['yahoo_oauth_shop_id', 'yahoo_oauth_nonce']);
+
+        $shop = Shop::findOrFail($shopId);
+
+        $connection = $connector->handleCallback($request, $shop);
+
+        Log::info('Yahoo Shopping callback via connector', [
+            'shop_id'   => $shop->id,
+            'has_token' => (bool) $connection->access_token,
+        ]);
+
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', '✓ Yahoo Shopping connected via connector.');
     }
 
 }
