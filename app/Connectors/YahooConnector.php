@@ -43,7 +43,7 @@ class YahooConnector implements OAuthConnector
         $connection = $this->connection($shop);
         $redirectUri = config('services.yahoo.redirect_uri');
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             'https://auth.login.yahoo.co.jp/yconnect/v2/token',
             [
                 'grant_type'    => 'authorization_code',
@@ -87,7 +87,7 @@ class YahooConnector implements OAuthConnector
             return;
         }
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             'https://auth.login.yahoo.co.jp/yconnect/v2/token',
             [
                 'grant_type'    => 'refresh_token',
@@ -139,7 +139,7 @@ class YahooConnector implements OAuthConnector
             '    <SellerId>' . htmlspecialchars($conn->seller_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</SellerId>' .
             '</Req>';
 
-        $response = Http::withToken($conn->access_token)
+        $response = Http::withoutVerifying()->withToken($conn->access_token)
             ->withHeaders(['Content-Type' => 'application/xml'])
             ->post('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderList', $orderListXml);
 
@@ -198,7 +198,7 @@ class YahooConnector implements OAuthConnector
                 '    <SellerId>' . htmlspecialchars($conn->seller_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</SellerId>' .
                 '</Req>';
 
-            $infoResponse = Http::withToken($conn->access_token)
+            $infoResponse = Http::withoutVerifying()->withToken($conn->access_token)
                 ->withHeaders(['Content-Type' => 'application/xml'])
                 ->post('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderInfo', $orderInfoXml);
 
@@ -293,7 +293,7 @@ class YahooConnector implements OAuthConnector
                 '    <SellerId>' . htmlspecialchars($conn->seller_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</SellerId>' .
                 '</Req>';
 
-            $infoResponse = Http::withToken($conn->access_token)
+            $infoResponse = Http::withoutVerifying()->withToken($conn->access_token)
                 ->withHeaders(['Content-Type' => 'application/xml'])
                 ->post('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderInfo', $orderInfoXml);
 
@@ -344,7 +344,7 @@ class YahooConnector implements OAuthConnector
         try {
             $this->refreshTokenIfNeeded($conn);
 
-            $response = Http::withToken($conn->access_token)
+            $response = Http::withoutVerifying()->withToken($conn->access_token)
                 ->get('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderCount', [
                     'sellerId' => $conn->seller_id,
                 ]);

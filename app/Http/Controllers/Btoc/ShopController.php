@@ -72,9 +72,10 @@ class ShopController extends Controller
             'platform_id.exists'   => '無効なプラットフォームです。',
         ]);
 
-        Shop::create($validated);
+        $shop = Shop::create($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'ショップを追加しました。');
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', 'ショップを追加しました。');
     }
 
     public function edit($id)
@@ -105,7 +106,8 @@ class ShopController extends Controller
 
         $shop->update($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'ショップ情報を更新しました。');
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', 'ショップ情報を更新しました。');
     }
 
     public function destroy($id)
