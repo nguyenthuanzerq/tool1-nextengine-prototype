@@ -72,9 +72,10 @@ class ShopController extends Controller
             'platform_id.exists'   => '無効なプラットフォームです。',
         ]);
 
-        Shop::create($validated);
+        $shop = Shop::create($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'ショップを追加しました。');
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', 'ショップを追加しました。');
     }
 
     public function edit($id)
@@ -105,7 +106,8 @@ class ShopController extends Controller
 
         $shop->update($validated);
 
-        return redirect()->route('btoc.shop.index')->with('success', 'ショップ情報を更新しました。');
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', 'ショップ情報を更新しました。');
     }
 
     public function destroy($id)
@@ -253,6 +255,39 @@ class ShopController extends Controller
 
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
             ->with('success', '✓ Yahoo Shopping connected via connector.');
+    }
+    public function testConnection(Request $request, $id, \App\Connectors\PlatformConnectorFactory $factory)
+    {
+        $shop = Shop::with('platform')->findOrFail($id);
+
+        $rules = [
+            'client_id'     => 'required|string',
+            'client_secret' => 'required|string',
+        ];
+        $validated = $request->validate($rules);
+
+        $conn = PlatformConnection::firstOrNew([
+            'platform_id' => $shop->platform_id,
+            'shop_id'     => $shop->id,
+        ]);
+        
+        $conn->client_id = $validated['client_id'];
+        $conn->client_secret = $validated['client_secret'];
+
+        try {
+            $connector = $factory->resolve($shop->platform->key);
+            $success = $connector->testConnection($conn);
+            
+            if ($success) {
+                $shop->status = 1;
+                $shop->save();
+                return response()->json(['success' => true, 'message' => 'Kết nối thành công! Trạng thái Shop đã được cập nhật.']);
+            }
+            
+            return response()->json(['success' => false, 'message' => 'Kết nối thất bại nhưng không có lỗi (API trả về false).']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi kết nối: ' . $e->getMessage()]);
+        }
     }
 
 }

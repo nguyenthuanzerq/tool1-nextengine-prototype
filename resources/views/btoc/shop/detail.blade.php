@@ -9,6 +9,8 @@
     // Derive connection status
     if (!$connection) {
         $connStatus = 'disconnected';
+    } elseif ($shop->platform?->key === 'rakuten') {
+        $connStatus = $shop->status == 1 ? 'connected' : 'disconnected';
     } elseif ($connection->access_token && $connection->token_expires_at && $connection->token_expires_at->isPast()) {
         $connStatus = 'expired';
     } elseif ($connection->access_token) {

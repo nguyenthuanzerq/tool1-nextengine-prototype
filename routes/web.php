@@ -38,6 +38,7 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
         Route::put('/{id}',       [ShopController::class, 'update'])->name('update');
         Route::delete('/{id}',    [ShopController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/nextengine-connection', [ShopController::class, 'storeNextEngineConnection'])->name('nextengine_connection');
+        Route::post('/{id}/test-connection', [ShopController::class, 'testConnection'])->name('test_connection');
     });
 
     // Orders

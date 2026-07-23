@@ -220,6 +220,26 @@ class PlatformSyncService
         return $count;
     }
 
+    /**
+     * Push a shipment tracking number to the platform immediately.
+     */
+    public function pushShipmentNow(Shop $shop, PlatformOrder $order, string $trackingNumber, array $extraData = []): void
+    {
+        $conn      = $this->resolveConnection($shop);
+        $connector = $this->factory->resolve($shop->platform->key);
+        
+        $trackingData = array_merge([
+            'tracking_number' => $trackingNumber,
+            'shipped_at'      => now()->format('Y-m-d'),
+        ], $extraData);
+
+        if (method_exists($connector, 'updateShipment')) {
+            $connector->updateShipment($conn, $order->platform_order_id, $trackingData);
+        } else {
+            throw new \RuntimeException("Connector does not support updateShipment.");
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------

@@ -66,6 +66,9 @@ interface PlatformConnector
      */
     public function normalizeOrderItem(array $raw): array;
 
+    /** Push shipment tracking data to the platform. */
+    public function updateShipment(PlatformConnection $conn, string $orderId, array $trackingData): void;
+
     /** Handle inbound webhook payload (no-op for platforms without webhooks). */
     public function webhookHandler(Request $request): void;
 }
