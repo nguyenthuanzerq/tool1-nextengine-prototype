@@ -41,6 +41,8 @@
                         $conn = $shop->platformConnections->first();
                         if (!$conn) {
                             $connStatus = 'disconnected';
+                        } elseif ($shop->platform?->key === 'rakuten') {
+                            $connStatus = $shop->status == 1 ? 'connected' : 'disconnected';
                         } elseif ($conn->access_token && $conn->token_expires_at && $conn->token_expires_at->isPast()) {
                             $connStatus = 'expired';
                         } elseif ($conn->access_token) {

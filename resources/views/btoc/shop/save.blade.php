@@ -40,29 +40,34 @@
 
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップコード <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップコード <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" name="shop_code" value="{{ old('shop_code', $shop->shop_code) }}"
                                 placeholder="例: shop-001"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
                             <p class="text-xs text-gray-400 mt-1">Shop Code</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップ名 <span class="text-red-500">*</span></label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ショップ名 <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" name="shop_name" value="{{ old('shop_name', $shop->shop_name) }}"
                                 placeholder="例: NextEngineショップ"
-                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
                             <p class="text-xs text-gray-400 mt-1">Shop Name</p>
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">プラットフォーム <span class="text-red-500">*</span></label>
-                            <select name="platform_id" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            <label class="block text-sm font-medium text-gray-700 mb-1">プラットフォーム <span
+                                    class="text-red-500">*</span></label>
+                            <select name="platform_id"
+                                class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 {{ !$isCreate ? 'disabled' : '' }} required>
                                 <option value="">-- プラットフォームを選択 --</option>
                                 @foreach ($platforms as $platform)
-                                    <option value="{{ $platform->id }}"
-                                        {{ old('platform_id', $shop->platform_id) == $platform->id ? 'selected' : '' }}>
+                                    <option value="{{ $platform->id }}" {{ old('platform_id', $shop->platform_id) == $platform->id ? 'selected' : '' }}>
                                         {{ $platform->name }} ({{ $platform->auth_type }})
                                     </option>
                                 @endforeach
@@ -76,7 +81,8 @@
                             class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
                             キャンセル
                         </a>
-                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
+                        <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
                             <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                                 <polyline points="17 21 17 13 7 13 7 21" />
@@ -109,10 +115,12 @@
                             {{-- Platform badge (dynamic) --}}
                             <div class="flex items-center gap-2 pb-3 border-b border-gray-100" id="platform-badge">
                                 @if($shop->platform)
-                                <span class="text-xs text-gray-500">Platform:</span>
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700" id="badge-label">
-                                    {{ $shop->platform->name }} ({{ $shop->platform->auth_type }})
-                                </span>
+                                    <span class="text-xs text-gray-500">Platform:</span>
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+                                        id="badge-label">
+                                        {{ $shop->platform->name }} ({{ $shop->platform->auth_type }})
+                                    </span>
                                 @endif
                             </div>
 
@@ -130,8 +138,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         Client ID <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" name="client_id"
-                                        value="{{ old('client_id', $connection?->client_id) }}"
+                                    <input type="text" name="client_id" value="{{ old('client_id', $connection?->client_id) }}"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div>
@@ -146,12 +153,14 @@
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Access Token</label>
                                     <input type="text" value="{{ $connection?->access_token ? '設定済み (set)' : '—' }}"
-                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50" readonly>
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50"
+                                        readonly>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Refresh Token</label>
                                     <input type="text" value="{{ $connection?->refresh_token ? '設定済み (set)' : '—' }}"
-                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50" readonly>
+                                        class="w-full rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-500 bg-gray-50"
+                                        readonly>
                                 </div>
                             </div>
 
@@ -161,8 +170,7 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">
                                         API Key (Service Secret) <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" name="client_id"
-                                        value="{{ old('client_id', $connection?->client_id) }}"
+                                    <input type="text" name="client_id" value="{{ old('client_id', $connection?->client_id) }}"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
                                 <div>
@@ -173,6 +181,7 @@
                                         value="{{ old('client_secret', $connection?->client_secret) }}"
                                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                                 </div>
+
                             </div>
 
                         </div>
@@ -187,7 +196,19 @@
                                 </svg>
                                 認証情報を保存
                             </button>
-
+                            @if(!$isCreate && $shop->platform?->key === 'rakuten')
+                                <div>
+                                    <a href="javascript:void(0)" id="btn-test-connection"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-gray-600 hover:bg-gray-700 text-white transition">
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                        </svg>
+                                        接続テスト
+                                    </a>
+                                    <span id="test-connection-result" class="ml-2 text-sm"></span>
+                                </div>
+                            @endif
                             {{-- OAuth2: show connect button after credentials saved --}}
                             @if($connection?->client_id && $authType !== 'api_key')
                                 @if($shop->platform?->key === 'yahoo')
@@ -211,12 +232,13 @@
                                 @endif
                             @endif
 
-                            {{-- Link to Sync tab after token obtained --}}
-                            @if($connection?->access_token)
+                            {{-- Link to Sync tab after token obtained or api_key connected --}}
+                            @if($connection?->access_token || ($authType === 'api_key' && $shop->status == 1))
                                 <a href="{{ route('btoc.shop.show', $shop->id) }}?tab=sync"
                                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
                                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                                        <path d="M1 4v6h6M23 20v-6h-6" />
+                                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
                                     </svg>
                                     同期タブへ
                                 </a>
@@ -277,5 +299,51 @@
             // Apply on page load (edit mode)
             applyAuthType(sel.value);
         })();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnTestConnection = document.getElementById('btn-test-connection');
+            if (btnTestConnection) {
+                btnTestConnection.addEventListener('click', async function () {
+                    const blockApiKey = document.getElementById('block-apikey');
+                    const clientId = blockApiKey.querySelector('input[name="client_id"]').value;
+                    const clientSecret = blockApiKey.querySelector('input[name="client_secret"]').value;
+                    const resultSpan = document.getElementById('test-connection-result');
+                    const shopId = '{{ !empty($shop->id) ? $shop->id : '' }}';
+
+                    if (!shopId) return;
+
+                    resultSpan.textContent = '確認中...';
+                    resultSpan.className = 'ml-2 text-sm text-gray-500';
+
+                    try {
+                        const response = await fetch(`/btoc/shop/${shopId}/test-connection`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                client_id: clientId,
+                                client_secret: clientSecret
+                            })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            resultSpan.textContent = '接続に成功しました';
+                            resultSpan.className = 'ml-2 text-sm text-green-600 font-medium';
+                        } else {
+                            resultSpan.textContent = '接続に失敗しました。認証情報を確認してください';
+                            resultSpan.className = 'ml-2 text-sm text-red-600 font-medium';
+                        }
+                    } catch (e) {
+                        resultSpan.textContent = 'テスト接続中にシステムエラーが発生しました';
+                        resultSpan.className = 'ml-2 text-sm text-red-600 font-medium';
+                    }
+                });
+            }
+        });
     </script>
 @endsection
