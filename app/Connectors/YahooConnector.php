@@ -335,6 +335,58 @@ class YahooConnector implements OAuthConnector
         return [];
     }
 
+    public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
+    {
+        if (empty($conn->seller_id) || empty($conn->access_token)) {
+            Log::warning('Yahoo pushInventory skipped due to missing credentials or seller_id');
+            return false;
+        }
+
+        $this->refreshTokenIfNeeded($conn);
+
+        $url = 'https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/setStock';
+        
+        $itemCode = $sku;
+        $subCode = null;
+        
+        // Yahoo ItemId is often in the format "itemcode:subcode"
+        if (strpos($sku, ':') !== false) {
+            list($itemCode, $subCode) = explode(':', $sku, 2);
+        }
+
+        $payload = [
+            'seller_id' => $conn->seller_id,
+            'item_code' => $itemCode,
+            'quantity'  => $quantity,
+        ];
+
+        if ($subCode) {
+            $payload['sub_code'] = $subCode;
+        }
+
+        $response = Http::withoutVerifying()
+            ->withToken($conn->access_token)
+            ->asForm()
+            ->post($url, $payload);
+
+        if ($response->failed()) {
+            throw new \Exception("Yahoo Push Inventory Error: " . $response->body());
+        }
+
+        // Yahoo might return success in HTTP 200 but XML contains Error
+        $xml = simplexml_load_string($response->body());
+        if ($xml && $xml->getName() === 'Error') {
+            throw new \Exception("Yahoo Push Inventory XML Error: " . $response->body());
+        }
+
+        return true;
+    }
+
+    public function updateShipment(PlatformConnection $conn, string $orderId, array $trackingData): void
+    {
+        throw new \Exception('Yahoo updateShipment is not implemented yet.');
+    }
+
     public function testConnection(PlatformConnection $conn): bool
     {
         if (!$conn->access_token || !$conn->seller_id) {

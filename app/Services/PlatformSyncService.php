@@ -204,6 +204,14 @@ class PlatformSyncService
         foreach ($rows as $row) {
             $normalized = $connector->normalizeInventory($row);
 
+            $existing = \App\Models\PlatformInventory::where([
+                'platform_id'  => $conn->platform_id,
+                'shop_id'      => $shop->id,
+                'product_code' => $normalized['product_code'],
+            ])->first();
+
+            $oldStock = $existing ? $existing->stock : null;
+
             \App\Models\PlatformInventory::updateOrCreate(
                 [
                     'platform_id'  => $conn->platform_id,
@@ -215,6 +223,12 @@ class PlatformSyncService
                     'meta'           => $row,
                 ])
             );
+
+            // Trigger push if this is NextEngine and stock has changed
+            if ($conn->platform->key === 'nextengine' && $oldStock !== $normalized['stock']) {
+                $this->pushInventoryUpdate($shop, $normalized['product_code'], $normalized['stock']);
+            }
+
             $count++;
         }
         return $count;
@@ -238,6 +252,14 @@ class PlatformSyncService
         } else {
             throw new \RuntimeException("Connector does not support updateShipment.");
         }
+    }
+
+    /**
+     * Dispatch Job to push inventory to other platforms (Rakuten, Yahoo)
+     */
+    public function pushInventoryUpdate(Shop $shop, string $sku, int $quantity): void
+    {
+        \App\Jobs\PushInventoryToPlatformsJob::dispatch($shop->id, $sku, $quantity);
     }
 
     // -------------------------------------------------------------------------

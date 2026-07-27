@@ -86,9 +86,9 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">プラットフォーム</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">店舗</th>
                         <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">在庫数</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">利用可能</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">予約済み</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終同期</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">同期状態</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最終同期 / プッシュ</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">アクション</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -99,7 +99,7 @@
                             <td class="px-4 py-4 text-sm text-gray-700">
                                 @php $key = $item->platform->key ?? ''; @endphp
                                 @if ($key === 'nextengine')
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">NextEngine</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-300">NextEngine (Master)</span>
                                 @elseif ($key === 'yahoo')
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Yahoo</span>
                                 @elseif ($key === 'rakuten')
@@ -109,19 +109,41 @@
                                 @endif
                             </td>
                             <td class="px-4 py-4 text-sm text-gray-700">{{ $item->shop->shop_name ?? '—' }}</td>
-                            <td class="px-4 py-4 text-sm text-gray-700 text-right font-medium">{{ number_format($item->stock) }}</td>
-                            <td class="px-4 py-4 text-sm text-right font-medium">
-                                @if ($item->available_stock <= 0)
-                                    <span class="text-red-600">{{ number_format($item->available_stock) }}</span>
-                                @elseif ($item->available_stock < 10)
-                                    <span class="text-amber-600">{{ number_format($item->available_stock) }}</span>
+                            <td class="px-4 py-4 text-sm text-gray-900 text-right font-bold text-lg">{{ number_format($item->stock) }}</td>
+                            <td class="px-4 py-4 text-sm text-center">
+                                @if($item->sync_status === 'success')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-100 text-green-700">🟢 Synced</span>
+                                @elseif($item->sync_status === 'failed')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-red-100 text-red-700">🔴 Failed</span>
+                                @elseif($item->sync_status === 'pending')
+                                    <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-yellow-100 text-yellow-700">🟡 Pending</span>
                                 @else
-                                    <span class="text-green-700">{{ number_format($item->available_stock) }}</span>
+                                    <span class="text-gray-400 text-xs">—</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-4 text-sm text-gray-500 text-right">{{ number_format($item->reserved_stock) }}</td>
                             <td class="px-4 py-4 text-sm text-gray-500 text-xs">
-                                {{ $item->last_synced_at?->format('Y-m-d H:i') ?? '—' }}
+                                <div><span class="text-gray-400">Sync:</span> {{ $item->last_synced_at?->format('Y-m-d H:i') ?? '—' }}</div>
+                                <div><span class="text-gray-400">Push:</span> {{ $item->last_pushed_at ? \Carbon\Carbon::parse($item->last_pushed_at)->format('Y-m-d H:i') : '—' }}</div>
+                            </td>
+                            <td class="px-4 py-4 text-right">
+                                <div class="flex flex-col gap-1 items-end">
+                                    @if ($key === 'nextengine')
+                                        <form method="POST" action="{{ route('btoc.inventory.sync_master', $item->shop_id) }}">
+                                            @csrf
+                                            <input type="hidden" name="sku" value="{{ $item->product_code }}">
+                                            <button type="submit" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200">
+                                                Sync Master
+                                            </button>
+                                        </form>
+                                    @else
+                                        <form method="POST" action="{{ route('btoc.inventory.force_push', $item->id) }}">
+                                            @csrf
+                                            <button type="submit" class="text-xs bg-gray-50 text-gray-700 hover:bg-gray-100 px-2 py-1 rounded border border-gray-200">
+                                                Force Push
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

@@ -43,7 +43,7 @@ class NextEngineConnector implements OAuthConnector
         $settings   = $this->settings();
         $connection = $this->connection($shop);
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_neauth',
             [
                 'client_id'     => $connection->client_id,
@@ -78,7 +78,7 @@ class NextEngineConnector implements OAuthConnector
     {
         $settings = $this->settings();
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_v1_receiveorder_base/search',
             [
                 'access_token'  => $conn->access_token,
@@ -142,7 +142,7 @@ class NextEngineConnector implements OAuthConnector
     {
         $settings = $this->settings();
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_v1_master_stock/search',
             [
                 'access_token'  => $conn->access_token,
@@ -194,6 +194,48 @@ class NextEngineConnector implements OAuthConnector
         return $result['data'] ?? [];
     }
 
+    public function fetchRecentInventoryChanges(PlatformConnection $conn): iterable
+    {
+        $settings = $this->settings();
+
+        $response = Http::withoutVerifying()->asForm()->post(
+            $settings['api_uri'] . '/api_v1_master_stock/search',
+            [
+                'access_token'  => $conn->access_token,
+                'refresh_token' => $conn->refresh_token,
+                'wait_flag'     => 1,
+                // Only get changes from the last 15 minutes
+                'stock_last_modified_date-gte' => now()->subMinutes(15)->format('Y-m-d H:i:s'),
+                'fields'        => implode(',', [
+                    'stock_goods_id',
+                    'stock_quantity',
+                    'stock_last_modified_date',
+                ]),
+            ]
+        );
+
+        $result = $response->json();
+        
+        if (($result['result'] ?? '') !== 'success') {
+            Log::warning('NextEngine fetchRecentInventoryChanges failed', ['result' => $result]);
+            return [];
+        }
+
+        $this->updateTokens($conn, $result);
+        return $result['data'] ?? [];
+    }
+
+    public function updateShipment(PlatformConnection $conn, string $orderId, array $trackingData): void
+    {
+        throw new \Exception('NextEngine updateShipment is not implemented.');
+    }
+
+    public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
+    {
+        // NextEngine is the Master, we don't push inventory to it from Tool1 in this prototype.
+        return false;
+    }
+
     public function fetchOrderItems(PlatformConnection $conn, array $orderIds): iterable
     {
         if (empty($orderIds)) {
@@ -202,7 +244,7 @@ class NextEngineConnector implements OAuthConnector
 
         $settings = $this->settings();
 
-        $response = Http::asForm()->post(
+        $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_v1_receiveorder_row/search',
             [
                 'access_token'           => $conn->access_token,
@@ -321,7 +363,7 @@ class NextEngineConnector implements OAuthConnector
         $settings = $this->settings();
 
         try {
-            $response = Http::asForm()->post(
+            $response = Http::withoutVerifying()->asForm()->post(
                 $settings['api_uri'] . '/api_v1_receiveorder_base/search',
                 [
                     'access_token'  => $conn->access_token,

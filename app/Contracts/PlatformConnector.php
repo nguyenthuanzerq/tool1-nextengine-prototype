@@ -71,4 +71,7 @@ interface PlatformConnector
 
     /** Handle inbound webhook payload (no-op for platforms without webhooks). */
     public function webhookHandler(Request $request): void;
+
+    /** Push updated inventory quantity to the platform. */
+    public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool;
 }

@@ -146,14 +146,22 @@
                         @foreach ($shops as $shop)
                         @php
                             $conn = $shop->platformConnections->first();
-                            if (!$conn) {
-                                $connStatus = 'disconnected';
-                            } elseif ($conn->access_token && $conn->token_expires_at && $conn->token_expires_at->isPast()) {
-                                $connStatus = 'expired';
-                            } elseif ($conn->access_token) {
-                                $connStatus = 'connected';
-                            } else {
-                                $connStatus = 'disconnected';
+                            $connStatus = 'disconnected';
+                            if ($conn) {
+                                $platformKey = $shop->platform->key ?? '';
+                                if (in_array($platformKey, ['rakuten'])) {
+                                    // API Key based platforms
+                                    if ($conn->client_id && $conn->client_secret) {
+                                        $connStatus = 'connected';
+                                    }
+                                } else {
+                                    // OAuth based platforms
+                                    if ($conn->access_token && $conn->token_expires_at && $conn->token_expires_at->isPast()) {
+                                        $connStatus = 'expired';
+                                    } elseif ($conn->access_token) {
+                                        $connStatus = 'connected';
+                                    }
+                                }
                             }
                             $lastSync = $shop->latestSyncHistory;
                         @endphp

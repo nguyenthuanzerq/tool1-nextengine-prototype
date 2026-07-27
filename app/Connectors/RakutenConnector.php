@@ -197,13 +197,60 @@ class RakutenConnector implements ApiKeyConnector
         return [];
     }
 
+    public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
+    {
+        $variantId = $sku;
+        $manageNumber = null;
+
+        // Try to find manageNumber from previously synced order items
+        $orderItem = \App\Models\PlatformOrderItem::where('product_code', $sku)
+            ->whereHas('order', function($q) use ($conn) {
+                $q->where('platform_id', $conn->platform_id);
+            })->first();
+
+        if ($orderItem && isset($orderItem->meta['manageNumber'])) {
+            $manageNumber = $orderItem->meta['manageNumber'];
+        }
+
+        // Fallback: try PlatformInventory meta
+        if (!$manageNumber) {
+            $inventory = \App\Models\PlatformInventory::where('platform_id', $conn->platform_id)
+                ->where('product_code', $sku)->first();
+            if ($inventory && isset($inventory->meta['manageNumber'])) {
+                $manageNumber = $inventory->meta['manageNumber'];
+            }
+        }
+
+        // If still not found, we might have to assume it's the same or throw error
+        if (!$manageNumber) {
+            \Illuminate\Support\Facades\Log::warning("Rakuten pushInventory: Could not find manageNumber for variantId {$variantId}. Using variantId as fallback.");
+            $manageNumber = $variantId;
+        }
+        
+        $url = "https://api.rms.rakuten.co.jp/es/2.1/inventories/manage-numbers/{$manageNumber}/variants/{$variantId}";
+        $headers = $this->buildAuthHeaders($conn);
+        
+        $response = Http::withoutVerifying()
+            ->withHeaders($headers)
+            ->put($url, [
+                'mode' => 'ABSOLUTE',
+                'quantity' => $quantity
+            ]);
+
+        if (!$response->successful()) {
+            throw new Exception("Rakuten Push Inventory Error: " . $response->body());
+        }
+
+        return true;
+    }
+
     public function webhookHandler(Request $request): void {}
 
     public function normalizeOrderItem(array $raw): array
     {
         return [
             'platform_item_id' => $raw['itemDetailId'] ?? $raw['detailNo'] ?? null,
-            'product_code'     => $raw['manageNumber'] ?? null,
+            'product_code'     => $raw['variantId'] ?? $raw['manageNumber'] ?? null,
             'product_name'     => $raw['itemName'] ?? null,
             'quantity'         => (int) ($raw['units'] ?? 1),
             'unit_price'       => (float) ($raw['price'] ?? 0),
