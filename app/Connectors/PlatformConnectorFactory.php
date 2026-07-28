@@ -12,6 +12,7 @@ class PlatformConnectorFactory
         'nextengine' => NextEngineConnector::class,
         'yahoo'      => YahooConnector::class,
         'rakuten'    => RakutenConnector::class,
+        'shopify'    => ShopifyConnector::class,
     ];
 
     /**

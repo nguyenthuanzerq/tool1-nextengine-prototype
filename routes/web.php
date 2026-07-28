@@ -7,6 +7,7 @@ use App\Http\Controllers\Btoc\OrderController;
 use App\Http\Controllers\Btoc\ShopController;
 use App\Http\Controllers\Btoc\SyncController;
 use App\Http\Controllers\Btoc\UserController;
+use App\Http\Controllers\Debug\LogViewerController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -88,3 +89,14 @@ Route::get('/yahoo/connect', [ShopController::class, 'connectYahoo'])
     ->middleware('auth')
     ->name('yahoo.connect');
 Route::get('/yahoo/callback', [ShopController::class, 'callbackYahoo'])->name('yahoo.callback');
+
+// ── Shopify OAuth ──────────────────────────────────────────────────────────────
+Route::get('/shopify/connect', [ShopController::class, 'connectShopify'])
+    ->middleware('auth')
+    ->name('shopify.connect');
+Route::get('/shopify/callback', [ShopController::class, 'callbackShopify'])->name('shopify.callback');
+
+// ── Debug / Logs ───────────────────────────────────────────────────────────────
+Route::get('/debug/logs', [LogViewerController::class, 'index'])->name('debug.logs');
+Route::get('/debug/logs/api/{id}', [LogViewerController::class, 'apiDetail'])->name('debug.logs.api');
+Route::get('/debug/logs/state/{id}', [LogViewerController::class, 'stateDetail'])->name('debug.logs.state');

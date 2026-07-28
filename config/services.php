@@ -45,4 +45,10 @@ return [
         'redirect_uri' => env('YAHOO_REDIRECT_URI'),
     ],
 
+    'shopify' => [
+        'redirect_uri' => env('SHOPIFY_REDIRECT_URI'),
+        'scopes' => env('SHOPIFY_SCOPES', 'read_orders,write_inventory,read_all_orders'),
+        'api_version' => env('SHOPIFY_API_VERSION', '2024-04'),
+    ],
+
 ];

@@ -220,6 +220,15 @@
                                         </svg>
                                         OAuth 連携 / Connect (Yahoo)
                                     </a>
+                                @elseif($shop->platform?->key === 'shopify')
+                                    <a href="{{ route('shopify.connect', ['id' => $shop->id]) }}"
+                                        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
+                                        <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                        </svg>
+                                        OAuth 連携 / Connect (Shopify)
+                                    </a>
                                 @else
                                     <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"
                                         class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
@@ -268,6 +277,8 @@
                 const sellerIdInput = document.getElementById('seller_id_input');
                 const isApiKey = authType === 'api_key';
                 const isYahoo = key === 'yahoo';
+                const isShopify = key === 'shopify';
+                const isYahooOrShopify = isYahoo || isShopify;
 
                 blockOauth2.classList.toggle('hidden', isApiKey);
                 blockApikey.classList.toggle('hidden', !isApiKey);
@@ -280,10 +291,17 @@
                 });
                 blockApikey.querySelectorAll('input').forEach(el => el.disabled = !isApiKey);
 
-                // Handle Yahoo Seller ID dynamic block
+                // Handle Seller ID dynamic block (used for Yahoo and Shopify)
                 if (yahooSellerIdBlock && sellerIdInput) {
-                    yahooSellerIdBlock.classList.toggle('hidden', !isYahoo);
-                    sellerIdInput.disabled = !isYahoo;
+                    yahooSellerIdBlock.classList.toggle('hidden', !isYahooOrShopify);
+                    sellerIdInput.disabled = !isYahooOrShopify;
+                    
+                    const label = yahooSellerIdBlock.querySelector('label');
+                    if (isShopify) {
+                        label.innerHTML = 'Shop URL (e.g. test.myshopify.com) <span class="text-red-500">*</span>';
+                    } else if (isYahoo) {
+                        label.innerHTML = 'Seller ID <span class="text-red-500">*</span>';
+                    }
                 }
 
                 const badge = document.getElementById('badge-label');

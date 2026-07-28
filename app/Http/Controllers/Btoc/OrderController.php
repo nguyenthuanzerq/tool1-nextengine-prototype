@@ -255,7 +255,24 @@ class OrderController extends Controller
 
         $notifyEmail = config('mail.notification_email');
         if ($notifyEmail) {
-            Mail::to($notifyEmail)->send(new ShipmentNotificationMail($order->load('shop')));
+            $user = auth()->user();
+            $mailerName = 'smtp'; // default to system smtp
+
+            if ($user && $user->email_smtp && $user->app_password) {
+                config([
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => 'smtp.gmail.com',
+                    'mail.mailers.smtp.port' => 587,
+                    'mail.mailers.smtp.encryption' => 'tls',
+                    'mail.mailers.smtp.username' => $user->email_smtp,
+                    'mail.mailers.smtp.password' => $user->app_password,
+                    'mail.from.address' => $user->email_smtp,
+                    'mail.from.name' => config('app.name'),
+                ]);
+                app('mail.manager')->purge('smtp'); // Clear cached transporter
+            }
+
+            Mail::mailer($mailerName)->to($notifyEmail)->send(new ShipmentNotificationMail($order->load('shop')));
         }
 
         if ($request->wantsJson() || $request->ajax()) {
