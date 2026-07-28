@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Connectors\NextEngineConnector;
+use App\Connectors\ShopifyConnector;
 use App\Connectors\YahooConnector;
 use App\Http\Controllers\Controller;
 use App\Models\Platform;
@@ -172,9 +173,9 @@ class ShopController extends Controller
             'client_secret' => 'required|string|max:255',
         ];
 
-        // If the platform is Yahoo, seller_id is also required
+        // If the platform is Yahoo or Shopify, seller_id is also required
         $platform = $shop->platform;
-        if ($platform && $platform->key === 'yahoo') {
+        if ($platform && in_array($platform->key, ['yahoo', 'shopify'])) {
             $rules['seller_id'] = 'required|string|max:255';
         }
 
@@ -256,6 +257,48 @@ class ShopController extends Controller
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
             ->with('success', '✓ Yahoo Shopping connected via connector.');
     }
+
+    public function connectShopify(Request $request, ShopifyConnector $connector)
+    {
+        $shop = Shop::findOrFail($request->query('id'));
+
+        $nonce = bin2hex(random_bytes(16));
+        session([
+            'shopify_oauth_shop_id' => $shop->id,
+            'shopify_oauth_nonce'   => $nonce,
+        ]);
+
+        return redirect($connector->getAuthUrl($shop));
+    }
+
+    public function callbackShopify(Request $request, ShopifyConnector $connector)
+    {
+        $shopId = session('shopify_oauth_shop_id');
+        $nonce  = session('shopify_oauth_nonce');
+
+        if (! $shopId || ! $nonce) {
+            abort(403, 'OAuth session expired or invalid. Please start the connection again.');
+        }
+
+        if ($request->query('state') !== $nonce) {
+            abort(403, 'Invalid state parameter. Possible CSRF attack.');
+        }
+
+        session()->forget(['shopify_oauth_shop_id', 'shopify_oauth_nonce']);
+
+        $shop = Shop::findOrFail($shopId);
+
+        $connection = $connector->handleCallback($request, $shop);
+
+        Log::info('Shopify callback via connector', [
+            'shop_id'   => $shop->id,
+            'has_token' => (bool) $connection->access_token,
+        ]);
+
+        return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
+            ->with('success', '✓ Shopify connected via connector.');
+    }
+
     public function testConnection(Request $request, $id, \App\Connectors\PlatformConnectorFactory $factory)
     {
         $shop = Shop::with('platform')->findOrFail($id);

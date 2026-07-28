@@ -115,9 +115,11 @@
 
                 {{-- OAuth2 fields --}}
                 @if($authType !== 'api_key')
-                @if($platform?->key === 'yahoo')
+                @if(in_array($platform?->key, ['yahoo', 'shopify']))
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Seller ID <span class="text-red-500">*</span></label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ $platform?->key === 'shopify' ? 'Shop URL (e.g. test.myshopify.com)' : 'Seller ID' }} <span class="text-red-500">*</span>
+                    </label>
                     <input type="text" name="seller_id"
                            value="{{ old('seller_id', $connection?->seller_id) }}"
                            class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
@@ -189,6 +191,15 @@
                                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                             </svg>
                             OAuth 連携 / Connect (Yahoo)
+                        </a>
+                    @elseif($platform?->key === 'shopify')
+                        <a href="{{ route('shopify.connect', ['id' => $shop->id]) }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition">
+                            <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                            </svg>
+                            OAuth 連携 / Connect (Shopify)
                         </a>
                     @else
                         <a href="{{ route('nextengine.connect', ['id' => $shop->id]) }}"

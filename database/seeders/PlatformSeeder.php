@@ -38,12 +38,21 @@ class PlatformSeeder extends Seeder
                     'rate_limit' => 100,
                 ],
             ],
+            [
+                'key'       => 'shopify',
+                'name'      => 'Shopify',
+                'auth_type' => 'oauth2',
+                'settings'  => [
+                    'api_version' => '2024-04',
+                    'scopes'      => 'read_orders,write_inventory,read_all_orders'
+                ],
+            ],
         ];
 
         foreach ($platforms as $data) {
             Platform::updateOrCreate(['key' => $data['key']], $data);
         }
 
-        $this->command->info('✓ Platforms seeded: nextengine, yahoo, rakuten');
+        $this->command->info('✓ Platforms seeded: nextengine, yahoo, rakuten, shopify');
     }
 }

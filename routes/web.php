@@ -88,6 +88,12 @@ Route::get('/yahoo/connect', [ShopController::class, 'connectYahoo'])
     ->name('yahoo.connect');
 Route::get('/yahoo/callback', [ShopController::class, 'callbackYahoo'])->name('yahoo.callback');
 
+// ── Shopify OAuth ──────────────────────────────────────────────────────────────
+Route::get('/shopify/connect', [ShopController::class, 'connectShopify'])
+    ->middleware('auth')
+    ->name('shopify.connect');
+Route::get('/shopify/callback', [ShopController::class, 'callbackShopify'])->name('shopify.callback');
+
 // ── Debug / Logs ───────────────────────────────────────────────────────────────
 Route::get('/debug/logs', [LogViewerController::class, 'index'])->name('debug.logs');
 Route::get('/debug/logs/api/{id}', [LogViewerController::class, 'apiDetail'])->name('debug.logs.api');

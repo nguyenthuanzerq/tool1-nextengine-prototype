@@ -104,6 +104,8 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">Yahoo</span>
                                 @elseif ($key === 'rakuten')
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-700">Rakuten</span>
+                                @elseif ($key === 'shopify')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Shopify</span>
                                 @else
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">{{ $item->platform->name ?? '—' }}</span>
                                 @endif
