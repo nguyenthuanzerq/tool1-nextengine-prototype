@@ -12,6 +12,8 @@ class PlatformInventory extends Model
         'product_code',
         'product_name',
         'variant_code',
+        'manage_number',
+        'variant_id',
         'stock',
         'available_stock',
         'reserved_stock',

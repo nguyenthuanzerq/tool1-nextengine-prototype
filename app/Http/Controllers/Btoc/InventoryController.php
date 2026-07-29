@@ -26,33 +26,4 @@ class InventoryController extends Controller
         return view('btoc.inventory', compact('items', 'shops', 'platforms'));
     }
 
-    public function forcePush($id)
-    {
-        $inventory = PlatformInventory::findOrFail($id);
-        
-        \App\Jobs\PushInventoryToPlatformsJob::dispatch(
-            $inventory->shop_id, 
-            $inventory->product_code, 
-            $inventory->stock
-        );
-
-        return back()->with('success', 'Force push triggered for SKU: ' . $inventory->product_code);
-    }
-
-    public function syncMaster(Request $request, $shopId)
-    {
-        $shop = Shop::findOrFail($shopId);
-        $sku = $request->input('sku');
-
-        if ($sku) {
-            // Because NextEngine API doesn't allow fetching single SKU easily in current implementation,
-            // we will just run the SyncNextEngineInventory command logic or dispatch full sync.
-            // For prototype, dispatching full inventory sync for the shop
-            $syncService = app(\App\Services\PlatformSyncService::class);
-            $syncService->dispatchInventorySync($shop);
-            return back()->with('success', 'Triggered Master Sync for Shop. The SKU will be updated shortly.');
-        }
-
-        return back()->with('error', 'SKU is required.');
-    }
 }

@@ -149,13 +149,23 @@
                             $connStatus = 'disconnected';
                             if ($conn) {
                                 $platformKey = $shop->platform->key ?? '';
-                                if (in_array($platformKey, ['rakuten'])) {
-                                    // API Key based platforms
+                                if ($platformKey === 'rakuten') {
                                     if ($conn->client_id && $conn->client_secret) {
                                         $connStatus = 'connected';
                                     }
+                                } elseif ($platformKey === 'yahoo') {
+                                    if ($conn->access_token && $conn->seller_id) {
+                                        if ($conn->token_expires_at && $conn->token_expires_at->isPast()) {
+                                            $connStatus = 'expired';
+                                        } else {
+                                            $connStatus = 'connected';
+                                        }
+                                    }
+                                } elseif ($platformKey === 'nextengine') {
+                                    if ($conn->access_token) {
+                                        $connStatus = 'connected';
+                                    }
                                 } else {
-                                    // OAuth based platforms
                                     if ($conn->access_token && $conn->token_expires_at && $conn->token_expires_at->isPast()) {
                                         $connStatus = 'expired';
                                     } elseif ($conn->access_token) {

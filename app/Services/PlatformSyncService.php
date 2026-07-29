@@ -224,10 +224,10 @@ class PlatformSyncService
                 ])
             );
 
-            // Trigger push if this is NextEngine and stock has changed
-            if ($conn->platform->key === 'nextengine' && $oldStock !== $normalized['stock']) {
-                $this->pushInventoryUpdate($shop, $normalized['product_code'], $normalized['stock']);
-            }
+            // Push logic disabled for read-only dashboard
+            // if ($conn->platform->key === 'nextengine' && $oldStock !== $normalized['stock']) {
+            //     $this->pushInventoryUpdate($shop, $normalized['product_code'], $normalized['stock']);
+            // }
 
             $count++;
         }
@@ -252,14 +252,6 @@ class PlatformSyncService
         } else {
             throw new \RuntimeException("Connector does not support updateShipment.");
         }
-    }
-
-    /**
-     * Dispatch Job to push inventory to other platforms (Rakuten, Yahoo)
-     */
-    public function pushInventoryUpdate(Shop $shop, string $sku, int $quantity): void
-    {
-        \App\Jobs\PushInventoryToPlatformsJob::dispatch($shop->id, $sku, $quantity);
     }
 
     // -------------------------------------------------------------------------

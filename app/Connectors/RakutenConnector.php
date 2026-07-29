@@ -194,54 +194,33 @@ class RakutenConnector implements ApiKeyConnector
 
     public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable
     {
-        return [];
+        $url = "https://api.rms.rakuten.co.jp/es/2.1/inventories/bulk-get/range?minQuantity=0&maxQuantity=99999";
+        $headers = $this->buildAuthHeaders($conn);
+        $results = [];
+        
+        try {
+            $response = Http::withoutVerifying()
+                ->withHeaders($headers)
+                ->get($url);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                if (!empty($data['inventories'])) {
+                    $results = $data['inventories'];
+                }
+            } else {
+                \Illuminate\Support\Facades\Log::warning("Rakuten fetchInventory Bulk API Error: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning("Rakuten fetchInventory Bulk Exception: " . $e->getMessage());
+        }
+
+        return $results;
     }
 
     public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
     {
-        $variantId = $sku;
-        $manageNumber = null;
-
-        // Try to find manageNumber from previously synced order items
-        $orderItem = \App\Models\PlatformOrderItem::where('product_code', $sku)
-            ->whereHas('order', function($q) use ($conn) {
-                $q->where('platform_id', $conn->platform_id);
-            })->first();
-
-        if ($orderItem && isset($orderItem->meta['manageNumber'])) {
-            $manageNumber = $orderItem->meta['manageNumber'];
-        }
-
-        // Fallback: try PlatformInventory meta
-        if (!$manageNumber) {
-            $inventory = \App\Models\PlatformInventory::where('platform_id', $conn->platform_id)
-                ->where('product_code', $sku)->first();
-            if ($inventory && isset($inventory->meta['manageNumber'])) {
-                $manageNumber = $inventory->meta['manageNumber'];
-            }
-        }
-
-        // If still not found, we might have to assume it's the same or throw error
-        if (!$manageNumber) {
-            \Illuminate\Support\Facades\Log::warning("Rakuten pushInventory: Could not find manageNumber for variantId {$variantId}. Using variantId as fallback.");
-            $manageNumber = $variantId;
-        }
-        
-        $url = "https://api.rms.rakuten.co.jp/es/2.1/inventories/manage-numbers/{$manageNumber}/variants/{$variantId}";
-        $headers = $this->buildAuthHeaders($conn);
-        
-        $response = Http::withoutVerifying()
-            ->withHeaders($headers)
-            ->put($url, [
-                'mode' => 'ABSOLUTE',
-                'quantity' => $quantity
-            ]);
-
-        if (!$response->successful()) {
-            throw new Exception("Rakuten Push Inventory Error: " . $response->body());
-        }
-
-        return true;
+        throw new \Exception('Rakuten pushInventory is disabled in Read-Only mode.');
     }
 
     public function webhookHandler(Request $request): void {}
@@ -298,9 +277,11 @@ class RakutenConnector implements ApiKeyConnector
     public function normalizeInventory(array $raw): array
     {
         return [
-            'product_code' => $raw['manageNumber'] ?? null,
-            'product_name' => $raw['itemName'] ?? null,
-            'stock'        => $raw['inventoryCount'] ?? 0,
+            'product_code'  => $raw['variantId'] ?? null, // Map sku con vao product_code
+            'product_name'  => $raw['itemName'] ?? null,
+            'stock'         => $raw['quantity'] ?? 0,
+            'manage_number' => $raw['manageNumber'] ?? null,
+            'variant_id'    => $raw['variantId'] ?? null,
         ];
     }
 }

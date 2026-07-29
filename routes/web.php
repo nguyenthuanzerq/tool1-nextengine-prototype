@@ -51,8 +51,6 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
 
     // Inventory
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
-    Route::post('/inventory/{id}/force-push', [InventoryController::class, 'forcePush'])->name('inventory.force_push');
-    Route::post('/inventory/{shopId}/sync-master', [InventoryController::class, 'syncMaster'])->name('inventory.sync_master');
 
     // Sync
     Route::prefix('shops/{shopId}/sync')->name('sync.')->group(function () {

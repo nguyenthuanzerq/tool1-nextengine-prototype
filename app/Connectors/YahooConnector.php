@@ -332,54 +332,67 @@ class YahooConnector implements OAuthConnector
 
     public function fetchInventory(PlatformConnection $conn, array $opts = []): iterable
     {
-        return [];
+        $skus = $opts['skus'] ?? []; // e.g. [['product_code' => 'A']]
+        
+        if (empty($skus)) {
+            $skus = \App\Models\PlatformInventory::whereHas('platform', function($q) {
+                $q->where('key', 'nextengine');
+            })->whereNotNull('product_code')->get(['product_code'])->toArray();
+        }
+
+        $results = [];
+        $this->refreshTokenIfNeeded($conn);
+
+        foreach ($skus as $sku) {
+            $productCode = $sku['product_code'] ?? null;
+            if (!$productCode) continue;
+
+            $itemCode = $productCode;
+            $subCode = null;
+            if (strpos($productCode, ':') !== false) {
+                list($itemCode, $subCode) = explode(':', $productCode, 2);
+            }
+
+            $url = 'https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/getStock';
+            $payload = [
+                'seller_id' => $conn->seller_id,
+                'item_code' => $itemCode,
+            ];
+
+            try {
+                $response = Http::withoutVerifying()
+                    ->withToken($conn->access_token)
+                    ->asForm()
+                    ->post($url, $payload);
+
+                if ($response->successful()) {
+                    $xml = simplexml_load_string($response->body());
+                    if ($xml && $xml->getName() !== 'Error') {
+                        // Assuming simple XML structure for getStock based on typical Yahoo API
+                        $qty = 0;
+                        if (isset($xml->Result->Quantity)) {
+                            $qty = (int) $xml->Result->Quantity;
+                        } elseif (isset($xml->Result->Item->Quantity)) {
+                            $qty = (int) $xml->Result->Item->Quantity;
+                        }
+                        
+                        $results[] = [
+                            'ItemCode' => $productCode,
+                            'Quantity' => $qty,
+                        ];
+                    }
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Yahoo fetchInventory Error for {$productCode}: " . $e->getMessage());
+            }
+        }
+
+        return $results;
     }
 
     public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
     {
-        if (empty($conn->seller_id) || empty($conn->access_token)) {
-            Log::warning('Yahoo pushInventory skipped due to missing credentials or seller_id');
-            return false;
-        }
-
-        $this->refreshTokenIfNeeded($conn);
-
-        $url = 'https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/setStock';
-        
-        $itemCode = $sku;
-        $subCode = null;
-        
-        // Yahoo ItemId is often in the format "itemcode:subcode"
-        if (strpos($sku, ':') !== false) {
-            list($itemCode, $subCode) = explode(':', $sku, 2);
-        }
-
-        $payload = [
-            'seller_id' => $conn->seller_id,
-            'item_code' => $itemCode,
-            'quantity'  => $quantity,
-        ];
-
-        if ($subCode) {
-            $payload['sub_code'] = $subCode;
-        }
-
-        $response = Http::withoutVerifying()
-            ->withToken($conn->access_token)
-            ->asForm()
-            ->post($url, $payload);
-
-        if ($response->failed()) {
-            throw new \Exception("Yahoo Push Inventory Error: " . $response->body());
-        }
-
-        // Yahoo might return success in HTTP 200 but XML contains Error
-        $xml = simplexml_load_string($response->body());
-        if ($xml && $xml->getName() === 'Error') {
-            throw new \Exception("Yahoo Push Inventory XML Error: " . $response->body());
-        }
-
-        return true;
+        throw new \Exception('Yahoo pushInventory is disabled in Read-Only mode.');
     }
 
     public function updateShipment(PlatformConnection $conn, string $orderId, array $trackingData): void

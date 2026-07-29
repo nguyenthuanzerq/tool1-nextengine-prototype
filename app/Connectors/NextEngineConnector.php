@@ -142,10 +142,31 @@ class NextEngineConnector implements OAuthConnector
     {
         $settings = $this->settings();
 
+        // 1. Fetch Goods for mapping
+        $goodsResponse = Http::withoutVerifying()->asForm()->post(
+            $settings['api_uri'] . '/api_v1_master_goods/search',
+            [
+                'access_token'  => $conn->access_token,
+                'refresh_token' => $conn->refresh_token,
+                'wait_flag'     => 1,
+                'fields'        => 'goods_syohin_code,goods_daihyo_syohin_code,goods_name',
+                'limit'         => 10000,
+            ]
+        );
+        $goodsResult = $goodsResponse->json();
+        $goodsMap = [];
+        if (($goodsResult['result'] ?? '') === 'success' && !empty($goodsResult['data'])) {
+            $this->updateTokens($conn, $goodsResult); // Token updated
+            foreach ($goodsResult['data'] as $item) {
+                $goodsMap[$item['goods_syohin_code']] = $item;
+            }
+        }
+
+        // 2. Fetch Stock
         $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_v1_master_stock/search',
             [
-                'access_token'  => $conn->access_token,
+                'access_token'  => $conn->access_token, // Use potentially refreshed token
                 'refresh_token' => $conn->refresh_token,
                 'wait_flag'     => 1,
                 'fields'        => implode(',', [
@@ -170,6 +191,7 @@ class NextEngineConnector implements OAuthConnector
                     'stock_last_modified_by_name',
                     'stock_last_modified_by_null_safe_name',
                 ]),
+                'limit'         => 10000,
             ]
         );
 
@@ -191,13 +213,45 @@ class NextEngineConnector implements OAuthConnector
         // NE returns refreshed tokens in every response — persist them
         $this->updateTokens($conn, $result);
 
-        return $result['data'] ?? [];
+        $stockData = $result['data'] ?? [];
+        
+        // 3. Merge Goods into Stock Data
+        foreach ($stockData as &$stock) {
+            $code = $stock['stock_goods_id'] ?? null;
+            if ($code && isset($goodsMap[$code])) {
+                $stock['goods_name'] = $goodsMap[$code]['goods_name'] ?? null;
+                $stock['goods_daihyo_syohin_code'] = $goodsMap[$code]['goods_daihyo_syohin_code'] ?? null;
+            }
+        }
+
+        return $stockData;
     }
 
     public function fetchRecentInventoryChanges(PlatformConnection $conn): iterable
     {
         $settings = $this->settings();
 
+        // 1. Fetch Goods for mapping
+        $goodsResponse = Http::withoutVerifying()->asForm()->post(
+            $settings['api_uri'] . '/api_v1_master_goods/search',
+            [
+                'access_token'  => $conn->access_token,
+                'refresh_token' => $conn->refresh_token,
+                'wait_flag'     => 1,
+                'fields'        => 'goods_syohin_code,goods_daihyo_syohin_code,goods_name',
+                'limit'         => 10000,
+            ]
+        );
+        $goodsResult = $goodsResponse->json();
+        $goodsMap = [];
+        if (($goodsResult['result'] ?? '') === 'success' && !empty($goodsResult['data'])) {
+            $this->updateTokens($conn, $goodsResult);
+            foreach ($goodsResult['data'] as $item) {
+                $goodsMap[$item['goods_syohin_code']] = $item;
+            }
+        }
+
+        // 2. Fetch Recent Stock Changes
         $response = Http::withoutVerifying()->asForm()->post(
             $settings['api_uri'] . '/api_v1_master_stock/search',
             [
@@ -209,8 +263,19 @@ class NextEngineConnector implements OAuthConnector
                 'fields'        => implode(',', [
                     'stock_goods_id',
                     'stock_quantity',
+                    'stock_allocation_quantity',
+                    'stock_defective_quantity',
+                    'stock_remaining_order_quantity',
+                    'stock_out_quantity',
+                    'stock_free_quantity',
+                    'stock_advance_order_quantity',
+                    'stock_advance_order_allocation_quantity',
+                    'stock_advance_order_free_quantity',
+                    'stock_deleted_flag',
+                    'stock_creation_date',
                     'stock_last_modified_date',
                 ]),
+                'limit'         => 10000,
             ]
         );
 
@@ -222,7 +287,19 @@ class NextEngineConnector implements OAuthConnector
         }
 
         $this->updateTokens($conn, $result);
-        return $result['data'] ?? [];
+        
+        $stockData = $result['data'] ?? [];
+        
+        // 3. Merge Goods into Stock Data
+        foreach ($stockData as &$stock) {
+            $code = $stock['stock_goods_id'] ?? null;
+            if ($code && isset($goodsMap[$code])) {
+                $stock['goods_name'] = $goodsMap[$code]['goods_name'] ?? null;
+                $stock['goods_daihyo_syohin_code'] = $goodsMap[$code]['goods_daihyo_syohin_code'] ?? null;
+            }
+        }
+
+        return $stockData;
     }
 
     public function updateShipment(PlatformConnection $conn, string $orderId, array $trackingData): void
@@ -338,12 +415,11 @@ class NextEngineConnector implements OAuthConnector
 
     public function normalizeInventory(array $raw): array
     {
-        // Endpoint: POST /api_v1_master_stock/search
-        // stock_goods_id is the only product identifier on this endpoint.
-        // product_name is not available here; fetch from /api_v1_master_goods/search if needed.
         return [
             'product_code'    => $raw['stock_goods_id'] ?? null,
-            'product_name'    => null,
+            'product_name'    => $raw['goods_name'] ?? null,
+            'manage_number'   => $raw['goods_daihyo_syohin_code'] ?? null,
+            'variant_id'      => $raw['stock_goods_id'] ?? null,
             'stock'           => (int) ($raw['stock_quantity'] ?? 0),
             'available_stock' => (int) ($raw['stock_free_quantity'] ?? 0),
             'reserved_stock'  => (int) ($raw['stock_allocation_quantity'] ?? 0),
