@@ -379,6 +379,13 @@ class ShopifyConnector implements OAuthConnector
         // No-op
     }
 
+    public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
+    {
+        // TODO: Implement pushInventory via GraphQL inventoryAdjustQuantities or inventorySetOnHandQuantities
+        Log::info('Shopify pushInventory stub called', ['sku' => $sku, 'qty' => $quantity]);
+        return false;
+    }
+
     private function connection(Shop $shop): PlatformConnection
     {
         $platform = \App\Models\Platform::where('key', 'shopify')->firstOrFail();
