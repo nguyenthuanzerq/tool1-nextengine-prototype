@@ -21,7 +21,7 @@ class ShopifyConnector implements OAuthConnector
     public function getAuthUrl(Shop $shop): string
     {
         $connection = $this->connection($shop);
-        $redirectUri = url('/shopify/callback'); // We should use absolute URL helper
+        $redirectUri = url('/shopify/callback');
         
         $settings = $shop->platform->settings;
         if (is_string($settings)) {
@@ -37,7 +37,6 @@ class ShopifyConnector implements OAuthConnector
             throw new \RuntimeException('Shop URL is not provided.');
         }
 
-        // Clean shop URL to ensure it doesn't have https:// prefix if user typed it
         $shopUrl = preg_replace('#^https?://#', '', rtrim($shopUrl, '/'));
 
         $query = http_build_query([
@@ -54,7 +53,7 @@ class ShopifyConnector implements OAuthConnector
     {
         $connection = $this->connection($shop);
         $code = $request->query('code');
-        $shopUrl = $request->query('shop'); // Shopify always passes the shop url back
+        $shopUrl = $request->query('shop');
 
         if (!$shopUrl) {
             $shopUrl = $connection->seller_id;
@@ -93,7 +92,6 @@ class ShopifyConnector implements OAuthConnector
     {
         $shopUrl = $conn->seller_id;
         
-        // Fetch platform settings for api_version
         $platform = \App\Models\Platform::find($conn->platform_id);
         $settings = $platform ? $platform->settings : [];
         if (is_string($settings)) {
@@ -103,15 +101,16 @@ class ShopifyConnector implements OAuthConnector
         
         $endpoint = "https://{$shopUrl}/admin/api/{$apiVersion}/graphql.json";
 
+        $payload = ['query' => $query];
+        if (!empty($variables)) {
+            $payload['variables'] = $variables;
+        }
         $response = Http::withoutVerifying()
             ->withHeaders([
                 'X-Shopify-Access-Token' => $conn->access_token,
                 'Content-Type' => 'application/json',
             ])
-            ->post($endpoint, [
-                'query' => $query,
-                'variables' => $variables,
-            ]);
+            ->post($endpoint, $payload);
 
         if ($response->failed()) {
             Log::error('Shopify GraphQL request failed', [
@@ -122,7 +121,18 @@ class ShopifyConnector implements OAuthConnector
             throw new \RuntimeException('Shopify API Error: ' . $response->body());
         }
 
-        return $response->json();
+        $json = $response->json();
+
+        if (isset($json['errors'])) {
+            Log::error('Shopify GraphQL errors', [
+                'errors' => $json['errors'],
+                'query' => $query,
+                'variables' => $variables,
+            ]);
+            throw new \RuntimeException('Shopify GraphQL Error: ' . json_encode($json['errors']));
+        }
+
+        return $json;
     }
 
     public function fetchOrders(PlatformConnection $conn, array $opts = []): iterable
@@ -130,7 +140,6 @@ class ShopifyConnector implements OAuthConnector
         if (empty($conn->access_token) || empty($conn->seller_id)) {
             return [];
         }
-
         $query = '
             query {
                 orders(first: 50, sortKey: CREATED_AT, reverse: true) {
@@ -181,32 +190,28 @@ class ShopifyConnector implements OAuthConnector
                 }
             }
         ';
-
-        try {
-            $data = $this->graphqlRequest($conn, $query);
-            $edges = $data['data']['orders']['edges'] ?? [];
-
-            $orders = [];
-            foreach ($edges as $edge) {
-                $node = $edge['node'];
-                
-                $lineItems = [];
-                if (isset($node['lineItems']['edges'])) {
-                    foreach ($node['lineItems']['edges'] as $itemEdge) {
-                        $itemEdge['node']['_order_id'] = $node['id'];
-                        $lineItems[] = $itemEdge['node'];
-                    }
-                }
-                $this->itemCache[$node['id']] = $lineItems;
-
-                $orders[] = $node;
-            }
-
-            return $orders;
-        } catch (\Throwable $e) {
-            Log::warning('Shopify fetchOrders failed', ['error' => $e->getMessage()]);
-            return [];
+        
+        $data = $this->graphqlRequest($conn, $query);
+        
+        if (isset($data['errors'])) {
+            throw new \RuntimeException("Shopify API Error (Orders): " . json_encode($data['errors']));
         }
+        $edges = $data['data']['orders']['edges'] ?? [];
+        $orders = [];
+        foreach ($edges as $edge) {
+            $node = $edge['node'];
+            
+            $lineItems = [];
+            if (isset($node['lineItems']['edges'])) {
+                foreach ($node['lineItems']['edges'] as $itemEdge) {
+                    $itemEdge['node']['_order_id'] = $node['id'];
+                    $lineItems[] = $itemEdge['node'];
+                }
+            }
+            $this->itemCache[$node['id']] = $lineItems;
+            $orders[] = $node;
+        }
+        return $orders;
     }
 
     public function fetchOrderItems(PlatformConnection $conn, array $orderIds): iterable
@@ -225,7 +230,6 @@ class ShopifyConnector implements OAuthConnector
         if (empty($conn->access_token) || empty($conn->seller_id)) {
             return [];
         }
-
         $query = '
             query {
                 inventoryItems(first: 50) {
@@ -237,7 +241,7 @@ class ShopifyConnector implements OAuthConnector
                             inventoryLevels(first: 10) {
                                 edges {
                                     node {
-                                        available
+                                        quantities(names: ["available"]) { name quantity }
                                         location { id name }
                                     }
                                 }
@@ -247,20 +251,16 @@ class ShopifyConnector implements OAuthConnector
                 }
             }
         ';
-
-        try {
-            $data = $this->graphqlRequest($conn, $query);
-            $edges = $data['data']['inventoryItems']['edges'] ?? [];
-
-            $items = [];
-            foreach ($edges as $edge) {
-                $items[] = $edge['node'];
-            }
-            return $items;
-        } catch (\Throwable $e) {
-            Log::warning('Shopify fetchInventory failed', ['error' => $e->getMessage()]);
-            return [];
+        $data = $this->graphqlRequest($conn, $query);
+        if (isset($data['errors'])) {
+            throw new \RuntimeException("Shopify API Error (Inventory): " . json_encode($data['errors']));
         }
+        $edges = $data['data']['inventoryItems']['edges'] ?? [];
+        $items = [];
+        foreach ($edges as $edge) {
+            $items[] = $edge['node'];
+        }        
+        return $items;
     }
 
     public function normalizeOrder(array $raw): array
@@ -311,7 +311,12 @@ class ShopifyConnector implements OAuthConnector
         $totalQuantity = 0;
         $levels = $raw['inventoryLevels']['edges'] ?? [];
         foreach ($levels as $level) {
-            $totalQuantity += (int) ($level['node']['available'] ?? 0);
+            $quantities = $level['node']['quantities'] ?? [];
+            foreach ($quantities as $qty) {
+                if (($qty['name'] ?? '') === 'available') {
+                    $totalQuantity += (int) ($qty['quantity'] ?? 0);
+                }
+            }
         }
 
         return [
@@ -326,35 +331,100 @@ class ShopifyConnector implements OAuthConnector
         if (empty($conn->access_token) || empty($conn->seller_id)) {
             return;
         }
-
-        $fulfillmentId = $trackingData['fulfillmentId'] ?? null;
-        if (!$fulfillmentId) {
-            Log::warning('Shopify updateShipment: fulfillmentId missing in trackingData');
-            return;
-        }
-
-        $mutation = '
-            mutation fulfillmentTrackingInfoUpdate($fulfillmentId: ID!, $trackingInfoInput: FulfillmentTrackingInput!) {
-                fulfillmentTrackingInfoUpdate(fulfillmentId: $fulfillmentId, trackingInfoInput: $trackingInfoInput) {
-                    fulfillment { id }
-                    userErrors { field message }
+        $trackingNumber = $trackingData['tracking_number'] ?? '';
+        $carrier = $trackingData['carrier'] ?? '';
+        // 1. Query GraphQL for current Fulfillment data of this Order
+        $fetchQuery = '
+            query getFulfillmentData($id: ID!) {
+                order(id: $id) {
+                    fulfillmentOrders(first: 5) {
+                        edges {
+                            node {
+                                id
+                                status
+                            }
+                        }
+                    }
+                    fulfillments(first: 5) {
+                        edges {
+                            node {
+                                id
+                            }
+                        }
+                    }
                 }
             }
         ';
-
-        $variables = [
-            'fulfillmentId' => $fulfillmentId,
-            'trackingInfoInput' => [
-                'number' => $trackingData['tracking_number'] ?? '',
-                'company' => $trackingData['carrier'] ?? '',
-                'url' => $trackingData['tracking_url'] ?? '',
-            ]
-        ];
-
-        try {
-            $this->graphqlRequest($conn, $mutation, $variables);
-        } catch (\Throwable $e) {
-            Log::error('Shopify updateShipment failed', ['error' => $e->getMessage()]);
+        
+        $data = $this->graphqlRequest($conn, $fetchQuery, ['id' => $orderId]);
+        
+        if (isset($data['errors'])) {
+            Log::error('Shopify updateShipment getFulfillmentData error', ['errors' => $data['errors']]);
+            return;
+        }
+        $orderNode = $data['data']['order'] ?? null;
+        if (!$orderNode) return;
+        $fulfillments = $orderNode['fulfillments']['edges'] ?? [];
+        $fulfillmentOrders = $orderNode['fulfillmentOrders']['edges'] ?? [];
+        // 2. Decide whether to CREATE or UPDATE tracking
+        if (!empty($fulfillments)) {
+            // CASE A: Order is ALREADY FULFILLED, just update tracking info
+            $fulfillmentId = $fulfillments[0]['node']['id'];
+            $mutation = '
+                mutation fulfillmentTrackingInfoUpdate($fulfillmentId: ID!, $trackingInfoInput: FulfillmentTrackingInput!) {
+                    fulfillmentTrackingInfoUpdate(fulfillmentId: $fulfillmentId, trackingInfoInput: $trackingInfoInput) {
+                        fulfillment { id }
+                        userErrors { field message }
+                    }
+                }
+            ';
+            $response = $this->graphqlRequest($conn, $mutation, [
+                'fulfillmentId' => $fulfillmentId,
+                'trackingInfoInput' => [
+                    'number' => $trackingNumber,
+                    'company' => $carrier,
+                ]
+            ]);
+            $userErrors = $response['data']['fulfillmentTrackingInfoUpdate']['userErrors'] ?? [];
+            if (!empty($userErrors)) {
+                throw new \RuntimeException("Shopify từ chối sửa vận đơn: " . json_encode($userErrors));
+            }
+        } else {
+            // CASE B: Order is UNFULFILLED, use fulfillmentCreateV2 API
+            $fulfillmentOrderId = null;
+            foreach ($fulfillmentOrders as $foEdge) {
+                if (in_array($foEdge['node']['status'], ['OPEN', 'IN_PROGRESS'])) {
+                    $fulfillmentOrderId = $foEdge['node']['id'];
+                    break;
+                }
+            }
+            if (!$fulfillmentOrderId) {
+                Log::warning('Shopify updateShipment: No OPEN FulfillmentOrder found for ' . $orderId);
+                return;
+            }
+            $mutation = '
+                mutation fulfillmentCreateV2($fulfillment: FulfillmentV2Input!) {
+                    fulfillmentCreateV2(fulfillment: $fulfillment) {
+                        fulfillment { id }
+                        userErrors { field message }
+                    }
+                }
+            ';
+            $response = $this->graphqlRequest($conn, $mutation, [
+                'fulfillment' => [
+                    'lineItemsByFulfillmentOrder' => [
+                        [ 'fulfillmentOrderId' => $fulfillmentOrderId ]
+                    ],
+                    'trackingInfo' => [
+                        'number' => $trackingNumber,
+                        'company' => $carrier,
+                    ]
+                ]
+            ]);
+            $userErrors = $response['data']['fulfillmentCreateV2']['userErrors'] ?? [];
+            if (!empty($userErrors)) {
+                throw new \RuntimeException("Shopify từ chối tạo vận đơn: " . json_encode($userErrors));
+            }
         }
     }
 

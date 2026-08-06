@@ -272,7 +272,11 @@ class OrderController extends Controller
                 app('mail.manager')->purge('smtp'); // Clear cached transporter
             }
 
-            Mail::mailer($mailerName)->to($notifyEmail)->send(new ShipmentNotificationMail($order->load('shop')));
+            try {
+                Mail::mailer($mailerName)->to($notifyEmail)->send(new ShipmentNotificationMail($order->load('shop')));
+            } catch (\Throwable $e) {
+                \Log::error('Gửi mail thất bại: ' . $e->getMessage());
+            }
         }
 
         if ($request->wantsJson() || $request->ajax()) {
