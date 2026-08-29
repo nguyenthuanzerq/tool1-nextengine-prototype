@@ -18,12 +18,14 @@ class Shop extends Model
         'access_token',
         'refresh_token',
         'token_expires_at',
+        'auto_sync_enabled',
     ];
 
     protected function casts(): array
     {
         return [
-            'token_expires_at' => 'datetime',
+            'token_expires_at'  => 'datetime',
+            'auto_sync_enabled' => 'boolean',
         ];
     }
 

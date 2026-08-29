@@ -12,7 +12,9 @@ class PlatformOrder extends Model
         'shop_id',
         // --- Platform identifier ---
         'platform_order_id',
+        'nextengine_order_id',
         'platform_order_status',
+        'sync_status',
         // --- Amounts ---
         'goods_amount',
         'delivery_fee',
@@ -40,6 +42,9 @@ class PlatformOrder extends Model
         // --- Raw ---
         'meta',
         'raw_data',
+        // --- Sync ---
+        'sync_status',
+        'nextengine_order_id',
     ];
 
     protected $casts = [

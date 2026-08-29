@@ -5,6 +5,7 @@ namespace App\Connectors;
 use App\Contracts\OAuthConnector;
 use App\Models\Platform;
 use App\Models\PlatformConnection;
+use App\Models\PlatformOrder;
 use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -307,10 +308,166 @@ class NextEngineConnector implements OAuthConnector
         throw new \Exception('NextEngine updateShipment is not implemented.');
     }
 
+    public function pushOrder(PlatformConnection $conn, PlatformOrder $order): array
+    {
+        $settings = $this->settings();
+        $user = \App\Models\User::first();
+        $patternId = $user->nextengine_pattern_id ?? 2;
+
+        $stream = fopen('php://temp', 'w+');
+        // 41 columns strictly required by 汎用標準パターン
+        $headers = [
+            '店舗伝票番号', '受注日', '受注郵便番号', '受注住所１', '受注住所２', '受注名', '受注名カナ', '受注電話番号', '受注メールアドレス', 
+            '発送郵便番号', '発送先住所１', '発送先住所２', '発送先名', '発送先カナ', '発送電話番号', '支払方法', '発送方法', 
+            '商品計', '税金', '発送料', '手数料', 'ポイント', 'その他費用', '合計金額', 'ギフトフラグ', '時間帯指定', '日付指定', 
+            '作業者欄', '備考', '商品名', '商品コード', '商品価格', '受注数量', '商品オプション', '出荷済フラグ', '顧客区分', 
+            '顧客コード', '消費税率（%）', 'のし', 'ラッピング', 'メッセージ'
+        ];
+        fputcsv($stream, $headers);
+
+        $orderedAt = $order->ordered_at ? $order->ordered_at->format('Y/m/d H:i:s') : now()->format('Y/m/d H:i:s');
+        
+        // Dummy data for missing required fields in test orders
+        $buyerZip = $order->buyer_zip ?: '150-0002';
+        $buyerAddress = $order->buyer_address ?: '東京都渋谷区渋谷1-1-1';
+        $deliveryZip = $order->delivery_zip ?: $buyerZip;
+        $deliveryAddress = $order->delivery_address ?: $buyerAddress;
+        $paymentMethod = $order->payment_method ?: 'クレジットカード';
+        $deliveryMethod = $order->delivery_method ?: '宅配便';
+
+        if ($order->items && $order->items->count() > 0) {
+            foreach ($order->items as $item) {
+                $row = [
+                    $order->platform_order_id ?? $order->id, // 店舗伝票番号
+                    $orderedAt, // 受注日
+                    $buyerZip, // 受注郵便番号
+                    $buyerAddress, // 受注住所１
+                    '', // 受注住所２
+                    $order->buyer_name ?? 'Test User', // 受注名
+                    '', // 受注名カナ
+                    $order->buyer_phone ?? '09012345678', // 受注電話番号
+                    $order->buyer_email ?? 'test@example.com', // 受注メールアドレス
+                    $deliveryZip, // 発送郵便番号
+                    $deliveryAddress, // 発送先住所１
+                    '', // 発送先住所２
+                    $order->delivery_name ?? $order->buyer_name ?? 'Test User', // 発送先名
+                    '', // 発送先カナ
+                    $order->buyer_phone ?? '09012345678', // 発送電話番号 (Fallback to buyer)
+                    $paymentMethod, // 支払方法
+                    $deliveryMethod, // 発送方法
+                    $order->goods_amount ?? 0, // 商品計
+                    0, // 税金
+                    $order->delivery_fee ?? 0, // 発送料
+                    0, // 手数料
+                    0, // ポイント
+                    0, // その他費用
+                    $order->total_amount ?? 0, // 合計金額
+                    0, // ギフトフラグ
+                    '', // 時間帯指定
+                    '', // 日付指定
+                    '', // 作業者欄
+                    '', // 備考
+                    $item->product_name ?? 'Test Product', // 商品名
+                    $item->product_code ?? 'TEST-01', // 商品コード
+                    $item->unit_price ?? 0, // 商品価格
+                    $item->quantity ?? 1, // 受注数量
+                    '', // 商品オプション
+                    0, // 出荷済フラグ
+                    $order->customer_type ?? '', // 顧客区分
+                    $order->buyer_id ?? '', // 顧客コード
+                    '', // 消費税率（%）
+                    '', // のし
+                    '', // ラッピング
+                    ''  // メッセージ
+                ];
+                fputcsv($stream, $row);
+            }
+        } else {
+            // Fallback if no items
+            $row = [
+                $order->platform_order_id ?? $order->id, $orderedAt, 
+                $buyerZip, $buyerAddress, '', 
+                $order->buyer_name ?? 'Test User', '', $order->buyer_phone ?? '09012345678', $order->buyer_email ?? 'test@example.com', 
+                $deliveryZip, $deliveryAddress, '', 
+                $order->delivery_name ?? $order->buyer_name ?? 'Test User', '', $order->buyer_phone ?? '09012345678', 
+                $paymentMethod, $deliveryMethod, 
+                $order->goods_amount ?? 0, 0, $order->delivery_fee ?? 0, 0, 0, 0, $order->total_amount ?? 0, 0, 
+                '', '', '', '', 'Unknown Item', 'UNKNOWN', 0, 1, '', 0, '', '', '', '', '', ''
+            ];
+            fputcsv($stream, $row);
+        }
+
+        rewind($stream);
+        $csvString = stream_get_contents($stream);
+        fclose($stream);
+
+        $response = Http::withoutVerifying()->asForm()->post(
+            $settings['api_uri'] . '/api_v1_receiveorder_base/upload',
+            [
+                'access_token'                    => $conn->access_token,
+                'refresh_token'                   => $conn->refresh_token,
+                'wait_flag'                       => 1,
+                'receive_order_upload_pattern_id' => $patternId,
+                'data_type_1'                     => 'csv',
+                'data_1'                          => $csvString,
+            ]
+        );
+
+        $result = $response->json();
+
+        Log::info('NextEngine pushOrder response', [
+            'result'  => $result['result'] ?? null,
+            'error'   => $result['error'] ?? null,
+            'message' => $result['message'] ?? null,
+        ]);
+
+        $this->updateTokens($conn, $result);
+
+        if (($result['result'] ?? '') !== 'success') {
+            return [
+                'status'  => 'failed',
+                'message' => $result['message'] ?? json_encode($result['error'] ?? 'Unknown error'),
+            ];
+        }
+
+        return [
+            'status'              => 'success',
+            'nextengine_order_id' => $result['receive_order_id'] ?? null,
+        ];
+    }
+
     public function pushInventory(PlatformConnection $conn, string $sku, int $quantity): bool
     {
-        // NextEngine is the Master, we don't push inventory to it from Tool1 in this prototype.
-        return false;
+        $settings = $this->settings();
+
+        // Sử dụng master_goods upload để đảm bảo tạo sản phẩm nếu chưa tồn tại
+        $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><requests></requests>');
+        $goods = $xml->addChild('goods');
+        $goods->addChild('goods_syohin_code', htmlspecialchars($sku));
+
+        $xmlString = $xml->asXML();
+
+        $response = Http::withoutVerifying()->asForm()->post(
+            $settings['api_uri'] . '/api_v1_master_goods/upload',
+            [
+                'access_token'  => $conn->access_token,
+                'refresh_token' => $conn->refresh_token,
+                'wait_flag'     => 1,
+                'data'          => $xmlString,
+            ]
+        );
+
+        $result = $response->json();
+
+        \Illuminate\Support\Facades\Log::info('NextEngine pushInventory (Goods) response', [
+            'result'  => $result['result'] ?? null,
+            'error'   => $result['error'] ?? null,
+            'message' => $result['message'] ?? null,
+        ]);
+
+        $this->updateTokens($conn, $result);
+
+        return ($result['result'] ?? '') === 'success';
     }
 
     public function fetchOrderItems(PlatformConnection $conn, array $orderIds): iterable

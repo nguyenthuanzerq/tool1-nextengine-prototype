@@ -24,6 +24,7 @@ class User extends Authenticatable
         'is_active',
         'email_smtp',
         'app_password',
+        'nextengine_pattern_id',
     ];
 
     /**

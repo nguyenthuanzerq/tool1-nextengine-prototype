@@ -214,6 +214,27 @@
                 @endif
             </div>
         </form>
+
+        @if($platform?->key !== 'nextengine')
+        <div class="mt-8 mb-4">
+            <h2 class="text-base font-semibold text-gray-800">Auto-Sync 設定</h2>
+            <p class="text-xs text-gray-400 mt-0.5">自動同期設定 / Auto-Sync Settings</p>
+        </div>
+        <form method="POST" action="{{ route('btoc.shop.update', $shop->id) }}" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+            @csrf
+            @method('PUT')
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900">自動同期 (Auto-Sync) を有効にする</h3>
+                    <p class="text-xs text-gray-500 mt-1">この機能を有効にすると、15分ごとに自動的に注文を同期します。</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="auto_sync_enabled" value="1" class="sr-only peer" onChange="this.form.submit()" {{ $shop->auto_sync_enabled ? 'checked' : '' }}>
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+            </div>
+        </form>
+        @endif
     </div>
     @endif
 

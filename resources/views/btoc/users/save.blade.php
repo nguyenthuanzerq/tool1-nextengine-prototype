@@ -130,8 +130,38 @@
                     {{ $isCreate ? '追加する' : '保存する' }}
                 </button>
             </div>
-        </form>
+        
     </div>
+
+    {{-- Cấu hình tích hợp (Integrations) --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mt-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Cấu hình tích hợp (Integrations)</h3>
+        
+        {{-- Pattern ID --}}
+        <div class="mb-5">
+            <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                受注一括登録パターンID (NextEngine Pattern ID)
+                <div class="group relative inline-block">
+                    <svg class="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-64 bg-gray-800 text-white text-xs rounded py-2 px-3 z-10">
+                        NextEngine上の受注一括登録パターンIDを入力してください（例: 1, 2...）。Đây là ID của Mẫu đăng ký đơn hàng trên NextEngine.
+                        <svg class="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+                    </div>
+                </div>
+            </label>
+            <input type="text" name="nextengine_pattern_id" value="{{ old('nextengine_pattern_id', $user->nextengine_pattern_id) }}"
+                   placeholder="例: 1, 2..."
+                   class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition
+                          @error('nextengine_pattern_id') border-red-400 @enderror">
+            @error('nextengine_pattern_id')
+                <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+    
+    </form>
 
 </div>
 @endsection

@@ -28,6 +28,7 @@
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">所要時間</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状態 / Status</th>
                         <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">件数</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">エラー内容 / Error</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -45,23 +46,32 @@
                         <td class="px-4 py-4 text-sm text-gray-500">{{ $h->platform->name ?? '—' }}</td>
                         <td class="px-4 py-4 text-sm text-gray-700">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                {{ $h->sync_type === 'orders' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
-                                {{ $h->sync_type === 'orders' ? '注文' : '在庫' }}
+                                {{ $h->sync_type === 'orders' || $h->sync_type === 'orders_push' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
+                                {{ $h->sync_type === 'orders' || $h->sync_type === 'orders_push' ? '注文' : '在庫' }}
                             </span>
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-700">{{ $h->started_at?->format('Y-m-d H:i:s') }}</td>
                         <td class="px-4 py-4 text-sm text-gray-500">{{ $duration }}</td>
                         <td class="px-4 py-4 text-sm text-gray-700">
                             @if($h->status === 'success')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">成功</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Success</span>
                             @elseif($h->status === 'running')
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">実行中</span>
+                                <span class="px-2 py-1 bg-amber-100 text-amber-800 rounded-full text-xs">Running</span>
                             @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">失敗</span>
+                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Failed</span>
                             @endif
                         </td>
                         <td class="px-4 py-4 text-sm text-gray-700">{{ $count }}</td>
-                        <td class="px-4 py-4 text-right">
+                        <td class="px-4 py-4 text-sm text-red-600 max-w-xs truncate cursor-help" title="{{ $h->error_message }}">
+                            {{ Str::limit($h->error_message, 30) }}
+                        </td>
+                        <td class="px-4 py-4 text-right flex gap-2 justify-end">
+                            @if($h->status === 'failed' && $h->sync_type === 'orders_push')
+                                <form method="POST" action="{{ route('btoc.sync.retry', $h->id) }}">
+                                    @csrf
+                                    <button type="submit" class="bg-white border border-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-50 text-xs font-medium">Retry</button>
+                                </form>
+                            @endif
                             <a href="{{ route('btoc.sync.history.detail', $h->id) }}"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
                                 詳細

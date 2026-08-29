@@ -59,6 +59,7 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
     });
     Route::get('/sync/history',      [SyncController::class, 'history'])->name('sync.history');
     Route::get('/sync/history/{id}', [SyncController::class, 'historyDetail'])->name('sync.history.detail');
+    Route::post('/sync/retry/{id}',  [SyncController::class, 'retryOrder'])->name('sync.retry');
 
     // Users
     Route::prefix('users')->name('users.')->group(function () {

@@ -36,6 +36,7 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
             'email_smtp' => ['nullable', 'email', 'max:255'],
             'app_password' => ['nullable', 'string', 'max:255'],
+            'nextengine_pattern_id' => ['nullable', 'string', 'max:255'],
         ], [
             'name.required'     => '名前を入力してください。',
             'email.required'    => 'メールアドレスを入力してください。',
@@ -51,6 +52,7 @@ class UserController extends Controller
             'is_active' => true,
             'email_smtp' => $validated['email_smtp'] ?? null,
             'app_password' => $validated['app_password'] ?? null,
+            'nextengine_pattern_id' => $validated['nextengine_pattern_id'] ?? null,
         ]);
 
         return redirect()->route('btoc.users.index')->with('success', 'ユーザーを追加しました。');
@@ -76,6 +78,7 @@ class UserController extends Controller
             'is_active' => ['sometimes', 'boolean'],
             'email_smtp' => ['nullable', 'email', 'max:255'],
             'app_password' => ['nullable', 'string', 'max:255'],
+            'nextengine_pattern_id' => ['nullable', 'string', 'max:255'],
         ], [
             'name.required'  => '名前を入力してください。',
             'email.required' => 'メールアドレスを入力してください。',

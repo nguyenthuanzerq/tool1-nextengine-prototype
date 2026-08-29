@@ -286,4 +286,79 @@ class PlatformSyncService
             'status'      => 'running',
         ]);
     }
+    public function pushPendingOrdersToNextEngine(): void
+    {
+        $conn = PlatformConnection::whereHas('platform', function ($q) {
+            $q->where('key', 'nextengine');
+        })->first();
+
+        if (!$conn) {
+            \Illuminate\Support\Facades\Log::warning('No NextEngine connection found for pushing orders.');
+            return;
+        }
+
+        $connector = $this->factory->resolve('nextengine');
+
+        $pendingOrders = PlatformOrder::where('sync_status', 'pending')->with(['items', 'shop'])->get();
+
+        foreach ($pendingOrders as $order) {
+            try {
+                if (method_exists($connector, 'pushOrder')) {
+                    $result = $connector->pushOrder($conn, $order);
+                    
+                    if ($result['status'] === 'success') {
+                        $order->update([
+                            'sync_status'           => 'success',
+                            'nextengine_order_id'   => $result['nextengine_order_id'] ?? null,
+                            'platform_order_status' => '50',
+                        ]);
+                    } else {
+                        $errMsg = $result['message'] ?? 'Failed to push order';
+                        $order->update(['sync_status' => 'failed']);
+                        
+                        SyncHistory::create([
+                            'shop_id'       => $order->shop_id,
+                            'platform_id'   => $conn->platform_id,
+                            'sync_code'     => 'PUSH_ORDER_' . now()->format('YmdHis') . '_' . Str::upper(Str::random(4)),
+                            'shop_name'     => $order->shop->shop_name ?? 'Unknown',
+                            'sync_type'     => 'orders_push',
+                            'started_at'    => now(),
+                            'ended_at'      => now(),
+                            'status'        => 'failed',
+                            'error_message' => $errMsg,
+                        ]);
+                        
+                        // Check for token or auth errors
+                        $errMsgLower = strtolower($errMsg);
+                        if (str_contains($errMsgLower, 'token') || str_contains($errMsgLower, 'unauthorized') || str_contains($errMsgLower, 'auth')) {
+                            \Illuminate\Support\Facades\Log::emergency('NextEngine Token Expired/Invalid. Stopping sync process.');
+                            break;
+                        }
+                    }
+                }
+            } catch(\Throwable $e) {
+                $errMsg = $e->getMessage();
+                $order->update(['sync_status' => 'failed']);
+                
+                SyncHistory::create([
+                    'shop_id'       => $order->shop_id,
+                    'platform_id'   => $conn->platform_id,
+                    'sync_code'     => 'PUSH_ORDER_' . now()->format('YmdHis') . '_' . Str::upper(Str::random(4)),
+                    'shop_name'     => $order->shop->shop_name ?? 'Unknown',
+                    'sync_type'     => 'orders_push',
+                    'started_at'    => now(),
+                    'ended_at'      => now(),
+                    'status'        => 'failed',
+                    'error_message' => substr($errMsg, 0, 255),
+                ]);
+
+                // Check for token or auth errors
+                $errMsgLower = strtolower($errMsg);
+                if (str_contains($errMsgLower, 'token') || str_contains($errMsgLower, 'unauthorized') || str_contains($errMsgLower, 'auth')) {
+                    \Illuminate\Support\Facades\Log::emergency('NextEngine Token Expired/Invalid. Stopping sync process.');
+                    break;
+                }
+            }
+        }
+    }
 }

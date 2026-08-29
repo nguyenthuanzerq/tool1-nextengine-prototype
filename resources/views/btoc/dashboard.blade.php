@@ -62,6 +62,33 @@
                 <div class="text-xs text-gray-400 mt-0.5">Today's Shipments</div>
             </div>
 
+            <!-- Pending Sync -->
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm hover:shadow transition">
+                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
+                    <svg viewBox="0 0 24 24" class="h-5 w-5 text-amber-700" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.5l1.75 1.93" />
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-gray-900 mb-1">{{ $pendingSync }}</div>
+                <div class="text-sm font-semibold text-gray-800">同期待ち</div>
+                <div class="text-xs text-gray-400 mt-0.5">Orders Pending Sync</div>
+            </div>
+
+            <!-- Failed Sync -->
+            <div class="bg-white p-5 rounded-xl border border-red-200 shadow-sm hover:shadow transition relative">
+                <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-4">
+                    <svg viewBox="0 0 24 24" class="h-5 w-5 text-red-700" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                </div>
+                <div class="text-3xl font-bold text-red-600 mb-1">{{ $failedOrders }}</div>
+                <div class="text-sm font-semibold text-red-800">同期エラー</div>
+                <div class="text-xs text-red-400 mt-0.5">Orders Failed</div>
+                <a href="{{ route('btoc.sync.history') }}" class="absolute top-5 right-5 text-sm text-blue-600 hover:underline">Xem lỗi</a>
+            </div>
+
             <!-- 5: Last Sync -->
             @php
                 $latestSync = \App\Models\SyncHistory::latest('started_at')->first();

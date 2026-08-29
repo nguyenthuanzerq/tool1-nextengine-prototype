@@ -100,12 +100,23 @@ class ShopController extends Controller
         $shop = Shop::findOrFail($id);
 
         $validated = $request->validate([
-            'shop_code'   => 'required|string|max:255|unique:shops,shop_code,' . $shop->id,
-            'shop_name'   => 'required|string|max:255',
-            'platform_id' => 'required|exists:platforms,id',
+            'shop_code'         => 'sometimes|required|string|max:255|unique:shops,shop_code,' . $shop->id,
+            'shop_name'         => 'sometimes|required|string|max:255',
+            'platform_id'       => 'sometimes|required|exists:platforms,id',
+            'auto_sync_enabled' => 'nullable|boolean',
         ]);
 
+        // If the checkbox is unchecked in a form that includes it, it won't be sent in the request.
+        // We handle this if the request comes from the detail page (where auto_sync_enabled is the only field).
+        if ($request->isMethod('PUT') && $request->has('_token') && !$request->has('shop_name')) {
+            $validated['auto_sync_enabled'] = $request->has('auto_sync_enabled');
+        }
+
         $shop->update($validated);
+
+        if (!$request->has('shop_name')) {
+            return redirect()->back()->with('success', 'Auto-Syncの設定を更新しました。');
+        }
 
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])
             ->with('success', 'ショップ情報を更新しました。');

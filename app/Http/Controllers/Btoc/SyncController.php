@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Btoc;
 
 use App\Http\Controllers\Controller;
+use App\Models\PlatformOrder;
 use App\Models\Shop;
 use App\Models\SyncHistory;
 use App\Services\PlatformSyncService;
@@ -70,5 +71,23 @@ class SyncController extends Controller
         $history = SyncHistory::with(['shop', 'platform'])->findOrFail($id);
 
         return view('btoc.sync.detail', compact('history'));
+    }
+
+    /**
+     * Retry failed orders for a shop based on a sync history record.
+     */
+    public function retryOrder(int $id)
+    {
+        $history = SyncHistory::findOrFail($id);
+        
+        // Reset failed orders to pending
+        PlatformOrder::where('shop_id', $history->shop_id)
+            ->where('sync_status', 'failed')
+            ->update(['sync_status' => 'pending']);
+
+        // Trigger the push process again
+        $this->syncService->pushPendingOrdersToNextEngine();
+
+        return redirect()->back()->with('success', 'Retry initiated. Check dashboard or history for updates.');
     }
 }
