@@ -14,5 +14,6 @@ Schedule::command('app:sync-orders-to-next-engine')
         ->withoutOverlapping();
 
 Schedule::command('app:pull-platform-orders')
-        ->everyTenSeconds()
+        // ->everyTenSeconds()
+        ->everyFiveMinutes()
         ->withoutOverlapping();
