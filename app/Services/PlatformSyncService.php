@@ -290,7 +290,7 @@ class PlatformSyncService
     {
         $conn = PlatformConnection::whereHas('platform', function ($q) {
             $q->where('key', 'nextengine');
-        })->first();
+        })->whereNotNull('shop_id')->first();
 
         if (!$conn) {
             \Illuminate\Support\Facades\Log::warning('No NextEngine connection found for pushing orders.');
