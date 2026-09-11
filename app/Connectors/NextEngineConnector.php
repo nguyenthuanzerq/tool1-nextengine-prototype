@@ -116,6 +116,10 @@ class NextEngineConnector implements OAuthConnector
             ]
         );
 
+        if (! $response->successful()) {
+            throw new \RuntimeException('NextEngine order API returned HTTP ' . $response->status());
+        }
+
         $result = $response->json();
 
         Log::info('NextEngine fetchOrders response', [
@@ -128,8 +132,11 @@ class NextEngineConnector implements OAuthConnector
         ]);
 
         if (($result['result'] ?? '') !== 'success') {
-            Log::warning('NextEngine fetchOrders failed', ['result' => $result]);
-            return [];
+            Log::warning('NextEngine fetchOrders failed', [
+                'error' => $result['error'] ?? null,
+                'message' => $result['message'] ?? null,
+            ]);
+            throw new \RuntimeException($result['message'] ?? 'NextEngine order API failed.');
         }
 
         // NE returns refreshed tokens in every response — persist them
@@ -311,8 +318,24 @@ class NextEngineConnector implements OAuthConnector
     public function pushOrder(PlatformConnection $conn, PlatformOrder $order): array
     {
         $settings = $this->settings();
-        $user = \App\Models\User::first();
-        $patternId = $user->nextengine_pattern_id ?? 2;
+        $patternId = config('services.next_engine.pattern_id')
+            ?: \App\Models\User::query()
+                ->whereNotNull('nextengine_pattern_id')
+                ->value('nextengine_pattern_id');
+
+        if (! $patternId) {
+            throw new \RuntimeException('NextEngine upload pattern ID is not configured. Set NEXT_ENGINE_PATTERN_ID or configure it for an admin user.');
+        }
+
+        if (! $order->platform_order_id || $order->items->isEmpty()) {
+            throw new \InvalidArgumentException('Order ID and at least one order item are required.');
+        }
+
+        foreach ($order->items as $item) {
+            if (! $item->product_code || $item->quantity === null) {
+                throw new \InvalidArgumentException('Every order item requires product_code and quantity.');
+            }
+        }
 
         $stream = fopen('php://temp', 'w+');
         // 41 columns strictly required by 汎用標準パターン
@@ -325,15 +348,30 @@ class NextEngineConnector implements OAuthConnector
         ];
         fputcsv($stream, $headers);
 
-        $orderedAt = $order->ordered_at ? $order->ordered_at->format('Y/m/d H:i:s') : now()->format('Y/m/d H:i:s');
-        
-        // Dummy data for missing required fields in test orders
-        $buyerZip = $order->buyer_zip ?: '150-0002';
-        $buyerAddress = $order->buyer_address ?: '東京都渋谷区渋谷1-1-1';
-        $deliveryZip = $order->delivery_zip ?: $buyerZip;
-        $deliveryAddress = $order->delivery_address ?: $buyerAddress;
-        $paymentMethod = $order->payment_method ?: 'クレジットカード';
-        $deliveryMethod = $order->delivery_method ?: '宅配便';
+        $orderedAt = $order->ordered_at?->format('Y/m/d H:i:s');
+        $requiredFields = [
+            'buyer_name' => $order->buyer_name,
+            'buyer_email' => $order->buyer_email,
+            'buyer_zip' => $order->buyer_zip,
+            'buyer_address' => $order->buyer_address,
+            'delivery_zip' => $order->delivery_zip,
+            'delivery_address' => $order->delivery_address,
+            'payment_method' => $order->payment_method,
+            'delivery_method' => $order->delivery_method,
+        ];
+
+        foreach ($requiredFields as $field => $value) {
+            if ($value === null || trim((string) $value) === '') {
+                throw new \InvalidArgumentException("Order field {$field} is required.");
+            }
+        }
+
+        $buyerZip = $order->buyer_zip;
+        $buyerAddress = $order->buyer_address;
+        $deliveryZip = $order->delivery_zip;
+        $deliveryAddress = $order->delivery_address;
+        $paymentMethod = $order->payment_method;
+        $deliveryMethod = $order->delivery_method;
 
         if ($order->items && $order->items->count() > 0) {
             foreach ($order->items as $item) {
@@ -343,16 +381,16 @@ class NextEngineConnector implements OAuthConnector
                     $buyerZip, // 受注郵便番号
                     $buyerAddress, // 受注住所１
                     '', // 受注住所２
-                    $order->buyer_name ?? 'Test User', // 受注名
+                    $order->buyer_name, // 受注名
                     '', // 受注名カナ
-                    $order->buyer_phone ?? '09012345678', // 受注電話番号
-                    $order->buyer_email ?? 'test@example.com', // 受注メールアドレス
+                    $order->buyer_phone, // 受注電話番号
+                    $order->buyer_email, // 受注メールアドレス
                     $deliveryZip, // 発送郵便番号
                     $deliveryAddress, // 発送先住所１
                     '', // 発送先住所２
-                    $order->delivery_name ?? $order->buyer_name ?? 'Test User', // 発送先名
+                    $order->delivery_name ?: $order->buyer_name, // 発送先名
                     '', // 発送先カナ
-                    $order->buyer_phone ?? '09012345678', // 発送電話番号 (Fallback to buyer)
+                    $order->buyer_phone, // 発送電話番号
                     $paymentMethod, // 支払方法
                     $deliveryMethod, // 発送方法
                     $order->goods_amount ?? 0, // 商品計
@@ -382,19 +420,6 @@ class NextEngineConnector implements OAuthConnector
                 ];
                 fputcsv($stream, $row);
             }
-        } else {
-            // Fallback if no items
-            $row = [
-                $order->platform_order_id ?? $order->id, $orderedAt, 
-                $buyerZip, $buyerAddress, '', 
-                $order->buyer_name ?? 'Test User', '', $order->buyer_phone ?? '09012345678', $order->buyer_email ?? 'test@example.com', 
-                $deliveryZip, $deliveryAddress, '', 
-                $order->delivery_name ?? $order->buyer_name ?? 'Test User', '', $order->buyer_phone ?? '09012345678', 
-                $paymentMethod, $deliveryMethod, 
-                $order->goods_amount ?? 0, 0, $order->delivery_fee ?? 0, 0, 0, 0, $order->total_amount ?? 0, 0, 
-                '', '', '', '', 'Unknown Item', 'UNKNOWN', 0, 1, '', 0, '', '', '', '', '', ''
-            ];
-            fputcsv($stream, $row);
         }
 
         rewind($stream);
@@ -412,6 +437,10 @@ class NextEngineConnector implements OAuthConnector
                 'data_1'                          => $csvString,
             ]
         );
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('NextEngine order upload returned HTTP ' . $response->status());
+        }
 
         $result = $response->json();
 

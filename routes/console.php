@@ -9,11 +9,11 @@ Artisan::command('inspire', function () {
 
 
 Schedule::command('app:sync-orders-to-next-engine')
-        // ->everyTenSeconds()
-        ->everyFiveMinutes()
+        ->everyTenSeconds()
+        // ->everyFiveMinutes()
         ->withoutOverlapping();
 
 Schedule::command('app:pull-platform-orders')
-        // ->everyTenSeconds()
-        ->everyFiveMinutes()
+        ->everyTenSeconds()
+        // ->everyFiveMinutes()
         ->withoutOverlapping();

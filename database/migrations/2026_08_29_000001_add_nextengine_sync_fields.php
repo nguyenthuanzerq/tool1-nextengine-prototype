@@ -8,14 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('platform_orders', function (Blueprint $table) {
-            $table->enum('sync_status', ['pending', 'success', 'failed'])->default('pending')->after('platform_order_status');
-            $table->string('nextengine_order_id')->nullable()->after('platform_order_id');
-        });
+        if (! Schema::hasColumn('platform_orders', 'sync_status')) {
+            Schema::table('platform_orders', function (Blueprint $table) {
+                $table->enum('sync_status', ['pending', 'success', 'failed'])->default('pending')->after('platform_order_status');
+            });
+        }
 
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('nextengine_pattern_id')->nullable()->after('remember_token');
-        });
+        if (! Schema::hasColumn('platform_orders', 'nextengine_order_id')) {
+            Schema::table('platform_orders', function (Blueprint $table) {
+                $table->string('nextengine_order_id')->nullable()->after('platform_order_id');
+            });
+        }
+
+        if (! Schema::hasColumn('users', 'nextengine_pattern_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('nextengine_pattern_id')->nullable()->after('remember_token');
+            });
+        }
     }
 
     public function down(): void

@@ -215,26 +215,42 @@
             </div>
         </form>
 
-        @if($platform?->key !== 'nextengine')
         <div class="mt-8 mb-4">
-            <h2 class="text-base font-semibold text-gray-800">Auto-Sync 設定</h2>
-            <p class="text-xs text-gray-400 mt-0.5">自動同期設定 / Auto-Sync Settings</p>
+            <h2 class="text-base font-semibold text-gray-800">自動同期設定</h2>
+            <p class="text-xs text-gray-400 mt-0.5">Auto-Sync Settings</p>
         </div>
-        <form method="POST" action="{{ route('btoc.shop.update', $shop->id) }}" class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-6">
+        <form method="POST" action="{{ route('btoc.shop.update', $shop->id) }}" class="space-y-3 mb-6">
             @csrf
             @method('PUT')
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-sm font-medium text-gray-900">自動同期 (Auto-Sync) を有効にする</h3>
-                    <p class="text-xs text-gray-500 mt-1">この機能を有効にすると、15分ごとに自動的に注文を同期します。</p>
+
+            @if($platform?->key !== 'nextengine')
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900">自動同期 (Auto-Sync) を有効にする</h3>
+                        <p class="text-xs text-gray-500 mt-1">この機能を有効にすると、5分ごとに注文を同期します。</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="auto_sync_enabled" value="1" class="sr-only peer" onChange="this.form.submit()" {{ $shop->auto_sync_enabled ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                 </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="auto_sync_enabled" value="1" class="sr-only peer" onChange="this.form.submit()" {{ $shop->auto_sync_enabled ? 'checked' : '' }}>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
             </div>
+            @else
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-900">自動 Push (Auto-Push) を有効にする</h3>
+                        <p class="text-xs text-gray-500 mt-1">有効にすると、Pending orderを5分ごとにNextEngineへ送信します。</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="auto_push_enabled" value="1" class="sr-only peer" onChange="this.form.submit()" {{ $shop->auto_push_enabled ? 'checked' : '' }}>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-300 after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    </label>
+                </div>
+            </div>
+            @endif
         </form>
-        @endif
     </div>
     @endif
 
@@ -254,7 +270,10 @@
         {{-- Sync Orders --}}
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
             <h2 class="text-sm font-semibold text-gray-800 mb-1">受注同期</h2>
-            <p class="text-xs text-gray-400 mb-4">Sync Orders</p>
+            <p class="text-xs text-gray-400 mb-4">
+                Sync Orders — tự động chạy mỗi 5 phút khi Auto-Sync được bật.
+                Pull và Push là hai cron riêng, có thể chạy tuần tự theo thời gian xử lý API.
+            </p>
             <form method="POST" action="{{ route('btoc.sync.orders', $shop->id) }}">
                 @csrf
                 <button type="submit" {{ $connStatus !== 'connected' ? 'disabled' : '' }}
@@ -264,26 +283,27 @@
                     </svg>
                     受注同期を開始
                 </button>
-            </form>
-        </div>
+             </form>
+         </div>
 
-        {{-- Sync Inventory --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <h2 class="text-sm font-semibold text-gray-800 mb-1">在庫同期</h2>
-            <p class="text-xs text-gray-400 mb-4">Sync Inventory</p>
-            <form method="POST" action="{{ route('btoc.sync.inventory', $shop->id) }}">
-                @csrf
-                <button type="submit" {{ $connStatus !== 'connected' ? 'disabled' : '' }}
-                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition">
-                    <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
-                    </svg>
-                    在庫同期を開始
-                </button>
-            </form>
-        </div>
-    </div>
-    @endif
+         {{-- Sync Inventory --}}
+         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+             <h2 class="text-sm font-semibold text-gray-800 mb-1">在庫同期</h2>
+             <p class="text-xs text-gray-400 mb-4">Sync Inventory</p>
+             <form method="POST" action="{{ route('btoc.sync.inventory', $shop->id) }}">
+                 @csrf
+                 <button type="submit" {{ $connStatus !== 'connected' ? 'disabled' : '' }}
+                     class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium bg-purple-100 text-purple-700 hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                     <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2">
+                         <path d="M1 4v6h6M23 20v-6h-6" /><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15" />
+                     </svg>
+                     在庫同期を開始
+                 </button>
+             </form>
+         </div>
+
+     </div>
+     @endif
 
     {{-- ═══════════════════════ TAB: HISTORY ═══════════════════════ --}}
     @if($activeTab === 'history')

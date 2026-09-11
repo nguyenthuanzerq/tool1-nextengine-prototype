@@ -36,6 +36,7 @@ return [
     ],
 
     'next_engine' => [
+        'pattern_id' => env('NEXT_ENGINE_PATTERN_ID'),
         'base_uri' => env('NEXT_ENGINE_BASE_URI'),
         'api_uri' => env('NEXT_ENGINE_API_URI'),
         'redirect_uri' => env('NEXT_ENGINE_REDIRECT_URI'),

@@ -104,18 +104,23 @@ class ShopController extends Controller
             'shop_name'         => 'sometimes|required|string|max:255',
             'platform_id'       => 'sometimes|required|exists:platforms,id',
             'auto_sync_enabled' => 'nullable|boolean',
+            'auto_push_enabled' => 'nullable|boolean',
         ]);
 
         // If the checkbox is unchecked in a form that includes it, it won't be sent in the request.
         // We handle this if the request comes from the detail page (where auto_sync_enabled is the only field).
-        if ($request->isMethod('PUT') && $request->has('_token') && !$request->has('shop_name')) {
-            $validated['auto_sync_enabled'] = $request->has('auto_sync_enabled');
+        if ($request->isMethod('PUT') && $request->has('_token') && ! $request->has('shop_name')) {
+            if ($shop->platform?->key === 'nextengine') {
+                $validated['auto_push_enabled'] = $request->has('auto_push_enabled');
+            } else {
+                $validated['auto_sync_enabled'] = $request->has('auto_sync_enabled');
+            }
         }
 
         $shop->update($validated);
 
-        if (!$request->has('shop_name')) {
-            return redirect()->back()->with('success', 'Auto-Syncの設定を更新しました。');
+        if (! $request->has('shop_name')) {
+            return redirect()->back()->with('success', '同期設定を更新しました。');
         }
 
         return redirect()->route('btoc.shop.edit', ['id' => $shop->id])

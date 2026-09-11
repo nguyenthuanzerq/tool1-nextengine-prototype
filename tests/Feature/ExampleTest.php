@@ -17,4 +17,10 @@ class ExampleTest extends TestCase
         // Accept either 200 OK or 302 redirect for environments that redirect root
         $this->assertTrue(in_array($response->getStatusCode(), [200, 302]));
     }
+
+    public function test_inventory_route_requires_authentication(): void
+    {
+        $this->get('/btoc/inventory')->assertRedirect('/login');
+    }
+
 }

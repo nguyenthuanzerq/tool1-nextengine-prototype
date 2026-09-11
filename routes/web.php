@@ -41,21 +41,22 @@ Route::prefix('btoc')->name('btoc.')->middleware(['auth', 'active'])->group(func
         Route::post('/{id}/test-connection', [ShopController::class, 'testConnection'])->name('test_connection');
     });
 
+    // Inventory (manual sync only; scheduler remains order-only)
+    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
+
     // Orders
     Route::prefix('orders')->name('orders.')->group(function () {
         Route::get('/',        [OrderController::class, 'index'])->name('index');
         Route::get('/{id}',    [OrderController::class, 'show'])->name('show');
         Route::put('/{id}',    [OrderController::class, 'update'])->name('update');
-        Route::delete('/{id}', [OrderController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/retry', [SyncController::class, 'retrySingleOrder'])->name('retry');
+        Route::post('/{id}/ignore', [SyncController::class, 'ignoreOrder'])->name('ignore');
     });
-
-    // Inventory
-    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory');
 
     // Sync
     Route::prefix('shops/{shopId}/sync')->name('sync.')->group(function () {
-        Route::post('/orders',    [SyncController::class, 'syncOrders'])->name('orders');
-        Route::post('/inventory', [SyncController::class, 'syncInventory'])->name('inventory');
+         Route::post('/orders',    [SyncController::class, 'syncOrders'])->name('orders');
+         Route::post('/inventory', [SyncController::class, 'syncInventory'])->name('inventory');
     });
     Route::get('/sync/history',      [SyncController::class, 'history'])->name('sync.history');
     Route::get('/sync/history/{id}', [SyncController::class, 'historyDetail'])->name('sync.history.detail');

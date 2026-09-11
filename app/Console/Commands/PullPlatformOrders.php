@@ -21,23 +21,24 @@ class PullPlatformOrders extends Command
      *
      * @var string
      */
-    protected $description = 'Pull new orders from connected platforms (except NextEngine)';
+    protected $description = 'Pull new orders from connected marketplace platforms.';
 
     /**
      * Execute the console command.
      */
-    public function handle(PlatformSyncService $syncService)
+    public function handle(PlatformSyncService $syncService): int
     {
-        $this->info('Starting to pull platform orders...');
+        $this->info('Starting to pull marketplace platform orders...');
         
-        // Find all connected shops EXCEPT NextEngine
-        $shops = Shop::whereHas('platform', function ($q) {
-            $q->where('key', '!=', 'nextengine');
-        })->get();
+        // Marketplace channels are order sources; NextEngine is the master target.
+        $shops = Shop::where('auto_sync_enabled', true)
+            ->whereHas('platform', function ($q) {
+                $q->whereIn('key', ['yahoo', 'rakuten', 'shopify']);
+            })->get();
 
         if ($shops->isEmpty()) {
-            $this->info('No connected shops found (excluding NextEngine).');
-            return;
+            $this->info('No connected marketplace shops found.');
+            return self::SUCCESS;
         }
 
         foreach ($shops as $shop) {
@@ -52,5 +53,7 @@ class PullPlatformOrders extends Command
         }
         
         $this->info('Finished pulling platform orders.');
+
+        return self::SUCCESS;
     }
 }

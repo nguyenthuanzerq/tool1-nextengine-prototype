@@ -26,7 +26,7 @@ class PlatformSyncJob implements ShouldQueue
     public function __construct(
         private int    $shopId,
         private int    $connectionId,
-        private string $syncType,   // 'orders' | 'inventory'
+        private string $syncType,   // 'orders' only in the active runtime scope
         private int    $historyId,
     ) {}
 
@@ -34,13 +34,16 @@ class PlatformSyncJob implements ShouldQueue
         PlatformConnectorFactory $factory,
         PlatformSyncService      $service
     ): void {
-        $shop    = Shop::findOrFail($this->shopId);
+        $shop    = Shop::with('platform')->findOrFail($this->shopId);
         $conn    = PlatformConnection::findOrFail($this->connectionId);
         $history = SyncHistory::findOrFail($this->historyId);
 
         $connector = $factory->resolve($shop->platform->key);
 
         try {
+            if (! method_exists($connector, 'refreshTokenIfNeeded')) {
+                throw new \LogicException('NextEngine connector does not support token refresh.');
+            }
             $connector->refreshTokenIfNeeded($conn);
 
             if ($this->syncType === 'orders') {
@@ -52,15 +55,6 @@ class PlatformSyncJob implements ShouldQueue
                     'meta'     => ['synced_count' => $count],
                 ]);
                 Log::info("PlatformSyncJob [orders] done", ['shop' => $shop->id, 'count' => $count]);
-            } elseif ($this->syncType === 'inventory') {
-                $rows  = $connector->fetchInventory($conn);
-                $count = $service->persistInventory($rows, $shop, $conn, $connector);
-                $history->update([
-                    'status'   => 'success',
-                    'ended_at' => now(),
-                    'meta'     => ['synced_count' => $count],
-                ]);
-                Log::info("PlatformSyncJob [inventory] done", ['shop' => $shop->id, 'count' => $count]);
             } else {
                 throw new \InvalidArgumentException("Unknown sync_type: {$this->syncType}");
             }
@@ -68,7 +62,7 @@ class PlatformSyncJob implements ShouldQueue
             $history->update([
                 'status'        => 'failed',
                 'ended_at'      => now(),
-                'error_message' => $e->getMessage(),
+                'error_message' => mb_substr($e->getMessage(), 0, 65535),
             ]);
             Log::error("PlatformSyncJob failed", [
                 'shop'      => $this->shopId,

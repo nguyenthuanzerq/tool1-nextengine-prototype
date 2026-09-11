@@ -19,6 +19,7 @@ class Shop extends Model
         'refresh_token',
         'token_expires_at',
         'auto_sync_enabled',
+        'auto_push_enabled',
     ];
 
     protected function casts(): array

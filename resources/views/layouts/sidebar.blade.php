@@ -62,8 +62,7 @@
         <a href="{{ route('btoc.inventory') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
                 {{ request()->routeIs('btoc.inventory*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50' }}">
-            <span class="inline-flex h-8 w-8 items-center justify-center rounded-md flex-shrink-0
-                {{ request()->routeIs('btoc.inventory*') ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500' }}">
+            <span class="inline-flex h-8 w-8 items-center justify-center rounded-md flex-shrink-0 bg-gray-100 text-gray-500">
                 <svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.5">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                     <path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12" />

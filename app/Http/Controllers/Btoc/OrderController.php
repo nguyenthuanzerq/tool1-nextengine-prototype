@@ -34,6 +34,10 @@ class OrderController extends Controller
             $query->whereDate('ordered_at', '<=', $request->date_to);
         }
 
+        if ($request->filled('sync_status')) {
+            $query->where('sync_status', $request->string('sync_status'));
+        }
+
         if ($request->filled('keyword')) {
             $keyword = $request->keyword;
             $query->where(function ($q) use ($keyword) {
@@ -43,12 +47,14 @@ class OrderController extends Controller
         }
 
         $orders = $query->orderByDesc('ordered_at')->paginate(20)->withQueryString();
-        $shops  = Shop::orderBy('shop_name')->get();
+        $shops  = Shop::whereHas('platform', function ($query) {
+            $query->whereIn('key', ['nextengine', 'yahoo', 'rakuten', 'shopify']);
+        })->orderBy('shop_name')->get();
 
         return view('btoc.orders.index', [
             'orders'  => $orders,
             'shops'   => $shops,
-            'filters' => $request->only(['shop_id', 'platform_id', 'date_from', 'date_to', 'keyword']),
+            'filters' => $request->only(['shop_id', 'platform_id', 'date_from', 'date_to', 'keyword', 'sync_status']),
         ]);
     }
 
@@ -168,86 +174,10 @@ class OrderController extends Controller
 
                 return $this->updateFailedResponse($request, 'NextEngine更新エラー: / NextEngine update error: ' . ($result['message'] ?? 'Unknown error'));
             }
-        } elseif ($platformKey === 'yahoo') {
-            $connection = PlatformConnection::query()
-                ->where('platform_id', $order->platform_id)
-                ->where('shop_id', $order->shop_id)
-                ->first();
-
-            if (!$connection) {
-                return $this->updateFailedResponse($request, 'このショップのYahoo Shopping認証情報が未設定です。/ Yahoo Shopping credentials not found.');
-            }
-
-            // Ensure access token is refreshed
-            try {
-                $connector = app(\App\Connectors\YahooConnector::class);
-                $connector->refreshTokenIfNeeded($connection);
-            } catch (\Throwable $e) {
-                return $this->updateFailedResponse($request, 'Yahoo Shoppingアクセストークンの更新に失敗しました: ' . $e->getMessage());
-            }
-
-            $accessToken = $connection->access_token;
-            if (empty($accessToken)) {
-                return $this->updateFailedResponse($request, 'Yahoo Shoppingトークンが未設定です。/ Yahoo Shopping token is not configured.');
-            }
-
-            $trackingNumberXml = htmlspecialchars(
-                $validated['tracking_number'],
-                ENT_XML1 | ENT_COMPAT,
-                'UTF-8'
-            );
-
-            $xmlData = '<?xml version="1.0" encoding="UTF-8"?>' .
-                '<Req>' .
-                '    <Target>' .
-                '        <OrderId>' . htmlspecialchars($order->platform_order_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</OrderId>' .
-                '        <IsPointFix>true</IsPointFix>' .
-                '        <OperationUser>System</OperationUser>' .
-                '    </Target>' .
-                '    <Order>' .
-                '        <Ship>' .
-                '            <ShipStatus>3</ShipStatus>' . // 3 = Shipped
-                '            <ShipInvoiceNumber1>' . $trackingNumberXml . '</ShipInvoiceNumber1>' .
-                '        </Ship>' .
-                '    </Order>' .
-                '    <SellerId>' . htmlspecialchars($connection->seller_id, ENT_XML1 | ENT_COMPAT, 'UTF-8') . '</SellerId>' .
-                '</Req>';
-
-            try {
-                $response = Http::withToken($accessToken)
-                    ->withHeaders(['Content-Type' => 'application/xml'])
-                    ->post('https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/orderShipStatusChange', $xmlData);
-            } catch (\Throwable $e) {
-                Log::error('Yahoo orderShipStatusChange request failed', [
-                    'order_id' => $order->id,
-                    'platform_order_id' => $order->platform_order_id,
-                    'error' => $e->getMessage(),
-                ]);
-                return $this->updateFailedResponse($request, 'Yahoo Shoppingへの接続に失敗しました。/ Could not connect to Yahoo Shopping.');
-            }
-
-            if (!$response->successful()) {
-                Log::warning('Yahoo orderShipStatusChange failed', [
-                    'order_id' => $order->id,
-                    'platform_order_id' => $order->platform_order_id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-                return $this->updateFailedResponse($request, 'Yahoo Shopping更新エラー: HTTP ' . $response->status());
-            }
-
-            try {
-                $xml = simplexml_load_string($response->body());
-                if ($xml && $xml->getName() === 'Error') {
-                    return $this->updateFailedResponse($request, 'Yahoo Shoppingエラー: ' . (string) $xml->Message . ' (' . (string) $xml->Code . ')');
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to parse Yahoo response XML', [
-                    'body' => $response->body(),
-                    'error' => $e->getMessage(),
-                ]);
-            }
+        } else {
+            return $this->updateFailedResponse($request, 'Only NextEngine orders support tracking updates in the current scope.');
         }
+
         // Update tracking number in DB
         $order->update([
             'tracking_number' => $validated['tracking_number'],
@@ -275,7 +205,7 @@ class OrderController extends Controller
             try {
                 Mail::mailer($mailerName)->to($notifyEmail)->send(new ShipmentNotificationMail($order->load('shop')));
             } catch (\Throwable $e) {
-                \Log::error('Gửi mail thất bại: ' . $e->getMessage());
+                Log::error('Gửi mail thất bại: ' . $e->getMessage());
             }
         }
 
@@ -300,8 +230,16 @@ class OrderController extends Controller
 
     public function destroy($id)
     {
-        PlatformOrder::findOrFail($id)->delete();
+        $order = PlatformOrder::with('platform')->findOrFail($id);
 
-        return response()->json(['success' => true]);
+        if ($order->platform?->key !== 'nextengine') {
+            return response()->json(['success' => false, 'message' => 'Only NextEngine orders are enabled.'], 422);
+        }
+
+        if (in_array($order->sync_status, [PlatformOrder::STATUS_PENDING, PlatformOrder::STATUS_FAILED], true)) {
+            $order->update(['sync_status' => PlatformOrder::STATUS_IGNORED]);
+        }
+
+        return response()->json(['success' => true, 'sync_status' => $order->fresh()->sync_status]);
     }
 }

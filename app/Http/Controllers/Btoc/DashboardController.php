@@ -16,8 +16,9 @@ class DashboardController extends Controller
         $unshipped   = PlatformOrder::whereNull('shipped_at')->count();
         $todayShipped = PlatformOrder::whereDate('shipped_at', today())->count();
         
-        $pendingSync = PlatformOrder::where('sync_status', 'pending')->count();
-        $failedOrders = PlatformOrder::where('sync_status', 'failed')->count();
+        $pendingSync = PlatformOrder::where('sync_status', PlatformOrder::STATUS_PENDING)->count();
+        $failedOrders = PlatformOrder::where('sync_status', PlatformOrder::STATUS_FAILED)->count();
+        $ignoredOrders = PlatformOrder::where('sync_status', PlatformOrder::STATUS_IGNORED)->count();
 
         $shops = Shop::with(['platform', 'platformConnections', 'latestSyncHistory'])->get();
 
@@ -28,6 +29,7 @@ class DashboardController extends Controller
             'todayShipped',
             'pendingSync',
             'failedOrders',
+            'ignoredOrders',
             'shops',
         ));
     }

@@ -50,8 +50,18 @@
                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
 
-            <div class="flex-1 min-w-[180px]">
-                <label class="block text-sm font-medium text-gray-700 mb-1">キーワード / Keyword</label>
+             <div class="flex-1 min-w-[120px]">
+                 <label class="block text-sm font-medium text-gray-700 mb-1">同期状態 / Sync status</label>
+                 <select name="sync_status" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+                     <option value="">すべて</option>
+                     @foreach (['pending' => 'Pending', 'success' => 'Success', 'failed' => 'Failed', 'ignored' => 'Ignored'] as $status => $label)
+                         <option value="{{ $status }}" {{ ($filters['sync_status'] ?? '') === $status ? 'selected' : '' }}>{{ $label }}</option>
+                     @endforeach
+                 </select>
+             </div>
+
+             <div class="flex-1 min-w-[180px]">
+                 <label class="block text-sm font-medium text-gray-700 mb-1">キーワード / Keyword</label>
                 <input type="text" name="keyword" value="{{ $filters['keyword'] ?? '' }}" placeholder="注文番号・購入者名"
                     class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
@@ -123,10 +133,11 @@
                                     電話番号
                                     <span class="block font-normal text-[10px] text-gray-500">(Phone)</span>
                                 </th>
-                                <th class="px-1 py-2 w-[10%] text-[11px] font-bold leading-tight">
-                                    メール
-                                    <span class="block font-normal text-[10px] text-gray-500">(Email)</span>
-                                </th>
+                                 <th class="px-1 py-2 w-[10%] text-[11px] font-bold leading-tight">
+                                     メール
+                                     <span class="block font-normal text-[10px] text-gray-500">(Email)</span>
+                                 </th>
+                                 <th class="px-1 py-2 w-[7%] text-[11px] font-bold leading-tight">Status</th>
                                 <th class="px-1 py-2 w-[5%] text-center text-[11px] font-bold leading-tight">
                                     操作
                                     <span class="block font-normal text-[10px] text-gray-500">(Action)</span>
@@ -197,12 +208,18 @@
                                         {{ $order->buyer_phone ?? '-' }}
                                     </td>
 
-                                    <td class="px-1 py-3 text-[11px] text-gray-500 truncate align-middle"
-                                        title="{{ $order->buyer_email ?? '-' }}">
-                                        {{ $order->buyer_email ?? '-' }}
-                                    </td>
+                                     <td class="px-1 py-3 text-[11px] text-gray-500 truncate align-middle"
+                                         title="{{ $order->buyer_email ?? '-' }}">
+                                         {{ $order->buyer_email ?? '-' }}
+                                     </td>
 
-                                    <td class="px-1 py-3 align-middle text-center">
+                                     <td class="px-1 py-3 text-[11px] align-middle">
+                                         <span class="rounded px-1.5 py-1 font-semibold {{ $order->sync_status === 'failed' ? 'bg-red-100 text-red-700' : ($order->sync_status === 'ignored' ? 'bg-gray-100 text-gray-600' : ($order->sync_status === 'success' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700')) }}">
+                                             {{ $order->sync_status ?? 'pending' }}
+                                         </span>
+                                     </td>
+
+                                     <td class="px-1 py-3 align-middle text-center">
                                         <div class="flex flex-col gap-1">
                                             <button type="button" id="register-btn-{{ $order->id }}"
                                                 onclick="updateTrackingNumber('{{ $order->id }}', '{{ route('btoc.orders.update', $order->id) }}')"
@@ -210,10 +227,21 @@
                                                 登録
                                             </button>
 
-                                            <a href="{{ route('btoc.orders.show', $order->id) }}"
-                                                class="w-full inline-flex justify-center items-center px-1 py-1.5 rounded text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm">
-                                                詳細
-                                            </a>
+                                             @if ($order->sync_status === 'failed')
+                                                 <form method="POST" action="{{ route('btoc.orders.retry', $order->id) }}">
+                                                     @csrf
+                                                     <button class="w-full rounded px-1 py-1.5 text-[10px] font-bold bg-amber-500 text-white">Retry</button>
+                                                 </form>
+                                             @elseif (in_array($order->sync_status, ['pending', 'failed'], true))
+                                                 <form method="POST" action="{{ route('btoc.orders.ignore', $order->id) }}">
+                                                     @csrf
+                                                     <button class="w-full rounded px-1 py-1.5 text-[10px] font-bold bg-gray-500 text-white">Ignore</button>
+                                                 </form>
+                                             @endif
+                                             <a href="{{ route('btoc.orders.show', $order->id) }}"
+                                                 class="w-full inline-flex justify-center items-center px-1 py-1.5 rounded text-[10px] font-bold bg-blue-600 hover:bg-blue-700 text-white transition">
+                                                 詳細
+                                             </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -18,7 +18,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app['request']->server->set('HTTPS', true);
+        // HTTPS is enforced by the reverse proxy in production. Do not rewrite
+        // the request scheme during local HTTP development, otherwise the
+        // session cookie and CSRF token can be issued for a different origin.
 
         // Register PlatformConnectorFactory as a singleton so all controllers
         // share the same instance (and any runtime overrides are preserved).
@@ -33,7 +35,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useTailwind();
-        URL::forceScheme('https');
+
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
 
         // Ignore SSL verification on local environment (Windows/XAMPP)
         if (app()->environment('local')) {

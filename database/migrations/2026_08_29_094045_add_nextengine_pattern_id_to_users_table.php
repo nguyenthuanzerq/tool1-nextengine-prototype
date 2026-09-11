@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('nextengine_pattern_id')->nullable();
-        });
+        if (! Schema::hasColumn('users', 'nextengine_pattern_id')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('nextengine_pattern_id')->nullable();
+            });
+        }
     }
 
     /**

@@ -11,10 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('platform_orders', function (Blueprint $table) {
-            $table->enum('sync_status', ['pending', 'success', 'failed'])->default('pending');
-            $table->string('nextengine_order_id')->nullable();
-        });
+        if (! Schema::hasColumn('platform_orders', 'sync_status')) {
+            Schema::table('platform_orders', function (Blueprint $table) {
+                $table->enum('sync_status', ['pending', 'success', 'failed'])->default('pending');
+            });
+        }
+
+        if (! Schema::hasColumn('platform_orders', 'nextengine_order_id')) {
+            Schema::table('platform_orders', function (Blueprint $table) {
+                $table->string('nextengine_order_id')->nullable();
+            });
+        }
     }
 
     /**

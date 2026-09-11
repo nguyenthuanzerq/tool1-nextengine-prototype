@@ -7,44 +7,19 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlatformOrder extends Model
 {
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_SUCCESS = 'success';
+    public const STATUS_FAILED = 'failed';
+    public const STATUS_IGNORED = 'ignored';
+
     protected $fillable = [
-        'platform_id',
-        'shop_id',
-        // --- Platform identifier ---
-        'platform_order_id',
-        'nextengine_order_id',
-        'platform_order_status',
-        'sync_status',
-        // --- Amounts ---
-        'goods_amount',
-        'delivery_fee',
-        'total_amount',
-        // --- Buyer ---
-        'buyer_id',
-        'buyer_name',
-        'buyer_email',
-        'buyer_phone',
-        'buyer_zip',
-        'buyer_address',
-        'customer_type',
-        // --- Delivery ---
-        'delivery_name',
-        'delivery_zip',
-        'delivery_address',
-        'delivery_method',
-        // --- Payment ---
-        'payment_method',
-        // --- Fulfillment ---
-        'tracking_number',
-        'ordered_at',
-        'shipped_at',
-        'synced_at',
-        // --- Raw ---
-        'meta',
+        'platform_id', 'shop_id', 'platform_order_id', 'nextengine_order_id',
+        'platform_order_status', 'sync_status', 'goods_amount', 'delivery_fee',
+        'total_amount', 'buyer_id', 'buyer_name', 'buyer_email', 'buyer_phone',
+        'buyer_zip', 'buyer_address', 'customer_type', 'delivery_name',
+        'delivery_zip', 'delivery_address', 'delivery_method', 'payment_method',
+        'tracking_number', 'ordered_at', 'shipped_at', 'synced_at', 'meta',
         'raw_data',
-        // --- Sync ---
-        'sync_status',
-        'nextengine_order_id',
     ];
 
     protected $casts = [
@@ -78,5 +53,25 @@ class PlatformOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PlatformOrderItem::class);
+    }
+
+    public function scopeNextEngine($query)
+    {
+        return $query->whereHas('platform', fn ($platform) => $platform->where('key', 'nextengine'));
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('sync_status', self::STATUS_PENDING);
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('sync_status', self::STATUS_FAILED);
+    }
+
+    public function scopeIgnored($query)
+    {
+        return $query->where('sync_status', self::STATUS_IGNORED);
     }
 }

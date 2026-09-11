@@ -36,16 +36,6 @@ class PlatformSyncService
     /**
      * Dispatch an inventory sync job for the given shop.
      */
-    public function dispatchInventorySync(Shop $shop): SyncHistory
-    {
-        $conn    = $this->resolveConnection($shop);
-        $history = $this->createHistory($shop, $conn, 'inventory');
-
-        PlatformSyncJob::dispatch($shop->id, $conn->id, 'inventory', $history->id);
-
-        return $history;
-    }
-
     /**
      * Run order sync synchronously (used by ShopController for now).
      * Returns count of rows processed.
@@ -66,7 +56,7 @@ class PlatformSyncService
             $history->update([
                 'status'   => 'success',
                 'ended_at' => now(),
-                'meta'     => ['synced_count' => $count],
+                'meta'     => ['synced_count' => $count, 'platform' => $shop->platform->key],
             ]);
 
             return $count;
@@ -74,7 +64,7 @@ class PlatformSyncService
             $history->update([
                 'status'        => 'failed',
                 'ended_at'      => now(),
-                'error_message' => $e->getMessage(),
+                'error_message' => $this->summarizeError($e),
             ]);
             throw $e;
         }
@@ -93,17 +83,35 @@ class PlatformSyncService
         foreach ($rows as $row) {
             $normalized = $connector->normalizeOrder($row);
 
-            $order = PlatformOrder::updateOrCreate(
-                [
-                    'platform_id'       => $conn->platform_id,
-                    'platform_order_id' => $normalized['platform_order_id'],
-                ],
-                array_merge($normalized, [
-                    'shop_id'   => $shop->id,
-                    'synced_at' => now(),
-                    'raw_data'  => $row,
-                ])
-            );
+            if (empty($normalized['platform_order_id'])) {
+                continue;
+            }
+
+            $existing = PlatformOrder::where([
+                'platform_id'       => $conn->platform_id,
+                'shop_id'           => $shop->id,
+                'platform_order_id' => $normalized['platform_order_id'],
+            ])->first();
+
+            $attributes = array_merge($normalized, [
+                'platform_id' => $conn->platform_id,
+                'shop_id'     => $shop->id,
+                'synced_at'   => now(),
+                'raw_data'    => $row,
+            ]);
+
+            // Pulling from NextEngine must not requeue or overwrite local push state.
+            if ($existing) {
+                unset($attributes['sync_status'], $attributes['nextengine_order_id']);
+                $order = tap($existing)->update($attributes);
+            } else {
+                $order = PlatformOrder::create(array_merge($attributes, [
+                    // Marketplace orders are queued for the NextEngine master.
+                    'sync_status' => $shop->platform->key === 'nextengine'
+                        ? PlatformOrder::STATUS_SUCCESS
+                        : PlatformOrder::STATUS_PENDING,
+                ]));
+            }
 
             $savedOrders[$normalized['platform_order_id']] = $order->id;
             $count++;
@@ -135,10 +143,11 @@ class PlatformSyncService
         foreach ($rawItems as $raw) {
             $normalized = $connector->normalizeOrderItem($raw);
 
-            // Resolve our internal platform_orders.id from the platform order ID
-            $platformOrderId = $raw['receive_order_id']  // NE
-                ?? $raw['OrderId']                        // Yahoo
-                ?? $raw['orderNumber']                    // Rakuten
+            // Each connector may use a different source order identifier.
+            $platformOrderId = $normalized['orderNumber']
+                ?? $raw['receive_order_id']
+                ?? $raw['orderNumber']
+                ?? $raw['OrderId']
                 ?? null;
 
             $internalOrderId = $orderIdMap[$platformOrderId] ?? null;
@@ -160,8 +169,8 @@ class PlatformSyncService
     }
 
     /**
-     * Run inventory sync synchronously (used by SyncController).
-     * Returns count of rows processed.
+     * Legacy inventory sync retained for the out-of-scope module.
+     * It is not exposed by routes or scheduled jobs.
      */
     public function syncInventoryNow(Shop $shop): int
     {
@@ -187,7 +196,7 @@ class PlatformSyncService
             $history->update([
                 'status'        => 'failed',
                 'ended_at'      => now(),
-                'error_message' => $e->getMessage(),
+                'error_message' => $this->summarizeError($e),
             ]);
             throw $e;
         }
@@ -286,22 +295,40 @@ class PlatformSyncService
             'status'      => 'running',
         ]);
     }
-    public function pushPendingOrdersToNextEngine(): void
+    public function pushPendingOrdersToNextEngine(): int
     {
-        $conn = PlatformConnection::whereHas('platform', function ($q) {
-            $q->where('key', 'nextengine');
-        })->whereNotNull('shop_id')->first();
+        $connector = $this->factory->resolve('nextengine');
+        $processed = 0;
 
-        if (!$conn) {
-            \Illuminate\Support\Facades\Log::warning('No NextEngine connection found for pushing orders.');
-            return;
+        $autoPushEnabled = Shop::where('auto_push_enabled', true)
+            ->whereHas('platform', fn ($query) => $query->where('key', 'nextengine'))
+            ->exists();
+
+        if (! $autoPushEnabled) {
+            return 0;
         }
 
-        $connector = $this->factory->resolve('nextengine');
-
-        $pendingOrders = PlatformOrder::where('sync_status', 'pending')->with(['items', 'shop'])->get();
+        // Auto-push is controlled by the NextEngine master shop, while the
+        // order remains owned by its originating marketplace shop.
+        $pendingOrders = PlatformOrder::pending()
+            ->whereNull('nextengine_order_id')
+            ->whereHas('platform', fn ($query) => $query->whereIn('key', ['yahoo', 'rakuten', 'shopify']))
+            ->with(['items', 'shop', 'platform'])
+            ->get();
 
         foreach ($pendingOrders as $order) {
+            $conn = PlatformConnection::whereHas('platform', fn ($query) => $query->where('key', 'nextengine'))
+                ->where('shop_id', Shop::where('auto_push_enabled', true)
+                    ->whereHas('platform', fn ($query) => $query->where('key', 'nextengine'))
+                    ->value('id'))
+                ->first();
+
+            if (! $conn) {
+                $this->markPushFailed($order, 'No NextEngine connection found for this shop.', $order->platform_id);
+                $processed++;
+                continue;
+            }
+
             try {
                 if (method_exists($connector, 'pushOrder')) {
                     $result = $connector->pushOrder($conn, $order);
@@ -314,19 +341,7 @@ class PlatformSyncService
                         ]);
                     } else {
                         $errMsg = $result['message'] ?? 'Failed to push order';
-                        $order->update(['sync_status' => 'failed']);
-                        
-                        SyncHistory::create([
-                            'shop_id'       => $order->shop_id,
-                            'platform_id'   => $conn->platform_id,
-                            'sync_code'     => 'PUSH_ORDER_' . now()->format('YmdHis') . '_' . Str::upper(Str::random(4)),
-                            'shop_name'     => $order->shop->shop_name ?? 'Unknown',
-                            'sync_type'     => 'orders_push',
-                            'started_at'    => now(),
-                            'ended_at'      => now(),
-                            'status'        => 'failed',
-                            'error_message' => $errMsg,
-                        ]);
+                        $this->markPushFailed($order, $errMsg, $conn->platform_id);
                         
                         // Check for token or auth errors
                         $errMsgLower = strtolower($errMsg);
@@ -335,22 +350,14 @@ class PlatformSyncService
                             break;
                         }
                     }
+                    $processed++;
+                } else {
+                    $this->markPushFailed($order, 'NextEngine connector does not support order push.', $order->platform_id);
+                    $processed++;
                 }
             } catch(\Throwable $e) {
                 $errMsg = $e->getMessage();
-                $order->update(['sync_status' => 'failed']);
-                
-                SyncHistory::create([
-                    'shop_id'       => $order->shop_id,
-                    'platform_id'   => $conn->platform_id,
-                    'sync_code'     => 'PUSH_ORDER_' . now()->format('YmdHis') . '_' . Str::upper(Str::random(4)),
-                    'shop_name'     => $order->shop->shop_name ?? 'Unknown',
-                    'sync_type'     => 'orders_push',
-                    'started_at'    => now(),
-                    'ended_at'      => now(),
-                    'status'        => 'failed',
-                    'error_message' => substr($errMsg, 0, 255),
-                ]);
+                $this->markPushFailed($order, $errMsg, $conn->platform_id);
 
                 // Check for token or auth errors
                 $errMsgLower = strtolower($errMsg);
@@ -358,7 +365,37 @@ class PlatformSyncService
                     \Illuminate\Support\Facades\Log::emergency('NextEngine Token Expired/Invalid. Stopping sync process.');
                     break;
                 }
+                $processed++;
             }
         }
+
+        return $processed;
+    }
+
+    private function markPushFailed(PlatformOrder $order, string $message, int $platformId): void
+    {
+        $order->update(['sync_status' => PlatformOrder::STATUS_FAILED]);
+        SyncHistory::create([
+            'shop_id'       => $order->shop_id,
+            'platform_id'   => $platformId,
+            'sync_code'     => 'PUSH_ORDER_' . now()->format('YmdHis') . '_' . Str::upper(Str::random(4)),
+            'shop_name'     => $order->shop?->shop_name ?? 'Unknown',
+            'sync_type'     => 'orders_push',
+            'started_at'    => now(),
+            'ended_at'      => now(),
+            'status'        => 'failed',
+            'error_message' => $this->truncateError($message),
+            'meta'          => ['order_id' => $order->id],
+        ]);
+    }
+
+    private function summarizeError(\Throwable $exception): string
+    {
+        return $this->truncateError($exception->getMessage());
+    }
+
+    private function truncateError(string $message): string
+    {
+        return mb_substr($message, 0, 255);
     }
 }

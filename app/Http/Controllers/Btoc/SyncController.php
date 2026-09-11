@@ -18,10 +18,10 @@ class SyncController extends Controller
      */
     public function syncOrders(Request $request, int $shopId)
     {
-        $shop = Shop::findOrFail($shopId);
+        $shop = Shop::with('platform')->findOrFail($shopId);
 
         try {
-            // Run synchronously (like inventory) and return count
+            // Run synchronously and return count
             $count = $this->syncService->syncOrdersNow($shop);
 
             return redirect()->back()
@@ -33,20 +33,20 @@ class SyncController extends Controller
     }
 
     /**
-     * Trigger inventory sync for a shop (queued).
+     * Trigger the legacy inventory sync flow manually.
      */
     public function syncInventory(Request $request, int $shopId)
     {
-        $shop = Shop::findOrFail($shopId);
+        $shop = Shop::with('platform')->findOrFail($shopId);
 
         try {
             $count = $this->syncService->syncInventoryNow($shop);
 
             return redirect()->back()
-                ->with('success', "✓ Inventory synced: {$count} records updated.");
+                ->with('success', "Inventory synced: {$count} records updated.");
         } catch (\Throwable $e) {
             return redirect()->back()
-                ->with('error', 'Sync failed: ' . $e->getMessage());
+                ->with('error', 'Inventory sync failed: ' . $e->getMessage());
         }
     }
 
@@ -78,16 +78,47 @@ class SyncController extends Controller
      */
     public function retryOrder(int $id)
     {
-        $history = SyncHistory::findOrFail($id);
-        
-        // Reset failed orders to pending
-        PlatformOrder::where('shop_id', $history->shop_id)
-            ->where('sync_status', 'failed')
-            ->update(['sync_status' => 'pending']);
+        $history = SyncHistory::with('platform')->findOrFail($id);
 
-        // Trigger the push process again
+        if ($history->sync_type !== 'orders_push' || $history->platform?->key !== 'nextengine') {
+            return redirect()->back()->with('error', 'Only failed NextEngine order pushes can be retried.');
+        }
+
+        $orders = PlatformOrder::where('shop_id', $history->shop_id)
+            ->where('sync_status', PlatformOrder::STATUS_FAILED)
+            ->where('platform_id', $history->platform_id)
+            ->get();
+
+        $orders->each->update(['sync_status' => PlatformOrder::STATUS_PENDING]);
+        $processed = $this->syncService->pushPendingOrdersToNextEngine();
+
+        return redirect()->back()->with('success', "Retry completed for {$processed} order(s).");
+    }
+
+    public function retrySingleOrder(int $id)
+    {
+        $order = PlatformOrder::with('platform')->findOrFail($id);
+
+        if (! in_array($order->platform?->key, ['yahoo', 'rakuten', 'shopify'], true) || $order->sync_status !== PlatformOrder::STATUS_FAILED) {
+            return redirect()->back()->with('error', 'Only failed marketplace orders can be retried.');
+        }
+
+        $order->update(['sync_status' => PlatformOrder::STATUS_PENDING]);
         $this->syncService->pushPendingOrdersToNextEngine();
 
-        return redirect()->back()->with('success', 'Retry initiated. Check dashboard or history for updates.');
+        return redirect()->back()->with('success', 'Order retry completed.');
+    }
+
+    public function ignoreOrder(int $id)
+    {
+        $order = PlatformOrder::with('platform')->findOrFail($id);
+
+        if (! in_array($order->platform?->key, ['yahoo', 'rakuten', 'shopify'], true) || ! in_array($order->sync_status, [PlatformOrder::STATUS_PENDING, PlatformOrder::STATUS_FAILED], true)) {
+            return redirect()->back()->with('error', 'Only pending or failed marketplace orders can be ignored.');
+        }
+
+        $order->update(['sync_status' => PlatformOrder::STATUS_IGNORED]);
+
+        return redirect()->back()->with('success', 'Order was removed from the sync queue.');
     }
 }
