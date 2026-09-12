@@ -36,14 +36,19 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useTailwind();
 
-        if (app()->environment('production')) {
+        // Generate HTTPS URLs whenever the configured application URL is HTTPS.
+        // This keeps form actions secure even when a reverse proxy forwards the
+        // request to PHP over HTTP.
+        $appUrl = (string) config('app.url');
+        if (parse_url($appUrl, PHP_URL_SCHEME) === 'https') {
+            URL::forceRootUrl(rtrim($appUrl, '/'));
             URL::forceScheme('https');
         }
 
         // Ignore SSL verification on local environment (Windows/XAMPP)
-        if (app()->environment('local')) {
-            Http::globalOptions(['verify' => false]);
-        }
+        // if (app()->environment('local')) {
+        //     Http::globalOptions(['verify' => false]);
+        // }
 
         Event::listen([
             ResponseReceived::class,
